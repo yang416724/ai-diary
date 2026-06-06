@@ -7,30 +7,30 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-       :root{
-    --bg:#F4ECEA;          /*莫兰迪浅冷粉底色（页面背景）*/
-    --card:#F9F3F2;        /*卡片浅裸粉白*/
-    --text:#5C5050;        /*深灰粉正文文字*/
-    --text-secondary:#998888;/*次要淡粉灰文字*/
-    --border:#E4D4D2;      /*莫兰迪粉灰边框*/
-    --primary:#C9A8A7;     /*主色：低饱和冷粉（按钮、高亮）*/
-    --primary-hover:#B99493;/*悬浮加深冷粉*/
-    --danger:#C88A8A;      /*删除按钮莫兰迪豆沙红*/
-    --success:#A9B8B0;     /*成功低饱和灰绿（莫兰迪搭配）*/
-    --shadow:0 1px 4px 0 rgba(150,120,120,0.12)
-}
-       .dark{
-    --bg:#483E3E;
-    --card:#594F4F;
-    --text:#EAE0E0;
-    --text-secondary:#BBAAAA;
-    --border:#726262;
-    --primary:#D1B2B1;
-    --primary-hover:#C9A8A7;
-    --danger:#DD9999;
-    --success:#9AB0A6;
-    --shadow:0 1px 4px 0 rgba(30,20,20,0.35)
-}
+        :root{
+            --bg:#F4ECEA;          /*莫兰迪浅冷粉底色（页面背景）*/
+            --card:#F9F3F2;        /*卡片浅裸粉白*/
+            --text:#5C5050;        /*深灰粉正文文字*/
+            --text-secondary:#998888;/*次要淡粉灰文字*/
+            --border:#E4D4D2;      /*莫兰迪粉灰边框*/
+            --primary:#C9A8A7;     /*主色：低饱和冷粉（按钮、高亮）*/
+            --primary-hover:#B99493;/*悬浮加深冷粉*/
+            --danger:#C88A8A;      /*删除按钮莫兰迪豆沙红*/
+            --success:#A9B8B0;     /*成功低饱和灰绿（莫兰迪搭配）*/
+            --shadow:0 1px 4px 0 rgba(150,120,120,0.12)
+        }
+        .dark{
+            --bg:#483E3E;
+            --card:#594F4F;
+            --text:#EAE0E0;
+            --text-secondary:#BBAAAA;
+            --border:#726262;
+            --primary:#D1B2B1;
+            --primary-hover:#C9A8A7;
+            --danger:#DD9999;
+            --success:#9AB0A6;
+            --shadow:0 1px 4px 0 rgba(30,20,20,0.35)
+        }
         body{background:var(--bg);color:var(--text);padding:20px;max-width:1000px;margin:0 auto;transition:all 0.3s ease}
         .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
         .top-bar h1{font-size:28px;color:var(--primary);display:flex;align-items:center;gap:8px}
@@ -38,25 +38,26 @@
         .icon-btn{background:transparent;border:none;font-size:22px;cursor:pointer;color:var(--text);padding:8px;border-radius:8px;transition:background 0.2s}
         .icon-btn:hover{background:var(--border)}
 
-        .card{background:var(--card);border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
+        .card{background:var(--card);border-radius:20px;padding:24px;margin-bottom:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
         .card h2{font-size:22px;margin-bottom:20px;color:var(--text)}
         .card h3{font-size:18px;margin:16px 0 12px;color:var(--text)}
 
         .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
         @media (max-width:768px){.grid-2{grid-template-columns:1fr}}
 
-        .input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:16px;outline:none;transition:border-color 0.2s}
+        .input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:16px;outline:none;transition:border-color 0.2s}
         .input:focus{border-color:var(--primary)}
         .textarea{min-height:120px;resize:vertical;line-height:1.6}
-        .select{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:16px;cursor:pointer}
+        .select{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:16px;cursor:pointer}
 
-        .btn{padding:12px 24px;border:none;border-radius:8px;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s}
+        .btn{padding:12px 24px;border:none;border-radius:10px;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s}
         .btn-primary{background:var(--primary);color:white}
         .btn-primary:hover{background:var(--primary-hover)}
         .btn-danger{background:var(--danger);color:white}
         .btn-success{background:var(--success);color:white}
         .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
         .btn-outline:hover{background:var(--border)}
+        .btn-sm{padding:8px 16px;font-size:14px}
 
         .upload-box{border:2px dashed var(--border);border-radius:12px;padding:40px 20px;text-align:center;transition:border-color 0.2s}
         .upload-box.active{border-color:var(--primary)}
@@ -87,11 +88,17 @@
         @keyframes spin{to{transform:rotate(360deg)}}
 
         .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
-        .modal-content{background:var(--card);border-radius:16px;padding:24px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto}
+        .modal-content{background:var(--card);border-radius:20px;padding:24px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto}
         .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
         .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text)}
 
         .badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:12px;background:var(--primary);color:white;margin-left:8px}
+
+        /* 新增：分析看板样式 */
+        .dashboard-card{margin-bottom:30px}
+        .dashboard-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+        .dashboard-actions{display:flex;gap:8px}
+        .latest-result{max-height:300px;overflow-y:auto;padding:16px;background:var(--bg);border-radius:12px}
     </style>
 </head>
 <body>
@@ -133,9 +140,85 @@
         </div>
     </div>
 
-    <!-- 分析区域【最终多选flomo视角】 -->
+    <!-- 主标签页：分析看板 / 日记列表 -->
+    <div class="tabs">
+        <button class="tab active" data-main-tab="dashboard">📊 分析看板</button>
+        <button class="tab" data-main-tab="diaryList">📝 日记列表</button>
+    </div>
+
+    <!-- 分析看板（新增核心功能） -->
+    <div id="dashboardTab" class="main-tab-content">
+        <!-- 今日分析 -->
+        <div class="card dashboard-card">
+            <div class="dashboard-header">
+                <h3>☀️ 今日分析</h3>
+                <div class="dashboard-actions">
+                    <button class="btn btn-primary btn-sm" onclick="quickAnalyze('today')">重新分析</button>
+                    <button class="btn btn-outline btn-sm" onclick="viewRangeHistory('today')">查看历史</button>
+                </div>
+            </div>
+            <div id="todayResult" class="latest-result">
+                <div class="empty-state">还没有今日分析，点击"重新分析"开始</div>
+            </div>
+        </div>
+
+        <!-- 近7天分析 -->
+        <div class="card dashboard-card">
+            <div class="dashboard-header">
+                <h3>📅 近7天分析</h3>
+                <div class="dashboard-actions">
+                    <button class="btn btn-primary btn-sm" onclick="quickAnalyze('week')">重新分析</button>
+                    <button class="btn btn-outline btn-sm" onclick="viewRangeHistory('week')">查看历史</button>
+                </div>
+            </div>
+            <div id="weekResult" class="latest-result">
+                <div class="empty-state">还没有近7天分析，点击"重新分析"开始</div>
+            </div>
+        </div>
+
+        <!-- 近30天分析 -->
+        <div class="card dashboard-card">
+            <div class="dashboard-header">
+                <h3>📆 近30天分析</h3>
+                <div class="dashboard-actions">
+                    <button class="btn btn-primary btn-sm" onclick="quickAnalyze('month')">重新分析</button>
+                    <button class="btn btn-outline btn-sm" onclick="viewRangeHistory('month')">查看历史</button>
+                </div>
+            </div>
+            <div id="monthResult" class="latest-result">
+                <div class="empty-state">还没有近30天分析，点击"重新分析"开始</div>
+            </div>
+        </div>
+
+        <!-- 年度分析 -->
+        <div class="card dashboard-card">
+            <div class="dashboard-header">
+                <h3>📈 年度分析（全部）</h3>
+                <div class="dashboard-actions">
+                    <button class="btn btn-primary btn-sm" onclick="quickAnalyze('all')">重新分析</button>
+                    <button class="btn btn-outline btn-sm" onclick="viewRangeHistory('all')">查看历史</button>
+                </div>
+            </div>
+            <div id="allResult" class="latest-result">
+                <div class="empty-state">还没有年度分析，点击"重新分析"开始</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 日记列表 -->
+    <div id="diaryListTab" class="main-tab-content" style="display:none">
+        <div class="card">
+            <h2>日记列表</h2>
+            <input type="text" class="input" id="searchInput" placeholder="搜索日记内容或日期..." style="margin-bottom:20px">
+            <div id="diaryList">
+                <div class="empty-state">还没有日记，开始写第一篇吧</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 原手动分析区域（保留，用于单篇和自定义视角） -->
     <div class="card">
-        <h2>AI分析 <span class="badge">手动触发</span></h2>
+        <h2>自定义分析 <span class="badge">手动触发</span></h2>
         <div class="grid-2">
             <div>
                 <label>分析时间范围</label>
@@ -182,18 +265,8 @@
         </div>
         <div style="margin-top:20px">
             <button class="btn btn-primary" onclick="startAnalysis()">开始AI分析</button>
-            <button class="btn btn-outline" onclick="viewHistory()">查看历史分析</button>
         </div>
         <div id="analysisResult" style="display:none"></div>
-    </div>
-
-    <!-- 日记列表 -->
-    <div class="card">
-        <h2>日记列表</h2>
-        <input type="text" class="input" id="searchInput" placeholder="搜索日记内容或日期..." style="margin-bottom:20px">
-        <div id="diaryList">
-            <div class="empty-state">还没有日记，开始写第一篇吧</div>
-        </div>
     </div>
 
     <!-- AI配置模态框 -->
@@ -218,7 +291,21 @@
             <div class="grid-2" style="margin-bottom:16px">
                 <div>
                     <label>模型名称</label>
-                    <input type="text" class="input" id="modelName" placeholder="gpt-3.5-turbo" value="gpt-3.5-turbo">
+                    <select class="select" id="modelName">
+                        <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                        <option value="gpt-4">gpt-4</option>
+                        <option value="gpt-4-turbo">gpt-4-turbo</option>
+                        <option value="gpt-4o">gpt-4o</option>
+                        <option value="claude-3-haiku">claude-3-haiku</option>
+                        <option value="claude-3-sonnet">claude-3-sonnet</option>
+                        <option value="claude-3-opus">claude-3-opus</option>
+                        <option value="gemini-pro">gemini-pro</option>
+                        <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                        <option value="qwen-turbo">通义千问turbo</option>
+                        <option value="glm-4">智谱GLM4</option>
+                        <option value="custom">自定义其他模型(下方填写)</option>
+                    </select>
+                    <input type="text" class="input" id="customModel" placeholder="选择自定义时在这里填模型名" style="margin-top:8px;display:none;">
                 </div>
                 <div>
                     <label>温度值 (0-2)</label>
@@ -271,7 +358,7 @@
     <div id="historyModal" class="modal" style="display:none">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>历史分析记录</h2>
+                <h2 id="historyModalTitle">历史分析记录</h2>
                 <button class="modal-close" onclick="closeModal('historyModal')">×</button>
             </div>
             <div id="historyList"></div>
@@ -317,8 +404,10 @@ let config = JSON.parse(localStorage.getItem('aiConfig') || JSON.stringify({
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initTabs();
+    initMainTabs();
     initFileUpload();
     renderDiaryList();
+    renderDashboard();
     loadConfigToForm();
     
     // 监听自定义勾选框切换输入框
@@ -329,6 +418,18 @@ document.addEventListener('DOMContentLoaded', () => {
         })
     }
 });
+
+// 主标签页切换（分析看板/日记列表）
+function initMainTabs() {
+    document.querySelectorAll('[data-main-tab]').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('[data-main-tab]').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.main-tab-content').forEach(c => c.style.display = 'none');
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.mainTab + 'Tab').style.display = 'block';
+        });
+    });
+}
 
 // 主题切换
 function initTheme() {
@@ -346,10 +447,10 @@ function initTheme() {
 
 // 标签页切换
 function initTabs() {
-    document.querySelectorAll('.tab').forEach(tab => {
+    document.querySelectorAll('.tab:not([data-main-tab])').forEach(tab => {
         tab.addEventListener('click', () => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.tab:not([data-main-tab])').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content:not(.main-tab-content)').forEach(c => c.style.display = 'none');
             tab.classList.add('active');
             document.getElementById(tab.dataset.tab + 'Tab').style.display = 'block';
         });
@@ -471,9 +572,9 @@ function renderDiaryList() {
             <div class="diary-header"><span class="diary-date">📅${d.date}</span><span class="diary-source">${d.source}</span></div>
             <div class="diary-preview">${d.content}</div>
             <div class="diary-actions">
-                <button class="btn btn-outline" onclick="selectDiary(${d.id})">选中分析</button>
-                <button class="btn btn-outline" onclick="viewDiary(${d.id})">查看全文</button>
-                <button class="btn btn-danger" onclick="deleteDiary(${d.id})">删除</button>
+                <button class="btn btn-outline btn-sm" onclick="selectDiary(${d.id})">选中分析</button>
+                <button class="btn btn-outline btn-sm" onclick="viewDiary(${d.id})">查看全文</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteDiary(${d.id})">删除</button>
             </div>
         </div>`
     })
@@ -481,7 +582,7 @@ function renderDiaryList() {
 }
 document.getElementById('searchInput').oninput=renderDiaryList;
 
-function selectDiary(id){selectedDiaryId=id;document.getElementById('timeRange').value='single';alert('已选中');}
+function selectDiary(id){selectedDiaryId=id;document.getElementById('timeRange').value='single';alert('已选中该日记，可在下方自定义分析区域分析');}
 function viewDiary(id){
     let d=diaries.find(x=>x.id==id);
     alert(`日期:${d.date}\n${d.content}`)
@@ -504,7 +605,117 @@ function toggleSelectAll(){
     document.getElementById('customViewInput').style.display = customCb.checked?'block':'none';
 }
 
-// 【最终 多选视角分析函数】
+// 渲染分析看板
+function renderDashboard() {
+    const ranges = ['today', 'week', 'month', 'all'];
+    ranges.forEach(range => {
+        const latest = analysisHistory.filter(h => h.timeRange === range && h.timeRange !== 'single')[0];
+        const el = document.getElementById(range + 'Result');
+        if (latest) {
+            el.innerHTML = `
+                <div class="analysis-meta">最后更新：${latest.createdAt} | 共${latest.diaryCount}篇日记</div>
+                <div>${marked.parse(latest.result.slice(0, 500) + (latest.result.length > 500 ? '...' : ''))}</div>
+                <div style="margin-top:12px;color:var(--text-secondary);font-size:14px">点击"查看历史"查看完整内容和所有历史版本</div>
+            `;
+        } else {
+            el.innerHTML = '<div class="empty-state">还没有分析记录，点击"重新分析"开始</div>';
+        }
+    });
+}
+
+// 看板一键快速分析
+async function quickAnalyze(range) {
+    if (!config.apiKey) {
+        alert('请先右上角⚙配置AI密钥');openModal('configModal');return;
+    }
+
+    // 默认选中所有预设视角
+    const defaultViews = ['default', 'value', 'reverse', 'second', 'cbt', 'mbti'];
+    const viewMap = {
+        default:"默认洞察",
+        value:"价值澄清",
+        reverse:"逆向思考",
+        second:"二阶思考",
+        cbt:"CBT疗法",
+        mbti:"MBTI分析"
+    };
+    const viewNames = defaultViews.map(k => viewMap[k]).join('、');
+
+    // 筛选日记
+    let target=[];
+    const now=new Date();
+    switch(range){
+        case 'today':
+            let td=now.toLocaleDateString();
+            target=diaries.filter(d=>d.date===td);break;
+        case 'week':
+            let wk=new Date(now.getTime()-7*86400*1000);
+            target=diaries.filter(d=>new Date(d.date)>=wk);break;
+        case 'month':
+            let m=new Date(now.getTime()-30*86400*1000);
+            target=diaries.filter(d=>new Date(d.date)>=m);break;
+        case 'all':target=[...diaries];break;
+    }
+    if(!target.length){alert('所选范围无日记');return;}
+
+    let diaryTxt = target.map(d=>`【${d.date}】\n${d.content}`).join('\n\n');
+    const el = document.getElementById(range + 'Result');
+    el.innerHTML = '<div class="loading">AI分析请求中...</div>';
+
+    try{
+        let prompt = config.analysisPrompt.replace('{视角}', viewNames).replace('{字数}', config.maxTokens * 0.75).replace('{日记内容}', diaryTxt);
+        let aiRes = await callAI(prompt);
+        
+        // 保存历史记录
+        const hisItem = {
+            id:Date.now(),
+            view: viewNames,
+            timeRange: range,
+            diaryCount: target.length,
+            result: aiRes,
+            createdAt: new Date().toLocaleString()
+        }
+        analysisHistory.unshift(hisItem);
+        localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
+
+        // 更新看板
+        renderDashboard();
+        alert(`${getRangeName(range)}分析完成！`);
+    }catch(e){
+        el.innerHTML = `<div style="color:var(--danger);padding:20px;text-align:center">失败：${e.message}</div>`;
+    }
+}
+
+// 查看某个时间范围的历史记录
+function viewRangeHistory(range) {
+    const rangeHistory = analysisHistory.filter(h => h.timeRange === range);
+    const wrap = document.getElementById('historyList');
+    document.getElementById('historyModalTitle').textContent = `${getRangeName(range)} 历史分析记录`;
+    
+    if(!rangeHistory.length){
+        wrap.innerHTML = '<div class="empty-state">暂无历史记录</div>';
+        openModal('historyModal');
+        return;
+    }
+
+    let html='';
+    rangeHistory.forEach(item=>{
+        html+=`
+        <div class="diary-item">
+            <div class="diary-header"><span class="diary-date">📊${item.view}</span><span class="diary-source">${item.createdAt}</span></div>
+            <div style="color:var(--text-secondary)">共${item.diaryCount}篇日记</div>
+            <div class="diary-preview">${item.result}</div>
+            <div class="diary-actions">
+                <button class="btn btn-outline btn-sm" onclick="viewHistoryDetail(${item.id})">查看完整内容</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteHistory(${item.id})">删除</button>
+            </div>
+        </div>`
+    })
+    wrap.innerHTML=html;
+    openModal('historyModal');
+}
+
+// 【自定义分析函数】
 async function startAnalysis() {
     if (!config.apiKey) {
         alert('请先右上角⚙配置AI密钥');openModal('configModal');return;
@@ -553,6 +764,7 @@ async function startAnalysis() {
         const allViewText = viewNames.join('、');
         let prompt = config.analysisPrompt.replace('{视角}',allViewText).replace('{字数}',config.maxTokens*0.75).replace('{日记内容}',diaryTxt);
         let aiRes = await callAI(prompt);
+        
         // 保存历史记录
         const hisItem = {
             id:Date.now(),
@@ -564,6 +776,11 @@ async function startAnalysis() {
         }
         analysisHistory.unshift(hisItem);
         localStorage.setItem('analysisHistory',JSON.stringify(analysisHistory));
+
+        // 如果是时间范围分析，同步更新看板
+        if(range !== 'single'){
+            renderDashboard();
+        }
 
         resWrap.innerHTML = `
         <div class="analysis-result">
@@ -580,7 +797,7 @@ async function startAnalysis() {
     }
 }
 function getRangeName(s){
-    const map={single:'单篇',today:'今日',week:'近7天',month:'近30天',all:'全部'}
+    const map={single:'单篇日记',today:'今日',week:'近7天',month:'近30天',all:'年度（全部）'}
     return map[s]
 }
 
@@ -621,25 +838,7 @@ function exportResult(){
     a.click();URL.revokeObjectURL(a.href);
 }
 
-// 历史记录
-function viewHistory(){
-    const wrap=document.getElementById('historyList');
-    if(!analysisHistory.length){wrap.innerHTML='<div class="empty-state">暂无历史</div>';openModal('historyModal');return;}
-    let html='';
-    analysisHistory.forEach(item=>{
-        html+=`
-        <div class="diary-item">
-            <div class="diary-header"><span class="diary-date">📊${item.view}</span><span class="diary-source">${item.createdAt}</span></div>
-            <div style="color:var(--text-secondary)">范围：${getRangeName(item.timeRange)}｜${item.diaryCount}篇</div>
-            <div class="diary-preview">${item.result}</div>
-            <div class="diary-actions">
-                <button class="btn btn-outline" onclick="viewHistoryDetail(${item.id})">查看详情</button>
-                <button class="btn btn-danger" onclick="deleteHistory(${item.id})">删除</button>
-            </div>
-        </div>`
-    })
-    wrap.innerHTML=html;openModal('historyModal');
-}
+// 历史记录详情
 function viewHistoryDetail(id){
     let item = analysisHistory.find(x=>x.id===id);
     const resWrap = document.getElementById('analysisResult');
@@ -649,14 +848,29 @@ function viewHistoryDetail(id){
         <h4>📊${item.view}（历史记录）</h4>
         <div class="analysis-meta">范围：${getRangeName(item.timeRange)}｜${item.diaryCount}篇｜${item.createdAt}</div>
         <div>${marked.parse(item.result)}</div>
+        <div style="margin-top:20px;display:flex;gap:12px">
+            <button class="btn btn-outline" onclick="copyResult()">复制结果</button>
+            <button class="btn btn-outline" onclick="exportResult()">导出md</button>
+        </div>
     </div>`
     closeModal('historyModal');
+    // 切换到自定义分析标签页显示结果
+    document.querySelector('[data-main-tab="dashboard"]').click();
 }
 function deleteHistory(id){
     if(!confirm('删除本条记录？'))return;
     analysisHistory=analysisHistory.filter(x=>x.id!==id);
     localStorage.setItem('analysisHistory',JSON.stringify(analysisHistory));
-    viewHistory();
+    // 刷新当前打开的历史模态框
+    const title = document.getElementById('historyModalTitle').textContent;
+    if(title.includes('今日')) viewRangeHistory('today');
+    else if(title.includes('近7天')) viewRangeHistory('week');
+    else if(title.includes('近30天')) viewRangeHistory('month');
+    else if(title.includes('年度')) viewRangeHistory('all');
+    else {
+        closeModal('historyModal');
+        renderDashboard();
+    }
 }
 
 // 弹窗
@@ -668,17 +882,46 @@ document.getElementById('configBtn').onclick=()=>{loadConfigToForm();openModal('
 function loadConfigToForm(){
     document.getElementById('apiKey').value=config.apiKey;
     document.getElementById('apiBase').value=config.apiBase;
-    document.getElementById('modelName').value=config.modelName;
     document.getElementById('temperature').value=config.temperature;
     document.getElementById('maxTokens').value=config.maxTokens;
     document.getElementById('analysisPrompt').value=config.analysisPrompt;
     document.getElementById('parsePrompt').value=config.parsePrompt;
+
+    // 模型下拉选择逻辑
+    const modelSel = document.getElementById('modelName');
+    const customModelInp = document.getElementById('customModel');
+    
+    // 先尝试匹配预设模型
+    let found = false;
+    for(let i=0;i<modelSel.options.length;i++){
+        if(modelSel.options[i].value === config.modelName){
+            modelSel.selectedIndex = i;
+            customModelInp.style.display = 'none';
+            found = true;
+            break;
+        }
+    }
+    // 没找到就是自定义模型
+    if(!found){
+        modelSel.value = 'custom';
+        customModelInp.style.display = 'block';
+        customModelInp.value = config.modelName;
+    }
+
+    // 下拉切换监听
+    modelSel.onchange = function(){
+        if(this.value === 'custom'){
+            customModelInp.style.display = 'block';
+        }else{
+            customModelInp.style.display = 'none';
+        }
+    }
 }
 function saveConfig(){
     config={
         apiKey:document.getElementById('apiKey').value.trim(),
         apiBase:document.getElementById('apiBase').value.trim(),
-        modelName:document.getElementById('modelName').value.trim(),
+        modelName: document.getElementById('modelName').value==='custom' ? document.getElementById('customModel').value.trim() : document.getElementById('modelName').value.trim(),
         temperature:document.getElementById('temperature').value,
         maxTokens:document.getElementById('maxTokens').value,
         analysisPrompt:document.getElementById('analysisPrompt').value,
