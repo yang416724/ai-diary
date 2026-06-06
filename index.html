@@ -7,28 +7,33 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+        /* 真正马卡龙粉绿配色（粉色为主，绿色为辅） */
         :root{
-            --bg:#FDF2F8;          /*马卡龙樱花粉背景（超浅不刺眼）*/
-            --card:#FEF7FA;        /*奶白卡片，和背景有柔和层次感*/
-            --text:#5A4B5A;        /*深灰粉正文，温柔不扎眼*/
-            --text-secondary:#9A8B9A;/*浅灰粉次要文字*/
-            --border:#E2D5E2;      /*浅粉边框，带一丢丢绿调*/
-            --primary:#F9A8D4;     /*主色：马卡龙樱花粉（按钮、高亮）*/
-            --primary-hover:#F472B6;/*悬浮加深樱花粉*/
-            --danger:#F87171;      /*马卡龙豆沙红（删除按钮）*/
-            --success:#6EE7B7;     /*马卡龙薄荷绿（成功提示）*/
-            --shadow:0 2px 8px 0 rgba(249, 168, 212, 0.15) /*淡粉柔阴影*/
+            --bg:#F8FDF9;          /* 超浅薄荷绿背景（比纯粉更护眼） */
+            --card:#FEF7FA;        /* 奶白卡片 */
+            --text:#5A4B5A;        /* 深灰粉正文 */
+            --text-secondary:#9A8B9A;/* 浅灰粉次要文字 */
+            --border:#D5E8DC;      /* 薄荷绿边框（粉绿平衡关键） */
+            --primary:#F9A8D4;     /* 主色：马卡龙樱花粉 */
+            --primary-hover:#F472B6;/* 悬浮加深樱花粉 */
+            --secondary:#86E3CE;   /* 辅助色：马卡龙薄荷绿 */
+            --secondary-hover:#6DD5BE;/* 悬浮加深薄荷绿 */
+            --danger:#F87171;      /* 马卡龙豆沙红 */
+            --success:#86E3CE;     /* 成功薄荷绿 */
+            --shadow:0 2px 8px 0 rgba(249, 168, 212, 0.12) /* 淡粉柔阴影 */
         }
         .dark{
-            --bg:#2D1F2D;          /*暗调粉紫背景*/
-            --card:#3D2F3D;        /*深一点的卡片色*/
-            --text:#F0E6F0;        /*奶白文字*/
-            --text-secondary:#C0B0C0;/*浅灰粉次要文字*/
-            --border:#5D4F5D;      /*深粉边框*/
-            --primary:#FBCFE8;     /*亮马卡龙樱花粉*/
-            --primary-hover:#F9A8D4;/*悬浮色*/
-            --danger:#FCA5A5;      /*亮马卡龙红*/
-            --success:#A7F3D0;     /*亮马卡龙薄荷绿*/
+            --bg:#2A3330;          /* 暗调薄荷绿背景 */
+            --card:#353F3C;        /* 深一点的卡片色 */
+            --text:#F0E6F0;        /* 奶白文字 */
+            --text-secondary:#B0C0B8;/* 浅灰绿次要文字 */
+            --border:#4A5A54;      /* 深薄荷绿边框 */
+            --primary:#FBCFE8;     /* 亮马卡龙樱花粉 */
+            --primary-hover:#F9A8D4;/* 悬浮色 */
+            --secondary:#A7F3D0;   /* 亮马卡龙薄荷绿 */
+            --secondary-hover:#86E3CE;/* 悬浮色 */
+            --danger:#FCA5A5;      /* 亮马卡龙红 */
+            --success:#A7F3D0;     /* 亮薄荷绿 */
             --shadow:0 2px 8px 0 rgba(0, 0, 0, 0.3)
         }
 
@@ -58,6 +63,8 @@
         .btn{padding:12px 24px;border:none;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s}
         .btn-primary{background:var(--primary);color:white}
         .btn-primary:hover{background:var(--primary-hover)}
+        .btn-secondary{background:var(--secondary);color:white}
+        .btn-secondary:hover{background:var(--secondary-hover)}
         .btn-danger{background:var(--danger);color:white}
         .btn-success{background:var(--success);color:white}
         .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
@@ -83,7 +90,7 @@
         .diary-preview{color:var(--text-secondary);line-height:1.5;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
         .diary-actions{display:flex;gap:8px;margin-top:12px}
         .diary-block{margin-bottom:12px;padding:12px;background:var(--bg);border-radius:8px}
-        .diary-block-title{font-weight:500;color:var(--primary);margin-bottom:6px}
+        .diary-block-title{font-weight:500;color:var(--secondary);margin-bottom:6px} /* 区块标题用薄荷绿 */
         .diary-block-content{line-height:1.5}
 
         .analysis-result{background:var(--bg);border-radius:12px;padding:20px;margin-top:20px;line-height:1.8}
@@ -100,7 +107,7 @@
         .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
         .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text)}
 
-        .badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:12px;background:var(--primary);color:white;margin-left:8px}
+        .badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:12px;background:var(--secondary);color:white;margin-left:8px} /* 标签用薄荷绿 */
 
         /* 分析看板样式 */
         .dashboard-card{margin-bottom:30px}
@@ -111,7 +118,7 @@
         /* 目标输入框样式 */
         .goal-input-group{margin-bottom:16px}
         .goal-input-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-        .goal-input-label{font-weight:500}
+        .goal-input-label{font-weight:500;color:var(--primary)} /* 目标标题用粉色 */
         .goal-no-record{display:flex;align-items:center;gap:6px;cursor:pointer}
         .goal-textarea{min-height:60px}
 
@@ -161,7 +168,7 @@
             <textarea class="input textarea" id="freeDiaryInput" style="min-height:300px" placeholder="随便写点什么吧，不用有任何格式限制..."></textarea>
             <div style="margin-top:20px;display:flex;gap:12px">
                 <button class="btn btn-outline" onclick="saveFreeDiary(false)">仅保存原始文本</button>
-                <button class="btn btn-primary" onclick="saveFreeDiary(true)">保存并AI智能分区</button>
+                <button class="btn btn-secondary" onclick="saveFreeDiary(true)">保存并AI智能分区</button>
             </div>
         </div>
     </div>
@@ -314,7 +321,7 @@
             </div>
             <div style="margin-top:20px;display:flex;gap:12px">
                 <button class="btn btn-outline" onclick="addGoalItem()">+ 添加新目标</button>
-                <button class="btn btn-primary" onclick="saveGoals()">保存目标</button>
+                <button class="btn btn-secondary" onclick="saveGoals()">保存目标</button>
             </div>
         </div>
     </div>
@@ -412,7 +419,7 @@
 
             <div style="display:flex;gap:12px;justify-content:flex-end">
                 <button class="btn btn-outline" onclick="resetPrompts()">恢复默认提示词</button>
-                <button class="btn btn-primary" onclick="saveConfig()">保存配置</button>
+                <button class="btn btn-secondary" onclick="saveConfig()">保存配置</button>
             </div>
         </div>
     </div>
@@ -786,8 +793,8 @@ async function saveFreeDiary(needPartition) {
         
         try {
             // 显示加载状态
-            document.querySelector('#freeEntryTab .btn-primary').disabled = true;
-            document.querySelector('#freeEntryTab .btn-primary').textContent = 'AI分区中...';
+            document.querySelector('#freeEntryTab .btn-secondary').disabled = true;
+            document.querySelector('#freeEntryTab .btn-secondary').textContent = 'AI分区中...';
             
             // 调用AI分区
             const prompt = config.partitionPrompt
@@ -828,8 +835,8 @@ async function saveFreeDiary(needPartition) {
     
     // 清空输入框
     document.getElementById('freeDiaryInput').value = '';
-    document.querySelector('#freeEntryTab .btn-primary').disabled = false;
-    document.querySelector('#freeEntryTab .btn-primary').textContent = '保存并AI智能分区';
+    document.querySelector('#freeEntryTab .btn-secondary').disabled = false;
+    document.querySelector('#freeEntryTab .btn-secondary').textContent = '保存并AI智能分区';
     
     alert('日记保存成功！');
 }
@@ -1289,16 +1296,3 @@ function saveConfig(){
 }
 function resetPrompts(){
     if(!confirm('恢复默认提示词？现有修改丢失'))return;
-    document.getElementById('analysisPrompt').value=`【AI角色】
-我是一名在福州读大学的女生，你是我的专属私人日记洞察师，深度了解我的所有自定义长期目标。你精通Flomo全6大洞察视角，客观中立，只讲真话，不做道德评判。我是坚定的女权主义者，反对平权，支持推翻父权制，成为强大女性（包括身体强壮，心理强大）。
-
-【核心规则（必须严格遵守）】
-1. 绝对禁止鸡汤、空洞安慰、空泛大道理和晦涩的心理学术语
-2. 所有分析必须紧扣我当天的日记内容，不凭空臆测
-3. 所有行动建议必须是我当天/次日就能完成的小事，单条不超过20字
-4. 严格按照下面的固定模块和顺序输出，不要增减大标题
-5. 末尾必须生成3-5个关键词标签，方便我检索和长期记忆存档
-
-【分析维度（完整覆盖Flomo6大视角+专属目标追踪）】
-1. 【默认洞察】一句话概括当日核心内容+提炼3件最关键的事
-2. 【价值澄清】从今天的言行
