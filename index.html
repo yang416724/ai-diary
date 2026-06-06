@@ -147,22 +147,59 @@
                     <option value="all">全部日记</option>
                 </select>
             </div>
+             <!-- 分析区域 -->
+    <div class="card">
+        <h2>AI分析 <span class="badge">手动触发</span></h2>
+        <div class="grid-2">
             <div>
-                <label>分析视角</label>
-                <select class="select" id="analysisView">
-                    <option value="emotion">情绪分析</option>
-                    <option value="growth">成长与反思</option>
-                    <option value="relationship">人际关系</option>
-                    <option value="productivity">生产力与时间</option>
-                    <option value="health">健康与生活</option>
-                    <option value="summary">内容总结</option>
-                    <option value="custom">自定义视角</option>
+                <label>分析时间范围</label>
+                <select class="select" id="timeRange">
+                    <option value="single">当前选中日记</option>
+                    <option value="today">今日日记</option>
+                    <option value="week">近7天日记</option>
+                    <option value="month">近30天日记</option>
+                    <option value="all">全部日记</option>
                 </select>
+            </div>
+            <div>
+                <label>分析视角（可多选，支持全选）</label>
+                <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()"> 全选
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                        <input type="checkbox" name="view" value="default"> 默认洞察
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                        <input type="checkbox" name="view" value="value"> 价值澄清
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                        <input type="checkbox" name="view" value="reverse"> 逆向思考
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                        <input type="checkbox" name="view" value="second"> 二阶思考
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                        <input type="checkbox" name="view" value="cbt"> CBT疗法
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                        <input type="checkbox" name="view" value="mbti"> MBTI分析
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                        <input type="checkbox" name="view" value="custom"> 自定义视角
+                    </label>
+                </div>
             </div>
         </div>
         <div id="customViewInput" style="margin-top:12px;display:none">
-            <input type="text" class="input" id="customView" placeholder="输入你想要的分析视角，例如：金钱消费分析、梦境分析">
+            <input type="text" class="input" id="customView" placeholder="输入你想要的额外分析视角，例如：金钱消费分析、梦境分析">
         </div>
+        <div style="margin-top:20px">
+            <button class="btn btn-primary" onclick="startAnalysis()">开始AI分析</button>
+            <button class="btn btn-outline" onclick="viewHistory()">查看历史分析</button>
+        </div>
+        <div id="analysisResult" style="display:none"></div>
+    </div>
         <div style="margin-top:20px">
             <button class="btn btn-primary" onclick="startAnalysis()">开始AI分析</button>
             <button class="btn btn-outline" onclick="viewHistory()">查看历史分析</button>
@@ -340,47 +377,143 @@ function initTabs() {
 function initFileUpload() {
     const dropBox = document.getElementById('dropBox');
     const fileInput = document.getElementById('fileInput');
+// AI分析
+async function startAnalysis() {
+    if (!config.apiKey) {
+        alert('请先点击右上角⚙️配置AI接口信息！');
+        openModal('configModal');
+        return;
+    }
 
-    fileInput.addEventListener('change', (e) => {
-        readFiles(e.target.files);
-    });
+    const timeRange = document.getElementById('timeRange').value;
+    
+    // 获取所有选中的分析视角
+    const checkedViews = Array.from(document.querySelectorAll('input[name="view"]:checked')).map(cb => cb.value);
+    if (checkedViews.length === 0) {
+        alert('请至少选择一个分析视角！');
+        return;
+    }
 
-    dropBox.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropBox.classList.add('active');
-    });
+    // 视角名称映射（完全对应flomo）
+    const viewMap = {
+        default: '默认洞察',
+        value: '价值澄清',
+        reverse: '逆向思考',
+        second: '二阶思考',
+        cbt: 'CBT疗法',
+        mbti: 'MBTI分析',
+        custom: document.getElementById('customView').value
+    };
 
-    dropBox.addEventListener('dragleave', () => {
-        dropBox.classList.remove('active');
-    });
+    // 处理自定义视角
+    let viewNames = checkedViews.map(v => viewMap[v]);
+    if (checkedViews.includes('custom') && !viewMap.custom) {
+        alert('请输入自定义分析视角内容！');
+        return;
+    }
 
-    dropBox.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropBox.classList.remove('active');
-        readFiles(e.dataTransfer.files);
-    });
+    // 自定义视角显示切换
+    document.getElementById('customViewInput').style.display = checkedViews.includes('custom') ? 'block' : 'none';
+
+    // 获取对应时间范围的日记
+    let targetDiaries = [];
+    const now = new Date();
+    
+    switch (timeRange) {
+        case 'single':
+            if (!selectedDiaryId) {
+                alert('请先在日记列表中点击"选中分析"选择一篇日记！');
+                return;
+            }
+            targetDiaries = diaries.filter(d => d.id === selectedDiaryId);
+            break;
+        case 'today':
+            const today = now.toLocaleDateString();
+            targetDiaries = diaries.filter(d => d.date === today);
+            break;
+        case 'week':
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            targetDiaries = diaries.filter(d => new Date(d.date) >= weekAgo);
+            break;
+        case 'month':
+            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            targetDiaries = diaries.filter(d => new Date(d.date) >= monthAgo);
+            break;
+        case 'all':
+            targetDiaries = [...diaries];
+            break;
+    }
+
+    if (targetDiaries.length === 0) {
+        alert('该时间范围内没有日记！');
+        return;
+    }
+
+    // 拼接日记内容
+    let diaryContent = targetDiaries.map(d => `【${d.date}】\n${d.content}`).join('\n\n');
+    
+    // 显示加载状态
+    const resultEl = document.getElementById('analysisResult');
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '<div class="loading">正在分析中，请稍候...</div>';
+
+    try {
+        // 拼接多视角提示词
+        const viewsText = viewNames.join('、');
+        const prompt = config.analysisPrompt
+            .replace('{视角}', viewsText)
+            .replace('{字数}', config.maxTokens * 0.75)
+            .replace('{日记内容}', diaryContent);
+
+        const result = await callAI(prompt);
+        
+        // 保存分析历史（✅ 确认：分析结果会永久保存到本地）
+        const historyItem = {
+            id: Date.now(),
+            view: viewsText, // 保存所有选中的视角名称
+            timeRange: timeRange,
+            diaryCount: targetDiaries.length,
+            result: result,
+            createdAt: new Date().toLocaleString()
+        };
+        analysisHistory.unshift(historyItem);
+        localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
+
+        // 显示结果
+        resultEl.innerHTML = `
+            <div class="analysis-result">
+                <h4>📊 ${viewsText} 分析结果</h4>
+                <div class="analysis-meta">分析范围: ${getTimeRangeText(timeRange)} | 共${targetDiaries.length}篇日记 | ${historyItem.createdAt}</div>
+                <div>${marked.parse(result)}</div>
+                <div style="margin-top:20px;display:flex;gap:12px">
+                    <button class="btn btn-outline" onclick="copyResult()">复制结果</button>
+                    <button class="btn btn-outline" onclick="exportResult()">导出为Markdown</button>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        resultEl.innerHTML = `<div style="color:var(--danger);text-align:center;padding:20px">分析失败: ${err.message}</div>`;
+    }
 }
 
-function readFiles(files) {
-    Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const content = e.target.result;
-            if (file.name.endsWith('.json')) {
-                try {
-                    const data = JSON.parse(content);
-                    if (Array.isArray(data)) {
-                        data.forEach(item => {
-                            addDiaryItem(item.date || new Date().toLocaleDateString(), item.content || item, '文件导入-' + file.name);
-                        });
-                    }
-                } catch (err) {
-                    // 如果JSON解析失败，当作纯文本处理
-                    await parseAndAddMultiDiary(content, '文件导入-' + file.name);
-                }
-            } else {
-                await parseAndAddMultiDiary(content, '文件导入-' + file.name);
-            }
+// 新增：全选/取消全选视角功能
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const allViews = document.querySelectorAll('input[name="view"]');
+    allViews.forEach(cb => cb.checked = selectAll.checked);
+    // 同步显示自定义视角输入框
+    document.getElementById('customViewInput').style.display = document.querySelector('input[value="custom"]').checked ? 'block' : 'none';
+}
+
+// 新增：监听自定义视角复选框变化
+document.addEventListener('DOMContentLoaded', () => {
+    // ... 保留原来的初始化代码 ...
+    
+    // 监听自定义视角复选框
+    document.querySelector('input[value="custom"]').addEventListener('change', (e) => {
+        document.getElementById('customViewInput').style.display = e.target.checked ? 'block' : 'none';
+    });
+});
         };
         reader.readAsText(file);
     });
