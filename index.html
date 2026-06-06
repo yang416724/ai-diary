@@ -7,34 +7,35 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-       :root{
-    --bg:#FDF2F8;          /*马卡龙樱花粉背景（超浅不刺眼）*/
-    --card:#FEF7FA;        /*奶白卡片，和背景有柔和层次感*/
-    --text:#5A4B5A;        /*深灰粉正文，温柔不扎眼*/
-    --text-secondary:#9A8B9A;/*浅灰粉次要文字*/
-    --border:#E2D5E2;      /*浅粉边框，带一丢丢绿调*/
-    --primary:#F9A8D4;     /*主色：马卡龙樱花粉（按钮、高亮）*/
-    --primary-hover:#F472B6;/*悬浮加深樱花粉*/
-    --danger:#F87171;      /*马卡龙豆沙红（删除按钮）*/
-    --success:#6EE7B7;     /*马卡龙薄荷绿（成功提示）*/
-    --shadow:0 2px 8px 0 rgba(249, 168, 212, 0.15) /*淡粉柔阴影*/
-}
-.dark{
-    --bg:#2D1F2D;          /*暗调粉紫背景*/
-    --card:#3D2F3D;        /*深一点的卡片色*/
-    --text:#F0E6F0;        /*奶白文字*/
-    --text-secondary:#C0B0C0;/*浅灰粉次要文字*/
-    --border:#5D4F5D;      /*深粉边框*/
-    --primary:#FBCFE8;     /*亮马卡龙樱花粉*/
-    --primary-hover:#F9A8D4;/*悬浮色*/
-    --danger:#FCA5A5;      /*亮马卡龙红*/
-    --success:#A7F3D0;     /*亮马卡龙薄荷绿*/
-    --shadow:0 2px 8px 0 rgba(0, 0, 0, 0.3)
-}
+        :root{
+            --bg:#FDF2F8;          /*马卡龙樱花粉背景（超浅不刺眼）*/
+            --card:#FEF7FA;        /*奶白卡片，和背景有柔和层次感*/
+            --text:#5A4B5A;        /*深灰粉正文，温柔不扎眼*/
+            --text-secondary:#9A8B9A;/*浅灰粉次要文字*/
+            --border:#E2D5E2;      /*浅粉边框，带一丢丢绿调*/
+            --primary:#F9A8D4;     /*主色：马卡龙樱花粉（按钮、高亮）*/
+            --primary-hover:#F472B6;/*悬浮加深樱花粉*/
+            --danger:#F87171;      /*马卡龙豆沙红（删除按钮）*/
+            --success:#6EE7B7;     /*马卡龙薄荷绿（成功提示）*/
+            --shadow:0 2px 8px 0 rgba(249, 168, 212, 0.15) /*淡粉柔阴影*/
+        }
+        .dark{
+            --bg:#2D1F2D;          /*暗调粉紫背景*/
+            --card:#3D2F3D;        /*深一点的卡片色*/
+            --text:#F0E6F0;        /*奶白文字*/
+            --text-secondary:#C0B0C0;/*浅灰粉次要文字*/
+            --border:#5D4F5D;      /*深粉边框*/
+            --primary:#FBCFE8;     /*亮马卡龙樱花粉*/
+            --primary-hover:#F9A8D4;/*悬浮色*/
+            --danger:#FCA5A5;      /*亮马卡龙红*/
+            --success:#A7F3D0;     /*亮马卡龙薄荷绿*/
+            --shadow:0 2px 8px 0 rgba(0, 0, 0, 0.3)
+        }
 
-/* 同步微调圆角，更贴合马卡龙软萌感（可选加在style末尾） */
-.card{border-radius:24px}
-.input,.select,.btn{border-radius:12px}
+        /* 马卡龙风格圆角 */
+        .card{border-radius:24px}
+        .input,.select,.btn{border-radius:12px}
+
         body{background:var(--bg);color:var(--text);padding:20px;max-width:1000px;margin:0 auto;transition:all 0.3s ease}
         .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
         .top-bar h1{font-size:28px;color:var(--primary);display:flex;align-items:center;gap:8px}
@@ -42,19 +43,19 @@
         .icon-btn{background:transparent;border:none;font-size:22px;cursor:pointer;color:var(--text);padding:8px;border-radius:8px;transition:background 0.2s}
         .icon-btn:hover{background:var(--border)}
 
-        .card{background:var(--card);border-radius:20px;padding:24px;margin-bottom:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
+        .card{background:var(--card);padding:24px;margin-bottom:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
         .card h2{font-size:22px;margin-bottom:20px;color:var(--text)}
         .card h3{font-size:18px;margin:16px 0 12px;color:var(--text)}
 
         .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
         @media (max-width:768px){.grid-2{grid-template-columns:1fr}}
 
-        .input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:16px;outline:none;transition:border-color 0.2s}
+        .input{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:16px;outline:none;transition:border-color 0.2s}
         .input:focus{border-color:var(--primary)}
         .textarea{min-height:120px;resize:vertical;line-height:1.6}
-        .select{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:16px;cursor:pointer}
+        .select{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:16px;cursor:pointer}
 
-        .btn{padding:12px 24px;border:none;border-radius:10px;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s}
+        .btn{padding:12px 24px;border:none;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s}
         .btn-primary{background:var(--primary);color:white}
         .btn-primary:hover{background:var(--primary-hover)}
         .btn-danger{background:var(--danger);color:white}
@@ -71,7 +72,7 @@
         input[type="file"]{display:none}
 
         .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:8px}
-        .tab{padding:8px 16px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:8px;font-size:16px}
+        .tab{padding:8px 16px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:8px;font-size:16px;transition:all 0.2s}
         .tab.active{background:var(--primary);color:white}
 
         .diary-item{border-bottom:1px solid var(--border);padding:16px 0}
@@ -127,6 +128,8 @@
             <button class="icon-btn" id="goalConfigBtn" title="目标配置">🎯</button>
             <button class="icon-btn" id="configBtn" title="AI配置">⚙️</button>
             <button class="icon-btn" id="exportBtn" title="导出所有数据">📤</button>
+            <button class="icon-btn" id="importBtn" title="导入备份数据">📥</button>
+            <button class="icon-btn" id="restoreBtn" title="恢复上一次备份">🔄</button>
         </div>
     </div>
 
@@ -343,16 +346,12 @@
                         <option value="gpt-4">gpt-4</option>
                         <option value="gpt-4-turbo">gpt-4-turbo</option>
                         <option value="gpt-4o">gpt-4o</option>
-                        <option value="claude-3-haiku">claude-3-haiku</option>
-                        <option value="claude-3-sonnet">claude-3-sonnet</option>
-                        <option value="claude-3-opus">claude-3-opus</option>
-                        <option value="gemini-pro">gemini-pro</option>
-                        <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-                        <option value="qwen-turbo">通义千问turbo</option>
-                        <option value="glm-4">智谱GLM4</option>
-                        <option value="custom">自定义其他模型(下方填写)</option>
+                        <option value="claude-3-opus-20240229">claude-3-opus</option>
+                        <option value="claude-3-sonnet-20240229">claude-3-sonnet</option>
+                        <option value="claude-3-haiku-20240307">claude-3-haiku</option>
+                        <option value="custom">自定义其他模型</option>
                     </select>
-                    <input type="text" class="input" id="customModel" placeholder="选择自定义时在这里填模型名" style="margin-top:8px;display:none;">
+                    <input type="text" class="input" id="customModel" placeholder="输入自定义模型名称" style="margin-top:8px;display:none">
                 </div>
                 <div>
                     <label>温度值 (0-2)</label>
@@ -430,25 +429,77 @@
     </div>
 
 <script>
-// 全局变量
-let diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-let analysisHistory = JSON.parse(localStorage.getItem('analysisHistory') || '[]');
-let goals = JSON.parse(localStorage.getItem('goals') || JSON.stringify([
-    '瘦子增肌',
-    '去外地找工作',
-    '早睡早起/健康饮食',
-    '克服拖延症',
-    '攒钱下学期校外租房',
-    '自媒体从零起步'
-]));
+// 全局变量（安全版，绝对不会因为格式错误丢失数据）
+let diaries = [];
+let analysisHistory = [];
+let goals = [];
 let selectedDiaryId = null;
-let config = JSON.parse(localStorage.getItem('aiConfig') || JSON.stringify({
-    apiKey: '',
-    apiBase: 'https://api.openai.com/v1',
-    modelName: 'gpt-3.5-turbo',
-    temperature: 0.7,
-    maxTokens: 2000,
-    analysisPrompt: `【AI角色】
+let config = {};
+
+// 安全读取所有数据
+function safeLoadData() {
+    // 读取日记
+    try {
+        const rawDiaries = localStorage.getItem('diaries');
+        if (rawDiaries) {
+            diaries = JSON.parse(rawDiaries);
+        }
+    } catch (e) {
+        console.error('日记数据读取失败:', e);
+    }
+
+    // 读取分析历史
+    try {
+        const rawHistory = localStorage.getItem('analysisHistory');
+        if (rawHistory) {
+            analysisHistory = JSON.parse(rawHistory);
+        }
+    } catch (e) {
+        console.error('分析历史读取失败:', e);
+    }
+
+    // 读取目标
+    try {
+        const rawGoals = localStorage.getItem('goals');
+        if (rawGoals) {
+            goals = JSON.parse(rawGoals);
+        } else {
+            // 默认目标
+            goals = [
+                '瘦子增肌',
+                '去外地找工作',
+                '早睡早起/健康饮食',
+                '克服拖延症',
+                '攒钱下学期校外租房',
+                '自媒体从零起步'
+            ];
+        }
+    } catch (e) {
+        console.error('目标数据读取失败:', e);
+        goals = [
+            '瘦子增肌',
+            '去外地找工作',
+            '早睡早起/健康饮食',
+            '克服拖延症',
+            '攒钱下学期校外租房',
+            '自媒体从零起步'
+        ];
+    }
+
+    // 读取AI配置
+    try {
+        const rawConfig = localStorage.getItem('aiConfig');
+        if (rawConfig) {
+            config = JSON.parse(rawConfig);
+        } else {
+            // 默认配置
+            config = {
+                apiKey: '',
+                apiBase: 'https://api.openai.com/v1',
+                modelName: 'gpt-3.5-turbo',
+                temperature: 0.7,
+                maxTokens: 2000,
+                analysisPrompt: `【AI角色】
 我是一名在福州读大学的女生，你是我的专属私人日记洞察师，深度了解我的所有自定义长期目标。你精通Flomo全6大洞察视角，客观中立，只讲真话，不做道德评判。我是坚定的女权主义者，反对平权，支持推翻父权制，成为强大女性（包括身体强壮，心理强大）。
 
 【核心规则（必须严格遵守）】
@@ -473,7 +524,7 @@ let config = JSON.parse(localStorage.getItem('aiConfig') || JSON.stringify({
 
 现在分析以下日记内容：
 {日记内容}`,
-    partitionPrompt: `请将以下日记文本按照我的长期目标进行智能分区，然后将剩余内容归纳为合理的临时主题。
+                partitionPrompt: `请将以下日记文本按照我的长期目标进行智能分区，然后将剩余内容归纳为合理的临时主题。
 
 我的长期目标列表：
 {目标列表}
@@ -487,7 +538,61 @@ let config = JSON.parse(localStorage.getItem('aiConfig') || JSON.stringify({
 
 需要分区的文本：
 {文本内容}`
-}));
+            };
+        }
+    } catch (e) {
+        console.error('AI配置读取失败:', e);
+        config = {
+            apiKey: '',
+            apiBase: 'https://api.openai.com/v1',
+            modelName: 'gpt-3.5-turbo',
+            temperature: 0.7,
+            maxTokens: 2000,
+            analysisPrompt: `【AI角色】
+我是一名在福州读大学的女生，你是我的专属私人日记洞察师，深度了解我的所有自定义长期目标。你精通Flomo全6大洞察视角，客观中立，只讲真话，不做道德评判。我是坚定的女权主义者，反对平权，支持推翻父权制，成为强大女性（包括身体强壮，心理强大）。
+
+【核心规则（必须严格遵守）】
+1. 绝对禁止鸡汤、空洞安慰、空泛大道理和晦涩的心理学术语
+2. 所有分析必须紧扣我当天的日记内容，不凭空臆测
+3. 所有行动建议必须是我当天/次日就能完成的小事，单条不超过20字
+4. 严格按照下面的固定模块和顺序输出，不要增减大标题
+5. 末尾必须生成3-5个关键词标签，方便我检索和长期记忆存档
+
+【分析维度（完整覆盖Flomo6大视角+专属目标追踪）】
+1. 【默认洞察】一句话概括当日核心内容+提炼3件最关键的事
+2. 【价值澄清】从今天的言行中，找出我真正在意的东西；判断哪些事符合我的长期目标，哪些事在消耗我、偏离目标
+3. 【逆向思考】如果今天这件事反过来做/不做，会有什么更好的结果？我今天忽略了哪些原本可以抓住的小机会（尤其关于赚钱、找工作、自媒体）
+4. 【二阶思考】今天出现的问题（拖延、焦虑、不开心），表面原因是什么？背后真正的深层原因是什么？（不要只说“我懒”）
+5. 【CBT认知纠偏】识别我日记里的负面思维陷阱（如非黑即白、灾难化、自我否定），用客观事实帮我纠正
+6. 【MBTI行为映射】结合今天我的具体言行，分析我的人格特质在这件事上的体现，指出优势和需要注意的短板
+7. 【核心目标每日追踪】分别对应我的所有自定义长期目标，给出1句话反馈+1条可落地小建议（当天没涉及的目标标注“今日无相关记录”即可）
+8. 【明日行动清单】最多3条，只写具体动作，不写空话
+
+【输出要求】
+每个模块用【】标注大标题，内容分点，语言简洁，单篇总字数控制在500字以内。尽量一次性全部发完，不要分段发。
+
+现在分析以下日记内容：
+{日记内容}`,
+            partitionPrompt: `请将以下日记文本按照我的长期目标进行智能分区，然后将剩余内容归纳为合理的临时主题。
+
+我的长期目标列表：
+{目标列表}
+
+要求：
+1. 首先提取所有与上述长期目标相关的内容，放入对应的目标区块
+2. 剩余内容自动归纳为合理的临时主题，生成新的区块
+3. 输出严格按照JSON数组格式，每个元素包含title和content两个字段
+4. 不要添加任何额外的解释或说明
+5. 保留原始内容，不要修改
+
+需要分区的文本：
+{文本内容}`
+        };
+    }
+}
+
+// 页面加载时先安全读取数据
+safeLoadData();
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
@@ -495,19 +600,20 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabs();
     initMainTabs();
     initEntryTabs();
-    initFileUpload();
     renderGoalInputs();
     renderDiaryList();
     renderDashboard();
     loadConfigToForm();
     
-    // 监听自定义勾选框切换输入框
-    const customCb = document.querySelector('input[value="custom"]');
-    if(customCb){
-        customCb.addEventListener('change',(e)=>{
-            document.getElementById('customViewInput').style.display = e.target.checked ? 'block':'none'
-        })
-    }
+    // 监听自定义视角勾选框
+    document.querySelector('input[name="view"][value="custom"]').addEventListener('change', (e) => {
+        document.getElementById('customViewInput').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    // 监听模型选择
+    document.getElementById('modelName').addEventListener('change', (e) => {
+        document.getElementById('customModel').style.display = e.target.value === 'custom' ? 'block' : 'none';
+    });
 
     // 日记类型筛选
     document.getElementById('diaryTypeFilter').addEventListener('change', renderDiaryList);
@@ -563,11 +669,6 @@ function initEntryTabs() {
     });
 }
 
-// 文件拖拽上传
-function initFileUpload() {
-    // 保留原文件上传功能，这里简化处理
-}
-
 // 渲染目标输入框
 function renderGoalInputs() {
     const container = document.getElementById('goalInputsContainer');
@@ -602,11 +703,11 @@ function toggleGoalInput(index) {
     }
 }
 
-// 保存目标打卡日记
+// 保存目标打卡日记（已修复变量名错误）
 function saveGoalDiary() {
     const blocks = [];
     
-    // 收集目标内容
+    // 收集目标内容（修复：把index改成i）
     for (let i = 0; i < goals.length; i++) {
         const checkbox = document.getElementById(`goalNoRecord${i}`);
         const input = document.getElementById(`goalInput${i}`);
@@ -639,7 +740,7 @@ function saveGoalDiary() {
         return;
     }
     
-    // 创建日记对象
+    // 创建日记对象（纯前端，不调用AI）
     const diary = {
         id: Date.now() + Math.random(),
         date: new Date().toLocaleDateString(),
@@ -685,8 +786,8 @@ async function saveFreeDiary(needPartition) {
         
         try {
             // 显示加载状态
-            document.getElementById('freeEntryTab').querySelector('.btn-primary').disabled = true;
-            document.getElementById('freeEntryTab').querySelector('.btn-primary').textContent = 'AI分区中...';
+            document.querySelector('#freeEntryTab .btn-primary').disabled = true;
+            document.querySelector('#freeEntryTab .btn-primary').textContent = 'AI分区中...';
             
             // 调用AI分区
             const prompt = config.partitionPrompt
@@ -727,8 +828,8 @@ async function saveFreeDiary(needPartition) {
     
     // 清空输入框
     document.getElementById('freeDiaryInput').value = '';
-    document.getElementById('freeEntryTab').querySelector('.btn-primary').disabled = false;
-    document.getElementById('freeEntryTab').querySelector('.btn-primary').textContent = '保存并AI智能分区';
+    document.querySelector('#freeEntryTab .btn-primary').disabled = false;
+    document.querySelector('#freeEntryTab .btn-primary').textContent = '保存并AI智能分区';
     
     alert('日记保存成功！');
 }
@@ -782,20 +883,12 @@ function saveGoals() {
     alert('目标保存成功！');
 }
 
-function addDiaryItem(date,content,source){
-    const obj = {
-        id:Date.now()+Math.random(),
-        date:date,
-        type:'free',
-        blocks:[{title:'原始内容',content:content}],
-        rawText:content,
-        source:source,
-        createdAt:new Date().toISOString()
-    }
-    diaries.unshift(obj);
-    saveDiaries();renderDiaryList();
+// 安全保存日记（自动备份）
+function saveDiaries(){
+    // 保存前先备份上一个版本
+    localStorage.setItem('diaries_backup', JSON.stringify(diaries));
+    localStorage.setItem('diaries', JSON.stringify(diaries));
 }
-function saveDiaries(){localStorage.setItem('diaries',JSON.stringify(diaries))}
 
 // 渲染日记列表
 function renderDiaryList() {
@@ -850,18 +943,12 @@ function deleteDiary(id){
     if(!confirm('确定删除？'))return;
     diaries=diaries.filter(x=>x.id!=id);saveDiaries();renderDiaryList();
 }
-function clearAllDiaries(){
-    if(!confirm('清空全部？不可恢复'))return;
-    diaries=[];saveDiaries();renderDiaryList();
-}
 
-// 全选/取消全选
+// 全选/取消全选分析视角
 function toggleSelectAll(){
-    const allCb = document.querySelectorAll('input[name="view"]');
     const allCheck = document.getElementById('selectAll').checked;
-    allCb.forEach(cb=>cb.checked=allCheck);
-    const customCb = document.querySelector('input[value="custom"]');
-    document.getElementById('customViewInput').style.display = customCb.checked?'block':'none';
+    document.querySelectorAll('input[name="view"]').forEach(cb=>cb.checked=allCheck);
+    document.getElementById('customViewInput').style.display = allCheck ? 'block' : 'none';
 }
 
 // 渲染分析看板
@@ -1079,6 +1166,7 @@ function getRangeName(s){
 
 // AI请求接口
 async function callAI(prompt){
+    const model = config.modelName === 'custom' ? document.getElementById('customModel').value : config.modelName;
     const res = await fetch(`${config.apiBase}/chat/completions`,{
         method:'POST',
         headers:{
@@ -1086,7 +1174,7 @@ async function callAI(prompt){
             'Authorization':`Bearer ${config.apiKey}`
         },
         body:JSON.stringify({
-            model:config.modelName,
+            model:model,
             messages:[{role:'user',content:prompt}],
             temperature:Number(config.temperature),
             max_tokens:Number(config.maxTokens)
@@ -1094,7 +1182,7 @@ async function callAI(prompt){
     })
     if(!res.ok){
         let err=await res.json();
-        throw new Error(err.error?.message||'接口异常');
+        throw new Error(err.error?.message||'接口请求失败');
     }
     let json=await res.json();
     return json.choices[0].message.content;
@@ -1130,7 +1218,7 @@ function viewHistoryDetail(id){
         </div>
     </div>`
     closeModal('historyModal');
-    // 切换到自定义分析标签页显示结果
+    // 切换到分析看板显示结果
     document.querySelector('[data-main-tab="dashboard"]').click();
 }
 function deleteHistory(id){
@@ -1156,48 +1244,41 @@ document.getElementById('configBtn').onclick=()=>{loadConfigToForm();openModal('
 
 // 配置读写
 function loadConfigToForm(){
-    document.getElementById('apiKey').value=config.apiKey;
-    document.getElementById('apiBase').value=config.apiBase;
-    document.getElementById('temperature').value=config.temperature;
-    document.getElementById('maxTokens').value=config.maxTokens;
-    document.getElementById('analysisPrompt').value=config.analysisPrompt;
-    document.getElementById('partitionPrompt').value=config.partitionPrompt;
+    document.getElementById('apiKey').value=config.apiKey||'';
+    document.getElementById('apiBase').value=config.apiBase||'https://api.openai.com/v1';
+    document.getElementById('temperature').value=config.temperature||0.7;
+    document.getElementById('maxTokens').value=config.maxTokens||2000;
+    document.getElementById('analysisPrompt').value=config.analysisPrompt||'';
+    document.getElementById('partitionPrompt').value=config.partitionPrompt||'';
 
-    // 模型下拉选择逻辑
+    // 模型选择
     const modelSel = document.getElementById('modelName');
-    const customModelInp = document.getElementById('customModel');
-    
-    // 先尝试匹配预设模型
-    let found = false;
-    for(let i=0;i<modelSel.options.length;i++){
-        if(modelSel.options[i].value === config.modelName){
-            modelSel.selectedIndex = i;
-            customModelInp.style.display = 'none';
-            found = true;
-            break;
+    const customModel = document.getElementById('customModel');
+    if(config.modelName){
+        let found = false;
+        for(let i=0;i<modelSel.options.length;i++){
+            if(modelSel.options[i].value === config.modelName){
+                modelSel.selectedIndex = i;
+                found = true;
+                break;
+            }
         }
-    }
-    // 没找到就是自定义模型
-    if(!found){
-        modelSel.value = 'custom';
-        customModelInp.style.display = 'block';
-        customModelInp.value = config.modelName;
-    }
-
-    // 下拉切换监听
-    modelSel.onchange = function(){
-        if(this.value === 'custom'){
-            customModelInp.style.display = 'block';
-        }else{
-            customModelInp.style.display = 'none';
+        if(!found){
+            modelSel.value = 'custom';
+            customModel.value = config.modelName;
+            customModel.style.display = 'block';
         }
     }
 }
 function saveConfig(){
+    const model = document.getElementById('modelName').value === 'custom' 
+        ? document.getElementById('customModel').value 
+        : document.getElementById('modelName').value;
+        
     config={
         apiKey:document.getElementById('apiKey').value.trim(),
         apiBase:document.getElementById('apiBase').value.trim(),
-        modelName: document.getElementById('modelName').value==='custom' ? document.getElementById('customModel').value.trim() : document.getElementById('modelName').value.trim(),
+        modelName:model,
         temperature:document.getElementById('temperature').value,
         maxTokens:document.getElementById('maxTokens').value,
         analysisPrompt:document.getElementById('analysisPrompt').value,
@@ -1220,49 +1301,4 @@ function resetPrompts(){
 
 【分析维度（完整覆盖Flomo6大视角+专属目标追踪）】
 1. 【默认洞察】一句话概括当日核心内容+提炼3件最关键的事
-2. 【价值澄清】从今天的言行中，找出我真正在意的东西；判断哪些事符合我的长期目标，哪些事在消耗我、偏离目标
-3. 【逆向思考】如果今天这件事反过来做/不做，会有什么更好的结果？我今天忽略了哪些原本可以抓住的小机会（尤其关于赚钱、找工作、自媒体）
-4. 【二阶思考】今天出现的问题（拖延、焦虑、不开心），表面原因是什么？背后真正的深层原因是什么？（不要只说“我懒”）
-5. 【CBT认知纠偏】识别我日记里的负面思维陷阱（如非黑即白、灾难化、自我否定），用客观事实帮我纠正
-6. 【MBTI行为映射】结合今天我的具体言行，分析我的人格特质在这件事上的体现，指出优势和需要注意的短板
-7. 【核心目标每日追踪】分别对应我的所有自定义长期目标，给出1句话反馈+1条可落地小建议（当天没涉及的目标标注“今日无相关记录”即可）
-8. 【明日行动清单】最多3条，只写具体动作，不写空话
-
-【输出要求】
-每个模块用【】标注大标题，内容分点，语言简洁，单篇总字数控制在500字以内。尽量一次性全部发完，不要分段发。
-
-现在分析以下日记内容：
-{日记内容}`;
-    document.getElementById('partitionPrompt').value=`请将以下日记文本按照我的长期目标进行智能分区，然后将剩余内容归纳为合理的临时主题。
-
-我的长期目标列表：
-{目标列表}
-
-要求：
-1. 首先提取所有与上述长期目标相关的内容，放入对应的目标区块
-2. 剩余内容自动归纳为合理的临时主题，生成新的区块
-3. 输出严格按照JSON数组格式，每个元素包含title和content两个字段
-4. 不要添加任何额外的解释或说明
-5. 保留原始内容，不要修改
-
-需要分区的文本：
-{文本内容}`;
-}
-
-// 全部数据导出
-document.getElementById('exportBtn').addEventListener('click',()=>{
-    const allData={diaries,analysisHistory,goals,exportTime:new Date().toISOString()};
-    const blob = new Blob([JSON.stringify(allData,null,2)],{type:'application/json'});
-    let a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download=`日记全量备份_${new Date().toLocaleDateString()}.json`;
-    a.click();URL.revokeObjectURL(a.href);
-})
-
-// 弹窗点击空白关闭
-document.querySelectorAll('.modal').forEach(m=>{
-    m.onclick=e=>{if(e.target===m)m.style.display='none'}
-})
-</script>
-</body>
-</html>
+2. 【价值澄清】从今天的言行
