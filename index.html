@@ -7,30 +7,34 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-        :root{
-            --bg:#F4ECEA;          /*莫兰迪浅冷粉底色（页面背景）*/
-            --card:#F9F3F2;        /*卡片浅裸粉白*/
-            --text:#5C5050;        /*深灰粉正文文字*/
-            --text-secondary:#998888;/*次要淡粉灰文字*/
-            --border:#E4D4D2;      /*莫兰迪粉灰边框*/
-            --primary:#C9A8A7;     /*主色：低饱和冷粉（按钮、高亮）*/
-            --primary-hover:#B99493;/*悬浮加深冷粉*/
-            --danger:#C88A8A;      /*删除按钮莫兰迪豆沙红*/
-            --success:#A9B8B0;     /*成功低饱和灰绿（莫兰迪搭配）*/
-            --shadow:0 1px 4px 0 rgba(150,120,120,0.12)
-        }
-        .dark{
-            --bg:#483E3E;
-            --card:#594F4F;
-            --text:#EAE0E0;
-            --text-secondary:#BBAAAA;
-            --border:#726262;
-            --primary:#D1B2B1;
-            --primary-hover:#C9A8A7;
-            --danger:#DD9999;
-            --success:#9AB0A6;
-            --shadow:0 1px 4px 0 rgba(30,20,20,0.35)
-        }
+       :root{
+    --bg:#FDF2F8;          /*马卡龙樱花粉背景（超浅不刺眼）*/
+    --card:#FEF7FA;        /*奶白卡片，和背景有柔和层次感*/
+    --text:#5A4B5A;        /*深灰粉正文，温柔不扎眼*/
+    --text-secondary:#9A8B9A;/*浅灰粉次要文字*/
+    --border:#E2D5E2;      /*浅粉边框，带一丢丢绿调*/
+    --primary:#F9A8D4;     /*主色：马卡龙樱花粉（按钮、高亮）*/
+    --primary-hover:#F472B6;/*悬浮加深樱花粉*/
+    --danger:#F87171;      /*马卡龙豆沙红（删除按钮）*/
+    --success:#6EE7B7;     /*马卡龙薄荷绿（成功提示）*/
+    --shadow:0 2px 8px 0 rgba(249, 168, 212, 0.15) /*淡粉柔阴影*/
+}
+.dark{
+    --bg:#2D1F2D;          /*暗调粉紫背景*/
+    --card:#3D2F3D;        /*深一点的卡片色*/
+    --text:#F0E6F0;        /*奶白文字*/
+    --text-secondary:#C0B0C0;/*浅灰粉次要文字*/
+    --border:#5D4F5D;      /*深粉边框*/
+    --primary:#FBCFE8;     /*亮马卡龙樱花粉*/
+    --primary-hover:#F9A8D4;/*悬浮色*/
+    --danger:#FCA5A5;      /*亮马卡龙红*/
+    --success:#A7F3D0;     /*亮马卡龙薄荷绿*/
+    --shadow:0 2px 8px 0 rgba(0, 0, 0, 0.3)
+}
+
+/* 同步微调圆角，更贴合马卡龙软萌感（可选加在style末尾） */
+.card{border-radius:24px}
+.input,.select,.btn{border-radius:12px}
         body{background:var(--bg);color:var(--text);padding:20px;max-width:1000px;margin:0 auto;transition:all 0.3s ease}
         .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
         .top-bar h1{font-size:28px;color:var(--primary);display:flex;align-items:center;gap:8px}
