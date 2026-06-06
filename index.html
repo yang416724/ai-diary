@@ -4,947 +4,836 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI日记分析</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3b82f6',
-                        secondary: '#64748b',
-                        success: '#10b981',
-                        warning: '#f59e0b',
-                        danger: '#ef4444',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                }
-            }
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+        :root{
+            --bg:#f8fafc;
+            --card:#ffffff;
+            --text:#1e293b;
+            --text-secondary:#64748b;
+            --border:#e2e8f0;
+            --primary:#3b82f6;
+            --primary-hover:#2563eb;
+            --danger:#ef4444;
+            --success:#10b981;
+            --shadow:0 1px 3px 0 rgba(0,0,0,0.1)
         }
-    </script>
-    <style type="text/tailwindcss">
-        @layer utilities {
-            .content-auto {
-                content-visibility: auto;
-            }
-            .card-shadow {
-                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            }
-            .card-hover {
-                transition: all 0.2s ease;
-            }
-            .card-hover:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            }
-            .scrollbar-thin::-webkit-scrollbar {
-                width: 4px;
-                height: 4px;
-            }
-            .scrollbar-thin::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            .scrollbar-thin::-webkit-scrollbar-thumb {
-                background: #cbd5e1;
-                border-radius: 2px;
-            }
-            .dark .scrollbar-thin::-webkit-scrollbar-thumb {
-                background: #475569;
-            }
+        .dark{
+            --bg:#0f172a;
+            --card:#1e293b;
+            --text:#f1f5f9;
+            --text-secondary:#94a3b8;
+            --border:#334155;
+            --primary:#60a5fa;
+            --primary-hover:#3b82f6;
+            --danger:#f87171;
+            --success:#34d399;
+            --shadow:0 1px 3px 0 rgba(0,0,0,0.3)
         }
+        body{background:var(--bg);color:var(--text);padding:20px;max-width:1000px;margin:0 auto;transition:all 0.3s ease}
+        .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+        .top-bar h1{font-size:28px;color:var(--primary);display:flex;align-items:center;gap:8px}
+        .top-actions{display:flex;gap:16px;align-items:center}
+        .icon-btn{background:transparent;border:none;font-size:22px;cursor:pointer;color:var(--text);padding:8px;border-radius:8px;transition:background 0.2s}
+        .icon-btn:hover{background:var(--border)}
+
+        .card{background:var(--card);border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
+        .card h2{font-size:22px;margin-bottom:20px;color:var(--text)}
+        .card h3{font-size:18px;margin:16px 0 12px;color:var(--text)}
+
+        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+        @media (max-width:768px){.grid-2{grid-template-columns:1fr}}
+
+        .input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:16px;outline:none;transition:border-color 0.2s}
+        .input:focus{border-color:var(--primary)}
+        .textarea{min-height:120px;resize:vertical;line-height:1.6}
+        .select{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:16px;cursor:pointer}
+
+        .btn{padding:12px 24px;border:none;border-radius:8px;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s}
+        .btn-primary{background:var(--primary);color:white}
+        .btn-primary:hover{background:var(--primary-hover)}
+        .btn-danger{background:var(--danger);color:white}
+        .btn-success{background:var(--success);color:white}
+        .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+        .btn-outline:hover{background:var(--border)}
+
+        .upload-box{border:2px dashed var(--border);border-radius:12px;padding:40px 20px;text-align:center;transition:border-color 0.2s}
+        .upload-box.active{border-color:var(--primary)}
+        .upload-icon{font-size:48px;color:var(--text-secondary);margin-bottom:12px}
+        .upload-txt{font-size:18px;color:var(--text);margin-bottom:8px}
+        .upload-tip{color:var(--text-secondary);margin-bottom:20px}
+        input[type="file"]{display:none}
+
+        .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:8px}
+        .tab{padding:8px 16px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:8px;font-size:16px}
+        .tab.active{background:var(--primary);color:white}
+
+        .diary-item{border-bottom:1px solid var(--border);padding:16px 0}
+        .diary-item:last-child{border-bottom:none}
+        .diary-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+        .diary-date{font-weight:500;color:var(--text)}
+        .diary-source{font-size:14px;color:var(--text-secondary)}
+        .diary-preview{color:var(--text-secondary);line-height:1.5;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+        .diary-actions{display:flex;gap:8px;margin-top:12px}
+
+        .analysis-result{background:var(--bg);border-radius:12px;padding:20px;margin-top:20px;line-height:1.8}
+        .analysis-result h4{margin-bottom:12px;color:var(--primary)}
+        .analysis-meta{font-size:14px;color:var(--text-secondary);margin-bottom:16px}
+
+        .empty-state{text-align:center;padding:60px 20px;color:var(--text-secondary)}
+        .loading{text-align:center;padding:40px;color:var(--text-secondary)}
+        .loading::after{content:"";display:inline-block;width:20px;height:20px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+        .modal-content{background:var(--card);border-radius:16px;padding:24px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+        .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text)}
+
+        .badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:12px;background:var(--primary);color:white;margin-left:8px}
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
-    <!-- 顶部导航栏 -->
-    <nav class="bg-white dark:bg-gray-800 card-shadow sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <h1 class="text-xl font-bold text-primary">
-                        <i class="fa fa-book mr-2"></i>AI日记分析
-                    </h1>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                        <i class="fa fa-moon-o dark:hidden"></i>
-                        <i class="fa fa-sun-o hidden dark:inline"></i>
-                    </button>
-                    <button id="settings-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                        <i class="fa fa-cog"></i>
-                    </button>
-                </div>
-            </div>
+<body>
+    <div class="top-bar">
+        <h1>📘 AI日记分析</h1>
+        <div class="top-actions">
+            <button class="icon-btn" id="themeBtn" title="切换主题">🌙</button>
+            <button class="icon-btn" id="configBtn" title="AI配置">⚙️</button>
+            <button class="icon-btn" id="exportBtn" title="导出所有数据">📤</button>
         </div>
-    </nav>
+    </div>
 
-    <!-- 主内容区 -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <!-- 标签页导航 -->
-        <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
-            <ul class="flex flex-wrap -mb-px" id="main-tabs">
-                <li class="mr-2">
-                    <button class="tab-btn active inline-block py-4 px-4 text-sm font-medium text-center border-b-2 border-primary text-primary" data-tab="diary">
-                        <i class="fa fa-pencil mr-2"></i>日记管理
-                    </button>
-                </li>
-                <li class="mr-2">
-                    <button class="tab-btn inline-block py-4 px-4 text-sm font-medium text-center border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600" data-tab="analysis">
-                        <i class="fa fa-line-chart mr-2"></i>AI分析
-                    </button>
-                </li>
-                <li class="mr-2">
-                    <button class="tab-btn inline-block py-4 px-4 text-sm font-medium text-center border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600" data-tab="results">
-                        <i class="fa fa-history mr-2"></i>历史结果
-                    </button>
-                </li>
-            </ul>
+    <!-- 录入区域 -->
+    <div class="card">
+        <div class="tabs">
+            <button class="tab active" data-tab="paste">直接粘贴</button>
+            <button class="tab" data-tab="upload">批量导入文件</button>
         </div>
 
-        <!-- 日记管理标签页 -->
-        <div id="diary-tab" class="tab-content">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- 日记编辑区 -->
-                <div class="lg:col-span-2">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-lg font-semibold">写日记</h2>
-                            <div class="flex items-center space-x-2">
-                                <input type="datetime-local" id="diary-date" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm">
-                                <button id="save-diary-btn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
-                                    <i class="fa fa-save mr-1"></i>保存
-                                </button>
-                            </div>
-                        </div>
-                        <textarea id="diary-content" rows="12" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 resize-none focus:ring-2 focus:ring-primary focus:border-transparent scrollbar-thin" placeholder="今天发生了什么？写下你的想法和感受..."></textarea>
-                        <div class="mt-4 flex justify-between items-center">
-                            <div>
-                                <span id="char-count" class="text-sm text-gray-500 dark:text-gray-400">0 字</span>
-                            </div>
-                            <div class="flex space-x-2">
-                                <button id="clear-diary-btn" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm">
-                                    <i class="fa fa-trash-o mr-1"></i>清空
-                                </button>
-                                <button id="analyze-single-btn" class="px-3 py-2 bg-success text-white rounded-md hover:bg-success/90 transition-colors text-sm">
-                                    <i class="fa fa-magic mr-1"></i>分析这篇
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 导入区域 -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow p-6 mt-6">
-                        <h2 class="text-lg font-semibold mb-4">导入日记</h2>
-                        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-                            <i class="fa fa-upload text-4xl text-gray-400 mb-4"></i>
-                            <p class="mb-4 text-gray-500 dark:text-gray-400">拖拽文件到这里，或者点击选择文件</p>
-                            <p class="mb-4 text-sm text-gray-400 dark:text-gray-500">支持格式：TXT、Markdown、JSON</p>
-                            <input type="file" id="import-file" accept=".txt,.md,.json" class="hidden">
-                            <button id="import-btn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
-                                选择文件
-                            </button>
-                        </div>
-                        <div id="import-preview" class="mt-4 hidden">
-                            <h3 class="font-medium mb-2">导入预览</h3>
-                            <div id="import-preview-list" class="max-h-60 overflow-y-auto scrollbar-thin border border-gray-200 dark:border-gray-700 rounded-md p-2"></div>
-                            <div class="mt-4 flex justify-end space-x-2">
-                                <button id="cancel-import-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                                    取消
-                                </button>
-                                <button id="confirm-import-btn" class="px-4 py-2 bg-success text-white rounded-md hover:bg-success/90 transition-colors">
-                                    确认导入
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 日记列表 -->
-                <div>
-                    <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow p-6 h-full">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-lg font-semibold">日记列表</h2>
-                            <div class="relative">
-                                <input type="text" id="diary-search" placeholder="搜索日记..." class="pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm w-full">
-                                <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                            </div>
-                        </div>
-                        <div id="diary-list" class="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin">
-                            <div class="text-center text-gray-500 dark:text-gray-400 py-8">
-                                还没有日记，开始写第一篇吧
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div id="pasteTab" class="tab-content">
+            <textarea class="input textarea" id="diaryInput" placeholder="在这里粘贴你的日记内容，支持单篇或多篇（每篇开头带日期格式如：2024-05-20 周一 晴）"></textarea>
+            <div style="display:flex;gap:12px;margin-top:16px">
+                <button class="btn btn-primary" onclick="addDiary()">添加单篇日记</button>
+                <button class="btn btn-outline" onclick="parseMultiDiary()">智能解析多篇</button>
             </div>
         </div>
 
-        <!-- AI分析标签页 -->
-        <div id="analysis-tab" class="tab-content hidden">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- 分析设置 -->
-                <div>
-                    <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow p-6">
-                        <h2 class="text-lg font-semibold mb-4">分析设置</h2>
-                        
-                        <!-- 时间范围选择 -->
-                        <div class="mb-6">
-                            <h3 class="font-medium mb-3">选择时间范围</h3>
-                            <div class="space-y-2">
-                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <input type="radio" name="time-range" value="today" class="mr-3" checked>
-                                    <span>今日分析</span>
-                                    <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">今天所有日记</span>
-                                </label>
-                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <input type="radio" name="time-range" value="week" class="mr-3">
-                                    <span>一周分析</span>
-                                    <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">最近7天</span>
-                                </label>
-                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <input type="radio" name="time-range" value="month" class="mr-3">
-                                    <span>一月分析</span>
-                                    <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">最近30天</span>
-                                </label>
-                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <input type="radio" name="time-range" value="all" class="mr-3">
-                                    <span>全部分析</span>
-                                    <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">所有历史日记</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- 分析视角选择 -->
-                        <div class="mb-6">
-                            <h3 class="font-medium mb-3">选择分析视角</h3>
-                            <div class="space-y-2" id="perspective-list">
-                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <input type="checkbox" name="perspective" value="default" class="mr-3" checked>
-                                    <div>
-                                        <div class="font-medium">默认洞察</div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">挖掘笔记背后隐藏的思维模式与深层内在</div>
-                                    </div>
-                                </label>
-                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <input type="checkbox" name="perspective" value="value" class="mr-3">
-                                    <div>
-                                        <div class="font-medium">价值澄清</div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">从笔记里找出你真正看重的东西</div>
-                                    </div>
-                                </label>
-                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <input type="checkbox" name="perspective" value="reverse" class="mr-3">
-                                    <div>
-                                        <div class="font-medium">逆向思考</div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">通过芒格的逆向思维考察关键问题</div>
-                                    </div>
-                                </label>
-                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <input type="checkbox" name="perspective" value="second-order" class="mr-3">
-                                    <div>
-                                        <div class="font-medium">二阶思考</div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">提炼问题之上的深层原因</div>
-                                    </div>
-                                </label>
-                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <input type="checkbox" name="perspective" value="cbt" class="mr-3">
-                                    <div>
-                                        <div class="font-medium">CBT疗法</div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">识别思维陷阱并提供改善建议</div>
-                                    </div>
-                                </label>
-                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <input type="checkbox" name="perspective" value="mbti" class="mr-3">
-                                    <div>
-                                        <div class="font-medium">MBTI分析</div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">解读真实的MBTI人格倾向</div>
-                                    </div>
-                                </label>
-                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <input type="checkbox" name="perspective" value="custom" class="mr-3">
-                                    <div>
-                                        <div class="font-medium">自定义视角</div>
-                                        <input type="text" id="custom-perspective" placeholder="输入你的分析指令..." class="mt-2 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm">
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- 分析参数 -->
-                        <div class="mb-6">
-                            <button id="toggle-advanced" class="flex items-center justify-between w-full text-left font-medium mb-3">
-                                <span>高级参数</span>
-                                <i class="fa fa-chevron-down transition-transform"></i>
-                            </button>
-                            <div id="advanced-settings" class="space-y-4 hidden">
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">
-                                        结果最大字数: <span id="max-tokens-value">1000</span>
-                                    </label>
-                                    <input type="range" id="max-tokens" min="200" max="5000" step="100" value="1000" class="w-full">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">
-                                        分析温度: <span id="temperature-value">0.3</span>
-                                    </label>
-                                    <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.3" class="w-full">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">
-                                        最大输入字数: <span id="max-input-value">4000</span>
-                                    </label>
-                                    <input type="range" id="max-input" min="1000" max="10000" step="500" value="4000" class="w-full">
-                                </div>
-                            </div>
-                        </div>
-
-                        <button id="start-analysis-btn" class="w-full py-3 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors font-medium">
-                            <i class="fa fa-magic mr-2"></i>开始分析
-                        </button>
-                        <div id="analysis-estimate" class="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">
-                            预估消耗: 约 0 tokens
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 分析结果展示 -->
-                <div class="lg:col-span-2">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow p-6 h-full flex flex-col">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-lg font-semibold">分析结果</h2>
-                            <div class="flex space-x-2">
-                                <button id="copy-result-btn" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm disabled:opacity-50" disabled>
-                                    <i class="fa fa-copy mr-1"></i>复制
-                                </button>
-                                <button id="save-result-btn" class="px-3 py-2 bg-success text-white rounded-md hover:bg-success/90 transition-colors text-sm disabled:opacity-50" disabled>
-                                    <i class="fa fa-save mr-1"></i>保存结果
-                                </button>
-                                <button id="export-result-btn" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm disabled:opacity-50" disabled>
-                                    <i class="fa fa-download mr-1"></i>导出
-                                </button>
-                            </div>
-                        </div>
-                        <div id="analysis-result" class="flex-1 overflow-y-auto scrollbar-thin p-4 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900">
-                            <div class="text-center text-gray-500 dark:text-gray-400 py-16">
-                                <i class="fa fa-line-chart text-4xl mb-4"></i>
-                                <p>选择时间范围和分析视角，点击"开始分析"</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div id="uploadTab" class="tab-content" style="display:none">
+            <div class="upload-box" id="dropBox">
+                <div class="upload-icon">⬆️</div>
+                <div class="upload-txt">拖拽文件到这里，或者点击选择文件</div>
+                <div class="upload-tip">支持格式: TXT、Markdown、JSON | 自动解析带日期的多篇日记</div>
+                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">选择文件</button>
+                <input id="fileInput" type="file" accept=".txt,.md,.json" multiple>
             </div>
-        </div>
-
-        <!-- 历史结果标签页 -->
-        <div id="results-tab" class="tab-content hidden">
-            <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-lg font-semibold">历史分析结果</h2>
-                    <div class="flex space-x-3">
-                        <select id="filter-range" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm">
-                            <option value="all">所有范围</option>
-                            <option value="single">单次分析</option>
-                            <option value="today">今日分析</option>
-                            <option value="week">一周分析</option>
-                            <option value="month">一月分析</option>
-                            <option value="all-range">全部分析</option>
-                        </select>
-                        <select id="filter-perspective" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm">
-                            <option value="all">所有视角</option>
-                            <option value="default">默认洞察</option>
-                            <option value="value">价值澄清</option>
-                            <option value="reverse">逆向思考</option>
-                            <option value="second-order">二阶思考</option>
-                            <option value="cbt">CBT疗法</option>
-                            <option value="mbti">MBTI分析</option>
-                            <option value="custom">自定义视角</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="results-list" class="space-y-4">
-                    <div class="text-center text-gray-500 dark:text-gray-400 py-16">
-                        <i class="fa fa-history text-4xl mb-4"></i>
-                        <p>还没有保存的分析结果</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- 设置模态框 -->
-    <div id="settings-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow w-full max-w-md mx-4">
-            <div class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold">AI接口设置</h2>
-                <button id="close-settings-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                    <i class="fa fa-times"></i>
-                </button>
-            </div>
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">API 密钥</label>
-                    <input type="password" id="api-key" placeholder="sk-..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">API 节点地址</label>
-                    <input type="text" id="api-base-url" placeholder="https://api.openai.com/v1" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">模型</label>
-                    <div class="flex space-x-2">
-                        <select id="model-select" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
-                            <option value="">请先配置API并拉取模型</option>
-                        </select>
-                        <button id="fetch-models-btn" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                            <i class="fa fa-refresh"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="pt-4">
-                    <button id="test-api-btn" class="w-full py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors mb-2">
-                        测试连接
-                    </button>
-                    <button id="save-settings-btn" class="w-full py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
-                        保存设置
-                    </button>
-                </div>
-                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <h3 class="font-medium mb-3">数据管理</h3>
-                    <div class="space-y-2">
-                        <button id="export-all-btn" class="w-full py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm">
-                            <i class="fa fa-download mr-1"></i>导出所有数据
-                        </button>
-                        <button id="import-all-btn" class="w-full py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm">
-                            <i class="fa fa-upload mr-1"></i>导入数据
-                        </button>
-                        <input type="file" id="import-all-file" accept=".json" class="hidden">
-                        <button id="clear-all-btn" class="w-full py-2 bg-danger text-white rounded-md hover:bg-danger/90 transition-colors text-sm">
-                            <i class="fa fa-trash-o mr-1"></i>清空所有数据
-                        </button>
-                    </div>
-                </div>
+            <div style="margin-top:16px">
+                <button class="btn btn-outline" onclick="clearAllDiaries()">清空所有日记</button>
             </div>
         </div>
     </div>
 
-    <!-- 结果详情模态框 -->
-    <div id="result-detail-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
-                <h2 id="result-detail-title" class="text-lg font-semibold">分析结果详情</h2>
-                <button id="close-result-detail-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                    <i class="fa fa-times"></i>
-                </button>
+    <!-- 分析区域 -->
+    <div class="card">
+        <h2>AI分析 <span class="badge">手动触发</span></h2>
+        <div class="grid-2">
+            <div>
+                <label>分析时间范围</label>
+                <select class="select" id="timeRange">
+                    <option value="single">当前选中日记</option>
+                    <option value="today">今日日记</option>
+                    <option value="week">近7天日记</option>
+                    <option value="month">近30天日记</option>
+                    <option value="all">全部日记</option>
+                </select>
             </div>
-            <div id="result-detail-content" class="p-6 overflow-y-auto scrollbar-thin flex-1"></div>
-            <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-2">
-                <button id="copy-detail-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                    <i class="fa fa-copy mr-1"></i>复制
-                </button>
-                <button id="export-detail-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                    <i class="fa fa-download mr-1"></i>导出
-                </button>
-                <button id="delete-detail-btn" class="px-4 py-2 bg-danger text-white rounded-md hover:bg-danger/90 transition-colors">
-                    <i class="fa fa-trash-o mr-1"></i>删除
-                </button>
+            <div>
+                <label>分析视角</label>
+                <select class="select" id="analysisView">
+                    <option value="emotion">情绪分析</option>
+                    <option value="growth">成长与反思</option>
+                    <option value="relationship">人际关系</option>
+                    <option value="productivity">生产力与时间</option>
+                    <option value="health">健康与生活</option>
+                    <option value="summary">内容总结</option>
+                    <option value="custom">自定义视角</option>
+                </select>
+            </div>
+        </div>
+        <div id="customViewInput" style="margin-top:12px;display:none">
+            <input type="text" class="input" id="customView" placeholder="输入你想要的分析视角，例如：金钱消费分析、梦境分析">
+        </div>
+        <div style="margin-top:20px">
+            <button class="btn btn-primary" onclick="startAnalysis()">开始AI分析</button>
+            <button class="btn btn-outline" onclick="viewHistory()">查看历史分析</button>
+        </div>
+        <div id="analysisResult" style="display:none"></div>
+    </div>
+
+    <!-- 日记列表 -->
+    <div class="card">
+        <h2>日记列表</h2>
+        <input type="text" class="input" id="searchInput" placeholder="搜索日记内容或日期..." style="margin-bottom:20px">
+        <div id="diaryList">
+            <div class="empty-state">还没有日记，开始写第一篇吧</div>
+        </div>
+    </div>
+
+    <!-- AI配置模态框 -->
+    <div id="configModal" class="modal" style="display:none">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>AI接口配置</h2>
+                <button class="modal-close" onclick="closeModal('configModal')">×</button>
+            </div>
+            
+            <h3>基础配置</h3>
+            <div class="grid-2" style="margin-bottom:16px">
+                <div>
+                    <label>API 密钥</label>
+                    <input type="password" class="input" id="apiKey" placeholder="输入你的API Key">
+                </div>
+                <div>
+                    <label>API 节点地址</label>
+                    <input type="text" class="input" id="apiBase" placeholder="https://api.openai.com/v1" value="https://api.openai.com/v1">
+                </div>
+            </div>
+            <div class="grid-2" style="margin-bottom:16px">
+                <div>
+                    <label>模型名称</label>
+                    <input type="text" class="input" id="modelName" placeholder="gpt-3.5-turbo" value="gpt-3.5-turbo">
+                </div>
+                <div>
+                    <label>温度值 (0-2)</label>
+                    <input type="number" class="input" id="temperature" placeholder="0.7" value="0.7" min="0" max="2" step="0.1">
+                </div>
+            </div>
+            <div style="margin-bottom:16px">
+                <label>最大生成长度 (tokens)</label>
+                <input type="number" class="input" id="maxTokens" placeholder="2000" value="2000" min="100" max="10000">
+            </div>
+
+            <h3>提示词配置（可修改）</h3>
+            <div style="margin-bottom:16px">
+                <label>日记分析提示词</label>
+                <textarea class="input textarea" id="analysisPrompt" style="min-height:200px">你是一位专业的日记分析师，请根据用户提供的日记内容，从{视角}角度进行深入、客观、温暖的分析。
+
+要求：
+1. 分析要具体，结合日记中的具体内容，不要空泛
+2. 语言要温暖有同理心，避免评判性语言
+3. 结构清晰，分点列出，使用小标题
+4. 最后给出1-2条建设性的建议
+5. 字数控制在{字数}左右
+
+现在开始分析以下日记内容：
+{日记内容}</textarea>
+            </div>
+            <div style="margin-bottom:24px">
+                <label>批量日记解析提示词</label>
+                <textarea class="input textarea" id="parsePrompt" style="min-height:150px">请将以下文本解析为多篇独立的日记，每篇日记包含日期和内容。
+
+要求：
+1. 识别每篇日记的开头日期，支持格式：YYYY-MM-DD、YYYY/MM/DD、MM-DD、X月X日
+2. 如果没有明确日期，使用"未知日期"
+3. 保留日记的原始内容，不要修改
+4. 输出严格按照JSON数组格式，每个元素包含date和content两个字段
+5. 不要添加任何额外的解释或说明
+
+需要解析的文本：
+{文本内容}</textarea>
+            </div>
+
+            <div style="display:flex;gap:12px;justify-content:flex-end">
+                <button class="btn btn-outline" onclick="resetPrompts()">恢复默认提示词</button>
+                <button class="btn btn-primary" onclick="saveConfig()">保存配置</button>
             </div>
         </div>
     </div>
 
-    <!-- Toast 提示 -->
-    <div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-20 opacity-0 transition-all duration-300">
-        <div class="bg-gray-800 dark:bg-gray-700 text-white px-6 py-3 rounded-lg card-shadow flex items-center">
-            <i id="toast-icon" class="fa fa-check-circle mr-2"></i>
-            <span id="toast-message">操作成功</span>
+    <!-- 历史分析模态框 -->
+    <div id="historyModal" class="modal" style="display:none">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>历史分析记录</h2>
+                <button class="modal-close" onclick="closeModal('historyModal')">×</button>
+            </div>
+            <div id="historyList"></div>
         </div>
     </div>
 
-    <script>
-        // 全局变量
-        let diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-        let analysisResults = JSON.parse(localStorage.getItem('analysisResults') || '[]');
-        let settings = JSON.parse(localStorage.getItem('settings') || '{"apiKey":"","baseUrl":"https://api.openai.com/v1","model":"","maxTokens":1000,"temperature":0.3,"maxInput":4000}');
-        let currentDiaryId = null;
-        let currentResultId = null;
-        let importData = [];
-        let isAnalyzing = false;
-        let abortController = null;
+<script>
+// 全局变量
+let diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
+let analysisHistory = JSON.parse(localStorage.getItem('analysisHistory') || '[]');
+let selectedDiaryId = null;
+let config = JSON.parse(localStorage.getItem('aiConfig') || JSON.stringify({
+    apiKey: '',
+    apiBase: 'https://api.openai.com/v1',
+    modelName: 'gpt-3.5-turbo',
+    temperature: 0.7,
+    maxTokens: 2000,
+    analysisPrompt: `你是一位专业的日记分析师，请根据用户提供的日记内容，从{视角}角度进行深入、客观、温暖的分析。
 
-        // 分析视角系统提示词
-        const perspectivePrompts = {
-            default: "请作为一个敏锐的观察者和深度思考者，分析以下日记内容。挖掘作者隐藏的思维模式、情绪变化规律、深层内在需求和价值观。请用清晰、有条理的方式呈现你的洞察，不要过于笼统，要结合具体内容进行分析。",
-            value: "请从价值澄清的角度分析以下日记内容。帮助作者找出他真正看重的东西、人生优先级、内在驱动力和意义来源。区分哪些是社会期待的价值，哪些是作者内心真正认同的价值。给出清晰的总结和思考。",
-            reverse: "请运用查理·芒格的逆向思维来分析以下日记内容。不要只看作者想要什么，而是分析他在避免什么、害怕什么、担心什么会出错。从反面思考如何避免这些问题，以及这些恐惧背后反映了什么。",
-            "second-order": "请运用二阶思考来分析以下日记内容。不要只停留在表面问题，而是深入挖掘：问题的根本原因是什么？这个原因背后又是什么？如果按照当前的模式发展，会产生什么二阶、三阶后果？",
-            cbt: "请从认知行为疗法(CBT)的角度分析以下日记内容。识别作者可能存在的思维陷阱（如非黑即白、灾难化、过度概括、情绪推理等）。对于每个识别出的思维陷阱，提供具体的、可操作的改善建议。",
-            mbti: "请基于以下日记内容，分析作者的MBTI人格倾向。从四个维度（E/I、S/N、T/F、J/P）进行分析，结合具体的日记内容作为证据。说明每个维度的倾向程度，以及这种人格类型的优势和可能的盲点。"
-        };
+要求：
+1. 分析要具体，结合日记中的具体内容，不要空泛
+2. 语言要温暖有同理心，避免评判性语言
+3. 结构清晰，分点列出，使用小标题
+4. 最后给出1-2条建设性的建议
+5. 字数控制在{字数}左右
 
-        // 初始化
-        document.addEventListener('DOMContentLoaded', () => {
-            initTheme();
-            initTabs();
-            initSettings();
-            initDiaryForm();
-            initDiaryList();
-            initAnalysis();
-            initResults();
-            initImport();
-            initDataManagement();
-            updateCharCount();
-            setDefaultDateTime();
+现在开始分析以下日记内容：
+{日记内容}`,
+    parsePrompt: `请将以下文本解析为多篇独立的日记，每篇日记包含日期和内容。
+
+要求：
+1. 识别每篇日记的开头日期，支持格式：YYYY-MM-DD、YYYY/MM/DD、MM-DD、X月X日
+2. 如果没有明确日期，使用"未知日期"
+3. 保留日记的原始内容，不要修改
+4. 输出严格按照JSON数组格式，每个元素包含date和content两个字段
+5. 不要添加任何额外的解释或说明
+
+需要解析的文本：
+{文本内容}`
+}));
+
+// 初始化
+document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    initTabs();
+    initFileUpload();
+    renderDiaryList();
+    loadConfigToForm();
+    
+    // 自定义视角显示切换
+    document.getElementById('analysisView').addEventListener('change', (e) => {
+        document.getElementById('customViewInput').style.display = e.target.value === 'custom' ? 'block' : 'none';
+    });
+});
+
+// 主题切换
+function initTheme() {
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark');
+        document.getElementById('themeBtn').textContent = '☀️';
+    }
+    document.getElementById('themeBtn').addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        const isDark = document.body.classList.contains('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+    });
+}
+
+// 标签页切换
+function initTabs() {
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab + 'Tab').style.display = 'block';
         });
+    });
+}
 
-        // 主题切换
-        function initTheme() {
-            if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            }
+// 文件上传
+function initFileUpload() {
+    const dropBox = document.getElementById('dropBox');
+    const fileInput = document.getElementById('fileInput');
 
-            document.getElementById('theme-toggle').addEventListener('click', () => {
-                document.documentElement.classList.toggle('dark');
-                localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-            });
-        }
+    fileInput.addEventListener('change', (e) => {
+        readFiles(e.target.files);
+    });
 
-        // 标签页切换
-        function initTabs() {
-            const tabBtns = document.querySelectorAll('.tab-btn');
-            const tabContents = document.querySelectorAll('.tab-content');
+    dropBox.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropBox.classList.add('active');
+    });
 
-            tabBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const tabId = btn.dataset.tab;
-                    
-                    // 更新按钮状态
-                    tabBtns.forEach(b => {
-                        b.classList.remove('active', 'border-primary', 'text-primary');
-                        b.classList.add('border-transparent');
-                    });
-                    btn.classList.add('active', 'border-primary', 'text-primary');
-                    btn.classList.remove('border-transparent');
+    dropBox.addEventListener('dragleave', () => {
+        dropBox.classList.remove('active');
+    });
 
-                    // 更新内容显示
-                    tabContents.forEach(content => {
-                        content.classList.add('hidden');
-                    });
-                    document.getElementById(`${tabId}-tab`).classList.remove('hidden');
-                });
-            });
-        }
+    dropBox.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropBox.classList.remove('active');
+        readFiles(e.dataTransfer.files);
+    });
+}
 
-        // 设置相关
-        function initSettings() {
-            const settingsModal = document.getElementById('settings-modal');
-            
-            document.getElementById('settings-btn').addEventListener('click', () => {
-                settingsModal.classList.remove('hidden');
-                loadSettingsToForm();
-            });
-
-            document.getElementById('close-settings-btn').addEventListener('click', () => {
-                settingsModal.classList.add('hidden');
-            });
-
-            // 点击模态框外部关闭
-            settingsModal.addEventListener('click', (e) => {
-                if (e.target === settingsModal) {
-                    settingsModal.classList.add('hidden');
-                }
-            });
-
-            document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
-            document.getElementById('fetch-models-btn').addEventListener('click', fetchModels);
-            document.getElementById('test-api-btn').addEventListener('click', testApiConnection);
-
-            // 高级参数切换
-            document.getElementById('toggle-advanced').addEventListener('click', () => {
-                const advancedSettings = document.getElementById('advanced-settings');
-                const icon = document.querySelector('#toggle-advanced i');
-                advancedSettings.classList.toggle('hidden');
-                icon.classList.toggle('rotate-180');
-            });
-
-            // 参数滑块事件
-            document.getElementById('max-tokens').addEventListener('input', (e) => {
-                document.getElementById('max-tokens-value').textContent = e.target.value;
-                updateAnalysisEstimate();
-            });
-
-            document.getElementById('temperature').addEventListener('input', (e) => {
-                document.getElementById('temperature-value').textContent = e.target.value;
-            });
-
-            document.getElementById('max-input').addEventListener('input', (e) => {
-                document.getElementById('max-input-value').textContent = e.target.value;
-            });
-        }
-
-        function loadSettingsToForm() {
-            document.getElementById('api-key').value = settings.apiKey;
-            document.getElementById('api-base-url').value = settings.baseUrl;
-            document.getElementById('max-tokens').value = settings.maxTokens;
-            document.getElementById('max-tokens-value').textContent = settings.maxTokens;
-            document.getElementById('temperature').value = settings.temperature;
-            document.getElementById('temperature-value').textContent = settings.temperature;
-            document.getElementById('max-input').value = settings.maxInput;
-            document.getElementById('max-input-value').textContent = settings.maxInput;
-            
-            // 加载模型列表
-            if (settings.model) {
-                const modelSelect = document.getElementById('model-select');
-                modelSelect.innerHTML = `<option value="${settings.model}" selected>${settings.model}</option>`;
-            }
-        }
-
-        function saveSettings() {
-            settings.apiKey = document.getElementById('api-key').value.trim();
-            settings.baseUrl = document.getElementById('api-base-url').value.trim();
-            settings.model = document.getElementById('model-select').value;
-            settings.maxTokens = parseInt(document.getElementById('max-tokens').value);
-            settings.temperature = parseFloat(document.getElementById('temperature').value);
-            settings.maxInput = parseInt(document.getElementById('max-input').value);
-            
-            localStorage.setItem('settings', JSON.stringify(settings));
-            showToast('设置已保存', 'success');
-            updateAnalysisEstimate();
-        }
-
-        async function fetchModels() {
-            const apiKey = document.getElementById('api-key').value.trim();
-            const baseUrl = document.getElementById('api-base-url').value.trim();
-
-            if (!apiKey || !baseUrl) {
-                showToast('请先填写API密钥和节点地址', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${baseUrl}/models`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${apiKey}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                const modelSelect = document.getElementById('model-select');
-                modelSelect.innerHTML = '';
-                
-                // 按名称排序，优先显示常用模型
-                const models = data.data
-                    .map(m => m.id)
-                    .sort((a, b) => {
-                        // 优先显示gpt系列
-                        if (a.startsWith('gpt') && !b.startsWith('gpt')) return -1;
-                        if (!a.startsWith('gpt') && b.startsWith('gpt')) return 1;
-                        return a.localeCompare(b);
-                    });
-
-                models.forEach(model => {
-                    const option = document.createElement('option');
-                    option.value = model;
-                    option.textContent = model;
-                    if (model === settings.model) {
-                        option.selected = true;
-                    }
-                    modelSelect.appendChild(option);
-                });
-
-                showToast(`成功拉取 ${models.length} 个模型`, 'success');
-            } catch (error) {
-                console.error('拉取模型失败:', error);
-                showToast('拉取模型失败: ' + error.message, 'error');
-            }
-        }
-
-        async function testApiConnection() {
-            const apiKey = document.getElementById('api-key').value.trim();
-            const baseUrl = document.getElementById('api-base-url').value.trim();
-            const model = document.getElementById('model-select').value;
-
-            if (!apiKey || !baseUrl || !model) {
-                showToast('请先填写API密钥、节点地址并选择模型', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${baseUrl}/chat/completions`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: model,
-                        messages: [{ role: 'user', content: 'Hello' }],
-                        max_tokens: 5
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                showToast('API连接测试成功！', 'success');
-            } catch (error) {
-                console.error('API测试失败:', error);
-                showToast('API连接失败: ' + error.message, 'error');
-            }
-        }
-
-        // 日记表单相关
-        function initDiaryForm() {
-            const contentTextarea = document.getElementById('diary-content');
-            
-            contentTextarea.addEventListener('input', updateCharCount);
-            
-            document.getElementById('save-diary-btn').addEventListener('click', saveDiary);
-            document.getElementById('clear-diary-btn').addEventListener('click', clearDiaryForm);
-            document.getElementById('analyze-single-btn').addEventListener('click', analyzeSingleDiary);
-        }
-
-        function updateCharCount() {
-            const content = document.getElementById('diary-content').value;
-            document.getElementById('char-count').textContent = `${content.length} 字`;
-        }
-
-        function setDefaultDateTime() {
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('diary-date').value = now.toISOString().slice(0, 16);
-        }
-
-        function saveDiary() {
-            const content = document.getElementById('diary-content').value.trim();
-            const date = document.getElementById('diary-date').value;
-
-            if (!content) {
-                showToast('日记内容不能为空', 'error');
-                return;
-            }
-
-            if (!date) {
-                showToast('请选择日期时间', 'error');
-                return;
-            }
-
-            if (currentDiaryId) {
-                // 更新现有日记
-                const index = diaries.findIndex(d => d.id === currentDiaryId);
-                if (index !== -1) {
-                    diaries[index].content = content;
-                    diaries[index].date = date;
-                    diaries[index].updatedAt = new Date().toISOString();
-                }
-                showToast('日记已更新', 'success');
-            } else {
-                // 创建新日记
-                const diary = {
-                    id: Date.now().toString(),
-                    content: content,
-                    date: date,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-                diaries.unshift(diary);
-                showToast('日记已保存', 'success');
-            }
-
-            localStorage.setItem('diaries', JSON.stringify(diaries));
-            renderDiaryList();
-            clearDiaryForm();
-            updateAnalysisEstimate();
-        }
-
-        function clearDiaryForm() {
-            document.getElementById('diary-content').value = '';
-            setDefaultDateTime();
-            currentDiaryId = null;
-            updateCharCount();
-        }
-
-        function loadDiaryToForm(diary) {
-            document.getElementById('diary-content').value = diary.content;
-            document.getElementById('diary-date').value = diary.date;
-            currentDiaryId = diary.id;
-            updateCharCount();
-        }
-
-        // 日记列表相关
-        function initDiaryList() {
-            renderDiaryList();
-            document.getElementById('diary-search').addEventListener('input', renderDiaryList);
-        }
-
-        function renderDiaryList() {
-            const searchTerm = document.getElementById('diary-search').value.toLowerCase();
-            const filteredDiaries = diaries.filter(diary => 
-                diary.content.toLowerCase().includes(searchTerm) ||
-                new Date(diary.date).toLocaleDateString().includes(searchTerm)
-            );
-
-            const diaryListEl = document.getElementById('diary-list');
-            
-            if (filteredDiaries.length === 0) {
-                diaryListEl.innerHTML = `
-                    <div class="text-center text-gray-500 dark:text-gray-400 py-8">
-                        还没有日记，开始写第一篇吧
-                    </div>
-                `;
-                return;
-            }
-
-            diaryListEl.innerHTML = filteredDiaries.map(diary => {
-                const date = new Date(diary.date);
-                const dateStr = date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', weekday: 'short' });
-                const timeStr = date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-                const preview = diary.content.length > 50 ? diary.content.substring(0, 50) + '...' : diary.content;
-
-                return `
-                    <div class="diary-card p-3 border border-gray-200 dark:border-gray-700 rounded-md card-hover cursor-pointer" data-id="${diary.id}">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="text-sm font-medium">${dateStr} ${timeStr}</div>
-                            <div class="flex space-x-1">
-                                <button class="diary-analyze-btn p-1 text-gray-400 hover:text-success transition-colors" data-id="${diary.id}" title="分析这篇">
-                                    <i class="fa fa-magic"></i>
-                                </button>
-                                <button class="diary-delete-btn p-1 text-gray-400 hover:text-danger transition-colors" data-id="${diary.id}" title="删除">
-                                    <i class="fa fa-trash-o"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">${preview}</div>
-                    </div>
-                `;
-            }).join('');
-
-            // 添加事件监听
-            document.querySelectorAll('.diary-card').forEach(card => {
-                card.addEventListener('click', (e) => {
-                    if (!e.target.closest('button')) {
-                        const id = card.dataset.id;
-                        const diary = diaries.find(d => d.id === id);
-                        if (diary) {
-                            loadDiaryToForm(diary);
-                        }
-                    }
-                });
-            });
-
-            document.querySelectorAll('.diary-analyze-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = btn.dataset.id;
-                    const diary = diaries.find(d => d.id === id);
-                    if (diary) {
-                        analyzeDiary(diary);
-                    }
-                });
-            });
-
-            document.querySelectorAll('.diary-delete-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = btn.dataset.id;
-                    deleteDiary(id);
-                });
-            });
-        }
-
-        function deleteDiary(id) {
-            if (confirm('确定要删除这篇日记吗？此操作不可撤销。')) {
-                diaries = diaries.filter(d => d.id !== id);
-                localStorage.setItem('diaries', JSON.stringify(diaries));
-                renderDiaryList();
-                showToast('日记已删除', 'success');
-                
-                if (currentDiaryId === id) {
-                    clearDiaryForm();
-                }
-                updateAnalysisEstimate();
-            }
-        }
-
-        // 导入相关
-        function initImport() {
-            const importFile = document.getElementById('import-file');
-            const importBtn = document.getElementById('import-btn');
-
-            importBtn.addEventListener('click', () => {
-                importFile.click();
-            });
-
-            importFile.addEventListener('change', handleFileSelect);
-
-            // 拖拽上传
-            const dropZone = document.querySelector('.border-dashed');
-            
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.classList.add('border-primary');
-            });
-
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.classList.remove('border-primary');
-            });
-
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('border-primary');
-                
-                if (e.dataTransfer.files.length > 0) {
-                    handleFile(e.dataTransfer.files[0]);
-                }
-            });
-
-            document.getElementById('cancel-import-btn').addEventListener('click', cancelImport);
-            document.getElementById('confirm-import-btn').addEventListener('click', confirmImport);
-        }
-
-        function handleFileSelect(e) {
-            if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
-            }
-        }
-
-        function handleFile(file) {
-            const reader = new FileReader();
-            
-            reader.onload = (e) => {
+function readFiles(files) {
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const content = e.target.result;
+            if (file.name.endsWith('.json')) {
                 try {
-                    const content = e.target.result;
-                    importData = parseImportContent(content, file.name);
-                    
-                    if (importData.length === 0) {
-                        showToast('没有找到可导入的日记内容', 'error');
-                        return;
+                    const data = JSON.parse(content);
+                    if (Array.isArray(data)) {
+                        data.forEach(item => {
+                            addDiaryItem(item.date || new Date().toLocaleDateString(), item.content || item, '文件导入-' + file.name);
+                        });
                     }
-
-                    showImportPreview();
-                } catch (error) {
-                    console.error('导入失败:', error);
-                    showToast('导入失败: ' + error.message, 'error');
+                } catch (err) {
+                    // 如果JSON解析失败，当作纯文本处理
+                    await parseAndAddMultiDiary(content, '文件导入-' + file.name);
                 }
-            };
+            } else {
+                await parseAndAddMultiDiary(content, '文件导入-' + file.name);
+            }
+        };
+        reader.readAsText(file);
+    });
+}
 
-            reader.readAsText(file);
+// 添加单篇日记
+function addDiary() {
+    const content = document.getElementById('diaryInput').value.trim();
+    if (!content) {
+        alert('日记内容不能为空！');
+        return;
+    }
+    addDiaryItem(new Date().toLocaleDateString(), content, '手动输入');
+    document.getElementById('diaryInput').value = '';
+}
+
+// 智能解析多篇日记
+async function parseMultiDiary() {
+    const content = document.getElementById('diaryInput').value.trim();
+    if (!content) {
+        alert('请先粘贴日记内容！');
+        return;
+    }
+    await parseAndAddMultiDiary(content, '智能解析');
+    document.getElementById('diaryInput').value = '';
+}
+
+async function parseAndAddMultiDiary(content, source) {
+    if (!config.apiKey) {
+        // 没有配置AI时，尝试简单解析
+        simpleParseMultiDiary(content, source);
+        return;
+    }
+
+    try {
+        const prompt = config.parsePrompt.replace('{文本内容}', content);
+        const result = await callAI(prompt);
+        const diaries = JSON.parse(result);
+        diaries.forEach(item => {
+            addDiaryItem(item.date, item.content, source);
+        });
+        alert(`成功解析 ${diaries.length} 篇日记！`);
+    } catch (err) {
+        console.error('AI解析失败，使用简单解析:', err);
+        simpleParseMultiDiary(content, source);
+    }
+}
+
+function simpleParseMultiDiary(content, source) {
+    // 简单的日期正则匹配
+    const dateRegex = /(?:^|\n)(\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}|\d{1,2}月\d{1,2}日)/g;
+    const parts = content.split(dateRegex);
+    
+    if (parts.length > 1) {
+        let count = 0;
+        for (let i = 1; i < parts.length; i += 2) {
+            const date = parts[i];
+            const text = parts[i + 1]?.trim() || '';
+            if (text) {
+                addDiaryItem(date, text, source);
+                count++;
+            }
         }
+        alert(`简单解析完成，共导入 ${count} 篇日记`);
+    } else {
+        // 没有找到日期，当作单篇
+        addDiaryItem(new Date().toLocaleDateString(), content, source);
+        alert('未识别到多个日期，已作为单篇日记导入');
+    }
+}
 
-        function parseImportContent(content, fileName) {
-            const results = [];
-            
-            if (fileName.endsWith('.json')) {
-                // JSON格式导入
-                const data = JSON.parse(content);
-                if (Array.isArray(data)) {
-                    data.forEach(item => {
-                        if (item.content && item.date) {
-                            results.push({
-                                content:
+function addDiaryItem(date, content, source) {
+    const diary = {
+        id: Date.now() + Math.random(),
+        date: date,
+        content: content.trim(),
+        source: source,
+        createdAt: new Date().toISOString()
+    };
+    diaries.unshift(diary);
+    saveDiaries();
+    renderDiaryList();
+}
+
+function saveDiaries() {
+    localStorage.setItem('diaries', JSON.stringify(diaries));
+}
+
+function renderDiaryList() {
+    const listEl = document.getElementById('diaryList');
+    const searchKey = document.getElementById('searchInput').value.toLowerCase();
+    
+    const filtered = diaries.filter(d => 
+        d.content.toLowerCase().includes(searchKey) || 
+        d.date.toLowerCase().includes(searchKey)
+    );
+
+    if (filtered.length === 0) {
+        listEl.innerHTML = '<div class="empty-state">没有找到匹配的日记</div>';
+        return;
+    }
+
+    let html = '';
+    filtered.forEach(diary => {
+        html += `
+        <div class="diary-item" data-id="${diary.id}">
+            <div class="diary-header">
+                <span class="diary-date">📅 ${diary.date}</span>
+                <span class="diary-source">${diary.source}</span>
+            </div>
+            <div class="diary-preview">${diary.content}</div>
+            <div class="diary-actions">
+                <button class="btn btn-outline btn-sm" onclick="selectDiary(${diary.id})">选中分析</button>
+                <button class="btn btn-outline btn-sm" onclick="viewDiary(${diary.id})">查看全文</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteDiary(${diary.id})">删除</button>
+            </div>
+        </div>
+        `;
+    });
+    listEl.innerHTML = html;
+}
+
+document.getElementById('searchInput').addEventListener('input', renderDiaryList);
+
+function selectDiary(id) {
+    selectedDiaryId = id;
+    document.getElementById('timeRange').value = 'single';
+    alert('已选中该日记，点击"开始AI分析"即可分析');
+}
+
+function viewDiary(id) {
+    const diary = diaries.find(d => d.id === id);
+    if (!diary) return;
+    alert(`日期：${diary.date}\n\n${diary.content}`);
+}
+
+function deleteDiary(id) {
+    if (!confirm('确定要删除这篇日记吗？')) return;
+    diaries = diaries.filter(d => d.id !== id);
+    saveDiaries();
+    renderDiaryList();
+}
+
+function clearAllDiaries() {
+    if (!confirm('确定要清空所有日记吗？此操作不可恢复！')) return;
+    diaries = [];
+    saveDiaries();
+    renderDiaryList();
+}
+
+// AI分析
+async function startAnalysis() {
+    if (!config.apiKey) {
+        alert('请先点击右上角⚙️配置AI接口信息！');
+        openModal('configModal');
+        return;
+    }
+
+    const timeRange = document.getElementById('timeRange').value;
+    const view = document.getElementById('analysisView').value;
+    let viewName = '';
+    
+    const viewMap = {
+        emotion: '情绪分析',
+        growth: '成长与反思',
+        relationship: '人际关系',
+        productivity: '生产力与时间',
+        health: '健康与生活',
+        summary: '内容总结',
+        custom: document.getElementById('customView').value
+    };
+    
+    viewName = viewMap[view];
+    if (view === 'custom' && !viewName) {
+        alert('请输入自定义分析视角！');
+        return;
+    }
+
+    // 获取对应时间范围的日记
+    let targetDiaries = [];
+    const now = new Date();
+    
+    switch (timeRange) {
+        case 'single':
+            if (!selectedDiaryId) {
+                alert('请先在日记列表中点击"选中分析"选择一篇日记！');
+                return;
+            }
+            targetDiaries = diaries.filter(d => d.id === selectedDiaryId);
+            break;
+        case 'today':
+            const today = now.toLocaleDateString();
+            targetDiaries = diaries.filter(d => d.date === today);
+            break;
+        case 'week':
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            targetDiaries = diaries.filter(d => new Date(d.date) >= weekAgo);
+            break;
+        case 'month':
+            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            targetDiaries = diaries.filter(d => new Date(d.date) >= monthAgo);
+            break;
+        case 'all':
+            targetDiaries = [...diaries];
+            break;
+    }
+
+    if (targetDiaries.length === 0) {
+        alert('该时间范围内没有日记！');
+        return;
+    }
+
+    // 拼接日记内容
+    let diaryContent = targetDiaries.map(d => `【${d.date}】\n${d.content}`).join('\n\n');
+    
+    // 显示加载状态
+    const resultEl = document.getElementById('analysisResult');
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '<div class="loading">正在分析中，请稍候...</div>';
+
+    try {
+        const prompt = config.analysisPrompt
+            .replace('{视角}', viewName)
+            .replace('{字数}', config.maxTokens * 0.75)
+            .replace('{日记内容}', diaryContent);
+
+        const result = await callAI(prompt);
+        
+        // 保存分析历史
+        const historyItem = {
+            id: Date.now(),
+            view: viewName,
+            timeRange: timeRange,
+            diaryCount: targetDiaries.length,
+            result: result,
+            createdAt: new Date().toLocaleString()
+        };
+        analysisHistory.unshift(historyItem);
+        localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
+
+        // 显示结果
+        resultEl.innerHTML = `
+            <div class="analysis-result">
+                <h4>📊 ${viewName} 分析结果</h4>
+                <div class="analysis-meta">分析范围: ${getTimeRangeText(timeRange)} | 共${targetDiaries.length}篇日记 | ${historyItem.createdAt}</div>
+                <div>${marked.parse(result)}</div>
+                <div style="margin-top:20px;display:flex;gap:12px">
+                    <button class="btn btn-outline" onclick="copyResult()">复制结果</button>
+                    <button class="btn btn-outline" onclick="exportResult()">导出为Markdown</button>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        resultEl.innerHTML = `<div style="color:var(--danger);text-align:center;padding:20px">分析失败: ${err.message}</div>`;
+    }
+}
+
+function getTimeRangeText(range) {
+    const map = {
+        single: '单篇日记',
+        today: '今日',
+        week: '近7天',
+        month: '近30天',
+        all: '全部'
+    };
+    return map[range];
+}
+
+async function callAI(prompt) {
+    const response = await fetch(`${config.apiBase}/chat/completions`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.apiKey}`
+        },
+        body: JSON.stringify({
+            model: config.modelName,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: parseFloat(config.temperature),
+            max_tokens: parseInt(config.maxTokens)
+        })
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'API请求失败');
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+}
+
+function copyResult() {
+    const resultText = document.querySelector('.analysis-result > div:nth-child(3)').textContent;
+    navigator.clipboard.writeText(resultText).then(() => {
+        alert('已复制到剪贴板！');
+    });
+}
+
+function exportResult() {
+    const resultText = document.querySelector('.analysis-result > div:nth-child(3)').textContent;
+    const blob = new Blob([resultText], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `日记分析_${new Date().toLocaleDateString()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function viewHistory() {
+    const listEl = document.getElementById('historyList');
+    if (analysisHistory.length === 0) {
+        listEl.innerHTML = '<div class="empty-state">还没有分析记录</div>';
+        openModal('historyModal');
+        return;
+    }
+
+    let html = '';
+    analysisHistory.forEach(item => {
+        html += `
+        <div class="diary-item">
+            <div class="diary-header">
+                <span class="diary-date">📊 ${item.view}</span>
+                <span class="diary-source">${item.createdAt}</span>
+            </div>
+            <div style="color:var(--text-secondary);margin-bottom:8px">
+                分析范围: ${getTimeRangeText(item.timeRange)} | 共${item.diaryCount}篇日记
+            </div>
+            <div class="diary-preview">${item.result}</div>
+            <div class="diary-actions">
+                <button class="btn btn-outline btn-sm" onclick="viewHistoryDetail(${item.id})">查看详情</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteHistory(${item.id})">删除</button>
+            </div>
+        </div>
+        `;
+    });
+    listEl.innerHTML = html;
+    openModal('historyModal');
+}
+
+function viewHistoryDetail(id) {
+    const item = analysisHistory.find(h => h.id === id);
+    if (!item) return;
+    
+    const resultEl = document.getElementById('analysisResult');
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = `
+        <div class="analysis-result">
+            <h4>📊 ${item.view} 分析结果（历史记录）</h4>
+            <div class="analysis-meta">分析范围: ${getTimeRangeText(item.timeRange)} | 共${item.diaryCount}篇日记 | ${item.createdAt}</div>
+            <div>${marked.parse(item.result)}</div>
+        </div>
+    `;
+    closeModal('historyModal');
+}
+
+function deleteHistory(id) {
+    if (!confirm('确定要删除这条分析记录吗？')) return;
+    analysisHistory = analysisHistory.filter(h => h.id !== id);
+    localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
+    viewHistory();
+}
+
+// 配置相关
+function openModal(id) {
+    document.getElementById(id).style.display = 'flex';
+}
+
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+
+document.getElementById('configBtn').addEventListener('click', () => {
+    loadConfigToForm();
+    openModal('configModal');
+});
+
+function loadConfigToForm() {
+    document.getElementById('apiKey').value = config.apiKey;
+    document.getElementById('apiBase').value = config.apiBase;
+    document.getElementById('modelName').value = config.modelName;
+    document.getElementById('temperature').value = config.temperature;
+    document.getElementById('maxTokens').value = config.maxTokens;
+    document.getElementById('analysisPrompt').value = config.analysisPrompt;
+    document.getElementById('parsePrompt').value = config.parsePrompt;
+}
+
+function saveConfig() {
+    config = {
+        apiKey: document.getElementById('apiKey').value.trim(),
+        apiBase: document.getElementById('apiBase').value.trim(),
+        modelName: document.getElementById('modelName').value.trim(),
+        temperature: document.getElementById('temperature').value,
+        maxTokens: document.getElementById('maxTokens').value,
+        analysisPrompt: document.getElementById('analysisPrompt').value,
+        parsePrompt: document.getElementById('parsePrompt').value
+    };
+    localStorage.setItem('aiConfig', JSON.stringify(config));
+    alert('配置已保存！');
+    closeModal('configModal');
+}
+
+function resetPrompts() {
+    if (!confirm('确定要恢复默认提示词吗？当前修改将丢失！')) return;
+    document.getElementById('analysisPrompt').value = `你是一位专业的日记分析师，请根据用户提供的日记内容，从{视角}角度进行深入、客观、温暖的分析。
+
+要求：
+1. 分析要具体，结合日记中的具体内容，不要空泛
+2. 语言要温暖有同理心，避免评判性语言
+3. 结构清晰，分点列出，使用小标题
+4. 最后给出1-2条建设性的建议
+5. 字数控制在{字数}左右
+
+现在开始分析以下日记内容：
+{日记内容}`;
+    document.getElementById('parsePrompt').value = `请将以下文本解析为多篇独立的日记，每篇日记包含日期和内容。
+
+要求：
+1. 识别每篇日记的开头日期，支持格式：YYYY-MM-DD、YYYY/MM/DD、MM-DD、X月X日
+2. 如果没有明确日期，使用"未知日期"
+3. 保留日记的原始内容，不要修改
+4. 输出严格按照JSON数组格式，每个元素包含date和content两个字段
+5. 不要添加任何额外的解释或说明
+
+需要解析的文本：
+{文本内容}`;
+}
+
+// 导出所有数据
+document.getElementById('exportBtn').addEventListener('click', () => {
+    const data = {
+        diaries: diaries,
+        analysisHistory: analysisHistory,
+        exportTime: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `AI日记分析数据_${new Date().toLocaleDateString()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+// 点击模态框外部关闭
+document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+});
+</script>
+</body>
+</html>
