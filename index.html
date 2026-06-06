@@ -1,1 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI日记分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#64748b',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            }
+            .card-hover {
+                transition: all 0.2s ease;
+            }
+            .card-hover:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            .scrollbar-thin::-webkit-scrollbar {
+                width: 4px;
+                height: 4px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 2px;
+            }
+            .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+                background: #475569;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+    <!-- 顶部导航栏 -->
+    <nav class="bg-white dark:bg-gray-800 card-shadow sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-primary">
+                        <i class="fa fa-book mr-2"></i>AI日记分析
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <i class="fa fa-moon-o dark:hidden"></i>
+                        <i class="fa fa-sun-o hidden dark:inline"></i>
+                    </button>
+                    <button id="settings-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <i class="fa fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
 
+    <!-- 主内容区 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- 标签页导航 -->
+        <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+            <ul class="flex flex-wrap -mb-px" id="main-tabs">
+                <li class="mr-2">
+                    <button class="tab-btn active inline-block py-4 px-4 text-sm font-medium text-center border-b-2 border-primary text-primary" data-tab="diary">
+                        <i class="fa fa-pencil mr-2"></i>日记管理
+                    </button>
+                </li>
+                <li class="mr-2">
+                    <button class="tab-btn inline-block py-4 px-4 text-sm font-medium text-center border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600" data-tab="analysis">
+                        <i class="fa fa-line-chart mr-2"></i>AI分析
+                    </button>
+                </li>
+                <li class="mr-2">
+                    <button class="tab-btn inline-block py-4 px-4 text-sm font-medium text-center border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600" data-tab="results">
+                        <i class="fa fa-history mr-2"></i>历史结果
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 日记管理标签页 -->
+        <div id="diary-tab" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 日记编辑区 -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-semibold">写日记</h2>
+                            <div class="flex items-center space-x-2">
+                                <input type="datetime-local" id="diary-date" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm">
+                                <button id="save-diary-btn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
+                                    <i class="fa fa-save mr-1"></i>保存
+                                </button>
+                            </div>
+                        </div>
+                        <textarea id="diary-content" rows="12" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 resize-none focus:ring-2 focus:ring-primary focus:border-transparent scrollbar-thin" placeholder="今天发生了什么？写下你的想法和感受..."></textarea>
+                        <div class="mt-4 flex justify-between items-center">
+                            <div>
+                                <span id="char-count" class="text-sm text-gray-500 dark:text-gray-400">0 字</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button id="clear-diary-btn" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm">
+                                    <i class="fa fa-trash-o mr-1"></i>清空
+                                </button>
+                                <button id="analyze-single-btn" class="px-3 py-2 bg-success text-white rounded-md hover:bg-success/90 transition-colors text-sm">
+                                    <i class="fa fa-magic mr-1"></i>分析这篇
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 导入区域 -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow p-6 mt-6">
+                        <h2 class="text-lg font-semibold mb-4">导入日记</h2>
+                        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+                            <i class="fa fa-upload text-4xl text-gray-400 mb-4"></i>
+                            <p class="mb-4 text-gray-500 dark:text-gray-400">拖拽文件到这里，或者点击选择文件</p>
+                            <p class="mb-4 text-sm text-gray-400 dark:text-gray-500">支持格式：TXT、Markdown、JSON</p>
+                            <input type="file" id="import-file" accept=".txt,.md,.json" class="hidden">
+                            <button id="import-btn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
+                                选择文件
+                            </button>
+                        </div>
+                        <div id="import-preview" class="mt-4 hidden">
+                            <h3 class="font-medium mb-2">导入预览</h3>
+                            <div id="import-preview-list" class="max-h-60 overflow-y-auto scrollbar-thin border border-gray-200 dark:border-gray-700 rounded-md p-2"></div>
+                            <div class="mt-4 flex justify-end space-x-2">
+                                <button id="cancel-import-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                                    取消
+                                </button>
+                                <button id="confirm-import-btn" class="px-4 py-2 bg-success text-white rounded-md hover:bg-success/90 transition-colors">
+                                    确认导入
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 日记列表 -->
+                <div>
+                    <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow p-6 h-full">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-semibold">日记列表</h2>
+                            <div class="relative">
+                                <input type="text" id="diary-search" placeholder="搜索日记..." class="pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm w-full">
+                                <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div id="diary-list" class="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin">
+                            <div class="text-center text-gray-500 dark:text-gray-400 py-8">
+                                还没有日记，开始写第一篇吧
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI分析标签页 -->
+        <div id="analysis-tab" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 分析设置 -->
+                <div>
+                    <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow p-6">
+                        <h2 class="text-lg font-semibold mb-4">分析设置</h2>
+                        
+                        <!-- 时间范围选择 -->
+                        <div class="mb-6">
+                            <h3 class="font-medium mb-3">选择时间范围</h3>
+                            <div class="space-y-2">
+                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <input type="radio" name="time-range" value="today" class="mr-3" checked>
+                                    <span>今日分析</span>
+                                    <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">今天所有日记</span>
+                                </label>
+                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <input type="radio" name="time-range" value="week" class="mr-3">
+                                    <span>一周分析</span>
+                                    <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">最近7天</span>
+                                </label>
+                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <input type="radio" name="time-range" value="month" class="mr-3">
+                                    <span>一月分析</span>
+                                    <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">最近30天</span>
+                                </label>
+                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <input type="radio" name="time-range" value="all" class="mr-3">
+                                    <span>全部分析</span>
+                                    <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">所有历史日记</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 分析视角选择 -->
+                        <div class="mb-6">
+                            <h3 class="font-medium mb-3">选择分析视角</h3>
+                            <div class="space-y-2" id="perspective-list">
+                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <input type="checkbox" name="perspective" value="default" class="mr-3" checked>
+                                    <div>
+                                        <div class="font-medium">默认洞察</div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">挖掘笔记背后隐藏的思维模式与深层内在</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <input type="checkbox" name="perspective" value="value" class="mr-3">
+                                    <div>
+                                        <div class="font-medium">价值澄清</div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">从笔记里找出你真正看重的东西</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <input type="checkbox" name="perspective" value="reverse" class="mr-3">
+                                    <div>
+                                        <div class="font-medium">逆向思考</div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">通过芒格的逆向思维考察关键问题</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <input type="checkbox" name="perspective" value="second-order" class="mr-3">
+                                    <div>
+                                        <div class="font-medium">二阶思考</div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">提炼问题之上的深层原因</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <input type="checkbox" name="perspective" value="cbt" class="mr-3">
+                                    <div>
+                                        <div class="font-medium">CBT疗法</div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">识别思维陷阱并提供改善建议</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <input type="checkbox" name="perspective" value="mbti" class="mr-3">
+                                    <div>
+                                        <div class="font-medium">MBTI分析</div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">解读真实的MBTI人格倾向</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <input type="checkbox" name="perspective" value="custom" class="mr-3">
+                                    <div>
+                                        <div class="font-medium">自定义视角</div>
+                                        <input type="text" id="custom-perspective" placeholder="输入你的分析指令..." class="mt-2 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 分析参数 -->
+                        <div class="mb-6">
+                            <button id="toggle-advanced" class="flex items-center justify-between w-full text-left font-medium mb-3">
+                                <span>高级参数</span>
+                                <i class="fa fa-chevron-down transition-transform"></i>
+                            </button>
+                            <div id="advanced-settings" class="space-y-4 hidden">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">
+                                        结果最大字数: <span id="max-tokens-value">1000</span>
+                                    </label>
+                                    <input type="range" id="max-tokens" min="200" max="5000" step="100" value="1000" class="w-full">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">
+                                        分析温度: <span id="temperature-value">0.3</span>
+                                    </label>
+                                    <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.3" class="w-full">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">
+                                        最大输入字数: <span id="max-input-value">4000</span>
+                                    </label>
+                                    <input type="range" id="max-input" min="1000" max="10000" step="500" value="4000" class="w-full">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="start-analysis-btn" class="w-full py-3 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors font-medium">
+                            <i class="fa fa-magic mr-2"></i>开始分析
+                        </button>
+                        <div id="analysis-estimate" class="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                            预估消耗: 约 0 tokens
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分析结果展示 -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow p-6 h-full flex flex-col">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-semibold">分析结果</h2>
+                            <div class="flex space-x-2">
+                                <button id="copy-result-btn" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm disabled:opacity-50" disabled>
+                                    <i class="fa fa-copy mr-1"></i>复制
+                                </button>
+                                <button id="save-result-btn" class="px-3 py-2 bg-success text-white rounded-md hover:bg-success/90 transition-colors text-sm disabled:opacity-50" disabled>
+                                    <i class="fa fa-save mr-1"></i>保存结果
+                                </button>
+                                <button id="export-result-btn" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm disabled:opacity-50" disabled>
+                                    <i class="fa fa-download mr-1"></i>导出
+                                </button>
+                            </div>
+                        </div>
+                        <div id="analysis-result" class="flex-1 overflow-y-auto scrollbar-thin p-4 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900">
+                            <div class="text-center text-gray-500 dark:text-gray-400 py-16">
+                                <i class="fa fa-line-chart text-4xl mb-4"></i>
+                                <p>选择时间范围和分析视角，点击"开始分析"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 历史结果标签页 -->
+        <div id="results-tab" class="tab-content hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-semibold">历史分析结果</h2>
+                    <div class="flex space-x-3">
+                        <select id="filter-range" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm">
+                            <option value="all">所有范围</option>
+                            <option value="single">单次分析</option>
+                            <option value="today">今日分析</option>
+                            <option value="week">一周分析</option>
+                            <option value="month">一月分析</option>
+                            <option value="all-range">全部分析</option>
+                        </select>
+                        <select id="filter-perspective" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm">
+                            <option value="all">所有视角</option>
+                            <option value="default">默认洞察</option>
+                            <option value="value">价值澄清</option>
+                            <option value="reverse">逆向思考</option>
+                            <option value="second-order">二阶思考</option>
+                            <option value="cbt">CBT疗法</option>
+                            <option value="mbti">MBTI分析</option>
+                            <option value="custom">自定义视角</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="results-list" class="space-y-4">
+                    <div class="text-center text-gray-500 dark:text-gray-400 py-16">
+                        <i class="fa fa-history text-4xl mb-4"></i>
+                        <p>还没有保存的分析结果</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 设置模态框 -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow w-full max-w-md mx-4">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-semibold">AI接口设置</h2>
+                <button id="close-settings-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">API 密钥</label>
+                    <input type="password" id="api-key" placeholder="sk-..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">API 节点地址</label>
+                    <input type="text" id="api-base-url" placeholder="https://api.openai.com/v1" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">模型</label>
+                    <div class="flex space-x-2">
+                        <select id="model-select" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                            <option value="">请先配置API并拉取模型</option>
+                        </select>
+                        <button id="fetch-models-btn" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            <i class="fa fa-refresh"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="pt-4">
+                    <button id="test-api-btn" class="w-full py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors mb-2">
+                        测试连接
+                    </button>
+                    <button id="save-settings-btn" class="w-full py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
+                        保存设置
+                    </button>
+                </div>
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h3 class="font-medium mb-3">数据管理</h3>
+                    <div class="space-y-2">
+                        <button id="export-all-btn" class="w-full py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm">
+                            <i class="fa fa-download mr-1"></i>导出所有数据
+                        </button>
+                        <button id="import-all-btn" class="w-full py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm">
+                            <i class="fa fa-upload mr-1"></i>导入数据
+                        </button>
+                        <input type="file" id="import-all-file" accept=".json" class="hidden">
+                        <button id="clear-all-btn" class="w-full py-2 bg-danger text-white rounded-md hover:bg-danger/90 transition-colors text-sm">
+                            <i class="fa fa-trash-o mr-1"></i>清空所有数据
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果详情模态框 -->
+    <div id="result-detail-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg card-shadow w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 id="result-detail-title" class="text-lg font-semibold">分析结果详情</h2>
+                <button id="close-result-detail-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div id="result-detail-content" class="p-6 overflow-y-auto scrollbar-thin flex-1"></div>
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-2">
+                <button id="copy-detail-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                    <i class="fa fa-copy mr-1"></i>复制
+                </button>
+                <button id="export-detail-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                    <i class="fa fa-download mr-1"></i>导出
+                </button>
+                <button id="delete-detail-btn" class="px-4 py-2 bg-danger text-white rounded-md hover:bg-danger/90 transition-colors">
+                    <i class="fa fa-trash-o mr-1"></i>删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-20 opacity-0 transition-all duration-300">
+        <div class="bg-gray-800 dark:bg-gray-700 text-white px-6 py-3 rounded-lg card-shadow flex items-center">
+            <i id="toast-icon" class="fa fa-check-circle mr-2"></i>
+            <span id="toast-message">操作成功</span>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
+        let analysisResults = JSON.parse(localStorage.getItem('analysisResults') || '[]');
+        let settings = JSON.parse(localStorage.getItem('settings') || '{"apiKey":"","baseUrl":"https://api.openai.com/v1","model":"","maxTokens":1000,"temperature":0.3,"maxInput":4000}');
+        let currentDiaryId = null;
+        let currentResultId = null;
+        let importData = [];
+        let isAnalyzing = false;
+        let abortController = null;
+
+        // 分析视角系统提示词
+        const perspectivePrompts = {
+            default: "请作为一个敏锐的观察者和深度思考者，分析以下日记内容。挖掘作者隐藏的思维模式、情绪变化规律、深层内在需求和价值观。请用清晰、有条理的方式呈现你的洞察，不要过于笼统，要结合具体内容进行分析。",
+            value: "请从价值澄清的角度分析以下日记内容。帮助作者找出他真正看重的东西、人生优先级、内在驱动力和意义来源。区分哪些是社会期待的价值，哪些是作者内心真正认同的价值。给出清晰的总结和思考。",
+            reverse: "请运用查理·芒格的逆向思维来分析以下日记内容。不要只看作者想要什么，而是分析他在避免什么、害怕什么、担心什么会出错。从反面思考如何避免这些问题，以及这些恐惧背后反映了什么。",
+            "second-order": "请运用二阶思考来分析以下日记内容。不要只停留在表面问题，而是深入挖掘：问题的根本原因是什么？这个原因背后又是什么？如果按照当前的模式发展，会产生什么二阶、三阶后果？",
+            cbt: "请从认知行为疗法(CBT)的角度分析以下日记内容。识别作者可能存在的思维陷阱（如非黑即白、灾难化、过度概括、情绪推理等）。对于每个识别出的思维陷阱，提供具体的、可操作的改善建议。",
+            mbti: "请基于以下日记内容，分析作者的MBTI人格倾向。从四个维度（E/I、S/N、T/F、J/P）进行分析，结合具体的日记内容作为证据。说明每个维度的倾向程度，以及这种人格类型的优势和可能的盲点。"
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initTabs();
+            initSettings();
+            initDiaryForm();
+            initDiaryList();
+            initAnalysis();
+            initResults();
+            initImport();
+            initDataManagement();
+            updateCharCount();
+            setDefaultDateTime();
+        });
+
+        // 主题切换
+        function initTheme() {
+            if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+
+            document.getElementById('theme-toggle').addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            });
+        }
+
+        // 标签页切换
+        function initTabs() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabId = btn.dataset.tab;
+                    
+                    // 更新按钮状态
+                    tabBtns.forEach(b => {
+                        b.classList.remove('active', 'border-primary', 'text-primary');
+                        b.classList.add('border-transparent');
+                    });
+                    btn.classList.add('active', 'border-primary', 'text-primary');
+                    btn.classList.remove('border-transparent');
+
+                    // 更新内容显示
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+                });
+            });
+        }
+
+        // 设置相关
+        function initSettings() {
+            const settingsModal = document.getElementById('settings-modal');
+            
+            document.getElementById('settings-btn').addEventListener('click', () => {
+                settingsModal.classList.remove('hidden');
+                loadSettingsToForm();
+            });
+
+            document.getElementById('close-settings-btn').addEventListener('click', () => {
+                settingsModal.classList.add('hidden');
+            });
+
+            // 点击模态框外部关闭
+            settingsModal.addEventListener('click', (e) => {
+                if (e.target === settingsModal) {
+                    settingsModal.classList.add('hidden');
+                }
+            });
+
+            document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
+            document.getElementById('fetch-models-btn').addEventListener('click', fetchModels);
+            document.getElementById('test-api-btn').addEventListener('click', testApiConnection);
+
+            // 高级参数切换
+            document.getElementById('toggle-advanced').addEventListener('click', () => {
+                const advancedSettings = document.getElementById('advanced-settings');
+                const icon = document.querySelector('#toggle-advanced i');
+                advancedSettings.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            });
+
+            // 参数滑块事件
+            document.getElementById('max-tokens').addEventListener('input', (e) => {
+                document.getElementById('max-tokens-value').textContent = e.target.value;
+                updateAnalysisEstimate();
+            });
+
+            document.getElementById('temperature').addEventListener('input', (e) => {
+                document.getElementById('temperature-value').textContent = e.target.value;
+            });
+
+            document.getElementById('max-input').addEventListener('input', (e) => {
+                document.getElementById('max-input-value').textContent = e.target.value;
+            });
+        }
+
+        function loadSettingsToForm() {
+            document.getElementById('api-key').value = settings.apiKey;
+            document.getElementById('api-base-url').value = settings.baseUrl;
+            document.getElementById('max-tokens').value = settings.maxTokens;
+            document.getElementById('max-tokens-value').textContent = settings.maxTokens;
+            document.getElementById('temperature').value = settings.temperature;
+            document.getElementById('temperature-value').textContent = settings.temperature;
+            document.getElementById('max-input').value = settings.maxInput;
+            document.getElementById('max-input-value').textContent = settings.maxInput;
+            
+            // 加载模型列表
+            if (settings.model) {
+                const modelSelect = document.getElementById('model-select');
+                modelSelect.innerHTML = `<option value="${settings.model}" selected>${settings.model}</option>`;
+            }
+        }
+
+        function saveSettings() {
+            settings.apiKey = document.getElementById('api-key').value.trim();
+            settings.baseUrl = document.getElementById('api-base-url').value.trim();
+            settings.model = document.getElementById('model-select').value;
+            settings.maxTokens = parseInt(document.getElementById('max-tokens').value);
+            settings.temperature = parseFloat(document.getElementById('temperature').value);
+            settings.maxInput = parseInt(document.getElementById('max-input').value);
+            
+            localStorage.setItem('settings', JSON.stringify(settings));
+            showToast('设置已保存', 'success');
+            updateAnalysisEstimate();
+        }
+
+        async function fetchModels() {
+            const apiKey = document.getElementById('api-key').value.trim();
+            const baseUrl = document.getElementById('api-base-url').value.trim();
+
+            if (!apiKey || !baseUrl) {
+                showToast('请先填写API密钥和节点地址', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${baseUrl}/models`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const modelSelect = document.getElementById('model-select');
+                modelSelect.innerHTML = '';
+                
+                // 按名称排序，优先显示常用模型
+                const models = data.data
+                    .map(m => m.id)
+                    .sort((a, b) => {
+                        // 优先显示gpt系列
+                        if (a.startsWith('gpt') && !b.startsWith('gpt')) return -1;
+                        if (!a.startsWith('gpt') && b.startsWith('gpt')) return 1;
+                        return a.localeCompare(b);
+                    });
+
+                models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    if (model === settings.model) {
+                        option.selected = true;
+                    }
+                    modelSelect.appendChild(option);
+                });
+
+                showToast(`成功拉取 ${models.length} 个模型`, 'success');
+            } catch (error) {
+                console.error('拉取模型失败:', error);
+                showToast('拉取模型失败: ' + error.message, 'error');
+            }
+        }
+
+        async function testApiConnection() {
+            const apiKey = document.getElementById('api-key').value.trim();
+            const baseUrl = document.getElementById('api-base-url').value.trim();
+            const model = document.getElementById('model-select').value;
+
+            if (!apiKey || !baseUrl || !model) {
+                showToast('请先填写API密钥、节点地址并选择模型', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${baseUrl}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [{ role: 'user', content: 'Hello' }],
+                        max_tokens: 5
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                showToast('API连接测试成功！', 'success');
+            } catch (error) {
+                console.error('API测试失败:', error);
+                showToast('API连接失败: ' + error.message, 'error');
+            }
+        }
+
+        // 日记表单相关
+        function initDiaryForm() {
+            const contentTextarea = document.getElementById('diary-content');
+            
+            contentTextarea.addEventListener('input', updateCharCount);
+            
+            document.getElementById('save-diary-btn').addEventListener('click', saveDiary);
+            document.getElementById('clear-diary-btn').addEventListener('click', clearDiaryForm);
+            document.getElementById('analyze-single-btn').addEventListener('click', analyzeSingleDiary);
+        }
+
+        function updateCharCount() {
+            const content = document.getElementById('diary-content').value;
+            document.getElementById('char-count').textContent = `${content.length} 字`;
+        }
+
+        function setDefaultDateTime() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('diary-date').value = now.toISOString().slice(0, 16);
+        }
+
+        function saveDiary() {
+            const content = document.getElementById('diary-content').value.trim();
+            const date = document.getElementById('diary-date').value;
+
+            if (!content) {
+                showToast('日记内容不能为空', 'error');
+                return;
+            }
+
+            if (!date) {
+                showToast('请选择日期时间', 'error');
+                return;
+            }
+
+            if (currentDiaryId) {
+                // 更新现有日记
+                const index = diaries.findIndex(d => d.id === currentDiaryId);
+                if (index !== -1) {
+                    diaries[index].content = content;
+                    diaries[index].date = date;
+                    diaries[index].updatedAt = new Date().toISOString();
+                }
+                showToast('日记已更新', 'success');
+            } else {
+                // 创建新日记
+                const diary = {
+                    id: Date.now().toString(),
+                    content: content,
+                    date: date,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                diaries.unshift(diary);
+                showToast('日记已保存', 'success');
+            }
+
+            localStorage.setItem('diaries', JSON.stringify(diaries));
+            renderDiaryList();
+            clearDiaryForm();
+            updateAnalysisEstimate();
+        }
+
+        function clearDiaryForm() {
+            document.getElementById('diary-content').value = '';
+            setDefaultDateTime();
+            currentDiaryId = null;
+            updateCharCount();
+        }
+
+        function loadDiaryToForm(diary) {
+            document.getElementById('diary-content').value = diary.content;
+            document.getElementById('diary-date').value = diary.date;
+            currentDiaryId = diary.id;
+            updateCharCount();
+        }
+
+        // 日记列表相关
+        function initDiaryList() {
+            renderDiaryList();
+            document.getElementById('diary-search').addEventListener('input', renderDiaryList);
+        }
+
+        function renderDiaryList() {
+            const searchTerm = document.getElementById('diary-search').value.toLowerCase();
+            const filteredDiaries = diaries.filter(diary => 
+                diary.content.toLowerCase().includes(searchTerm) ||
+                new Date(diary.date).toLocaleDateString().includes(searchTerm)
+            );
+
+            const diaryListEl = document.getElementById('diary-list');
+            
+            if (filteredDiaries.length === 0) {
+                diaryListEl.innerHTML = `
+                    <div class="text-center text-gray-500 dark:text-gray-400 py-8">
+                        还没有日记，开始写第一篇吧
+                    </div>
+                `;
+                return;
+            }
+
+            diaryListEl.innerHTML = filteredDiaries.map(diary => {
+                const date = new Date(diary.date);
+                const dateStr = date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', weekday: 'short' });
+                const timeStr = date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                const preview = diary.content.length > 50 ? diary.content.substring(0, 50) + '...' : diary.content;
+
+                return `
+                    <div class="diary-card p-3 border border-gray-200 dark:border-gray-700 rounded-md card-hover cursor-pointer" data-id="${diary.id}">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="text-sm font-medium">${dateStr} ${timeStr}</div>
+                            <div class="flex space-x-1">
+                                <button class="diary-analyze-btn p-1 text-gray-400 hover:text-success transition-colors" data-id="${diary.id}" title="分析这篇">
+                                    <i class="fa fa-magic"></i>
+                                </button>
+                                <button class="diary-delete-btn p-1 text-gray-400 hover:text-danger transition-colors" data-id="${diary.id}" title="删除">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">${preview}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // 添加事件监听
+            document.querySelectorAll('.diary-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (!e.target.closest('button')) {
+                        const id = card.dataset.id;
+                        const diary = diaries.find(d => d.id === id);
+                        if (diary) {
+                            loadDiaryToForm(diary);
+                        }
+                    }
+                });
+            });
+
+            document.querySelectorAll('.diary-analyze-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    const diary = diaries.find(d => d.id === id);
+                    if (diary) {
+                        analyzeDiary(diary);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.diary-delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    deleteDiary(id);
+                });
+            });
+        }
+
+        function deleteDiary(id) {
+            if (confirm('确定要删除这篇日记吗？此操作不可撤销。')) {
+                diaries = diaries.filter(d => d.id !== id);
+                localStorage.setItem('diaries', JSON.stringify(diaries));
+                renderDiaryList();
+                showToast('日记已删除', 'success');
+                
+                if (currentDiaryId === id) {
+                    clearDiaryForm();
+                }
+                updateAnalysisEstimate();
+            }
+        }
+
+        // 导入相关
+        function initImport() {
+            const importFile = document.getElementById('import-file');
+            const importBtn = document.getElementById('import-btn');
+
+            importBtn.addEventListener('click', () => {
+                importFile.click();
+            });
+
+            importFile.addEventListener('change', handleFileSelect);
+
+            // 拖拽上传
+            const dropZone = document.querySelector('.border-dashed');
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-primary');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('border-primary');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-primary');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            document.getElementById('cancel-import-btn').addEventListener('click', cancelImport);
+            document.getElementById('confirm-import-btn').addEventListener('click', confirmImport);
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        }
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                try {
+                    const content = e.target.result;
+                    importData = parseImportContent(content, file.name);
+                    
+                    if (importData.length === 0) {
+                        showToast('没有找到可导入的日记内容', 'error');
+                        return;
+                    }
+
+                    showImportPreview();
+                } catch (error) {
+                    console.error('导入失败:', error);
+                    showToast('导入失败: ' + error.message, 'error');
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        function parseImportContent(content, fileName) {
+            const results = [];
+            
+            if (fileName.endsWith('.json')) {
+                // JSON格式导入
+                const data = JSON.parse(content);
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        if (item.content && item.date) {
+                            results.push({
+                                content:
