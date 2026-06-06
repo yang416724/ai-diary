@@ -7,30 +7,30 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-        :root{
-            --bg:#f8fafc;
-            --card:#ffffff;
-            --text:#1e293b;
-            --text-secondary:#64748b;
-            --border:#e2e8f0;
-            --primary:#3b82f6;
-            --primary-hover:#2563eb;
-            --danger:#ef4444;
-            --success:#10b981;
-            --shadow:0 1px 3px 0 rgba(0,0,0,0.1)
-        }
-        .dark{
-            --bg:#0f172a;
-            --card:#1e293b;
-            --text:#f1f5f9;
-            --text-secondary:#94a3b8;
-            --border:#334155;
-            --primary:#60a5fa;
-            --primary-hover:#3b82f6;
-            --danger:#f87171;
-            --success:#34d399;
-            --shadow:0 1px 3px 0 rgba(0,0,0,0.3)
-        }
+       :root{
+    --bg:#F4ECEA;          /*莫兰迪浅冷粉底色（页面背景）*/
+    --card:#F9F3F2;        /*卡片浅裸粉白*/
+    --text:#5C5050;        /*深灰粉正文文字*/
+    --text-secondary:#998888;/*次要淡粉灰文字*/
+    --border:#E4D4D2;      /*莫兰迪粉灰边框*/
+    --primary:#C9A8A7;     /*主色：低饱和冷粉（按钮、高亮）*/
+    --primary-hover:#B99493;/*悬浮加深冷粉*/
+    --danger:#C88A8A;      /*删除按钮莫兰迪豆沙红*/
+    --success:#A9B8B0;     /*成功低饱和灰绿（莫兰迪搭配）*/
+    --shadow:0 1px 4px 0 rgba(150,120,120,0.12)
+}
+       .dark{
+    --bg:#483E3E;
+    --card:#594F4F;
+    --text:#EAE0E0;
+    --text-secondary:#BBAAAA;
+    --border:#726262;
+    --primary:#D1B2B1;
+    --primary-hover:#C9A8A7;
+    --danger:#DD9999;
+    --success:#9AB0A6;
+    --shadow:0 1px 4px 0 rgba(30,20,20,0.35)
+}
         body{background:var(--bg);color:var(--text);padding:20px;max-width:1000px;margin:0 auto;transition:all 0.3s ease}
         .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
         .top-bar h1{font-size:28px;color:var(--primary);display:flex;align-items:center;gap:8px}
@@ -133,21 +133,7 @@
         </div>
     </div>
 
-    <!-- 分析区域 -->
-    <div class="card">
-        <h2>AI分析 <span class="badge">手动触发</span></h2>
-        <div class="grid-2">
-            <div>
-                <label>分析时间范围</label>
-                <select class="select" id="timeRange">
-                    <option value="single">当前选中日记</option>
-                    <option value="today">今日日记</option>
-                    <option value="week">近7天日记</option>
-                    <option value="month">近30天日记</option>
-                    <option value="all">全部日记</option>
-                </select>
-            </div>
-             <!-- 分析区域 -->
+    <!-- 分析区域【最终多选flomo视角】 -->
     <div class="card">
         <h2>AI分析 <span class="badge">手动触发</span></h2>
         <div class="grid-2">
@@ -194,12 +180,6 @@
         <div id="customViewInput" style="margin-top:12px;display:none">
             <input type="text" class="input" id="customView" placeholder="输入你想要的额外分析视角，例如：金钱消费分析、梦境分析">
         </div>
-        <div style="margin-top:20px">
-            <button class="btn btn-primary" onclick="startAnalysis()">开始AI分析</button>
-            <button class="btn btn-outline" onclick="viewHistory()">查看历史分析</button>
-        </div>
-        <div id="analysisResult" style="display:none"></div>
-    </div>
         <div style="margin-top:20px">
             <button class="btn btn-primary" onclick="startAnalysis()">开始AI分析</button>
             <button class="btn btn-outline" onclick="viewHistory()">查看历史分析</button>
@@ -341,10 +321,13 @@ document.addEventListener('DOMContentLoaded', () => {
     renderDiaryList();
     loadConfigToForm();
     
-    // 自定义视角显示切换
-    document.getElementById('analysisView').addEventListener('change', (e) => {
-        document.getElementById('customViewInput').style.display = e.target.value === 'custom' ? 'block' : 'none';
-    });
+    // 监听自定义勾选框切换输入框
+    const customCb = document.querySelector('input[value="custom"]');
+    if(customCb){
+        customCb.addEventListener('change',(e)=>{
+            document.getElementById('customViewInput').style.display = e.target.checked ? 'block':'none'
+        })
+    }
 });
 
 // 主题切换
@@ -373,553 +356,340 @@ function initTabs() {
     });
 }
 
-// 文件上传
+// 文件拖拽上传
 function initFileUpload() {
     const dropBox = document.getElementById('dropBox');
     const fileInput = document.getElementById('fileInput');
-// AI分析
-async function startAnalysis() {
-    if (!config.apiKey) {
-        alert('请先点击右上角⚙️配置AI接口信息！');
-        openModal('configModal');
-        return;
+
+    fileInput.onchange = (e)=>readFiles(e.target.files);
+
+    dropBox.ondragover = e=>{e.preventDefault();dropBox.classList.add('active')};
+    dropBox.ondragleave = ()=>dropBox.classList.remove('active');
+    dropBox.ondrop = e=>{
+        e.preventDefault();
+        dropBox.classList.remove('active');
+        readFiles(e.dataTransfer.files);
     }
-
-    const timeRange = document.getElementById('timeRange').value;
-    
-    // 获取所有选中的分析视角
-    const checkedViews = Array.from(document.querySelectorAll('input[name="view"]:checked')).map(cb => cb.value);
-    if (checkedViews.length === 0) {
-        alert('请至少选择一个分析视角！');
-        return;
-    }
-
-    // 视角名称映射（完全对应flomo）
-    const viewMap = {
-        default: '默认洞察',
-        value: '价值澄清',
-        reverse: '逆向思考',
-        second: '二阶思考',
-        cbt: 'CBT疗法',
-        mbti: 'MBTI分析',
-        custom: document.getElementById('customView').value
-    };
-
-    // 处理自定义视角
-    let viewNames = checkedViews.map(v => viewMap[v]);
-    if (checkedViews.includes('custom') && !viewMap.custom) {
-        alert('请输入自定义分析视角内容！');
-        return;
-    }
-
-    // 自定义视角显示切换
-    document.getElementById('customViewInput').style.display = checkedViews.includes('custom') ? 'block' : 'none';
-
-    // 获取对应时间范围的日记
-    let targetDiaries = [];
-    const now = new Date();
-    
-    switch (timeRange) {
-        case 'single':
-            if (!selectedDiaryId) {
-                alert('请先在日记列表中点击"选中分析"选择一篇日记！');
-                return;
+}
+function readFiles(files) {
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const content = e.target.result;
+            if (file.name.endsWith('.json')) {
+                try {
+                    const data = JSON.parse(content);
+                    if (Array.isArray(data)) {
+                        data.forEach(item => addDiaryItem(item.date||new Date().toLocaleDateString(),item.content,'文件导入-'+file.name))
+                    }
+                } catch (err) {
+                    await parseAndAddMultiDiary(content,'文件导入-'+file.name)
+                }
+            } else {
+                await parseAndAddMultiDiary(content,'文件导入-'+file.name)
             }
-            targetDiaries = diaries.filter(d => d.id === selectedDiaryId);
-            break;
-        case 'today':
-            const today = now.toLocaleDateString();
-            targetDiaries = diaries.filter(d => d.date === today);
-            break;
-        case 'week':
-            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            targetDiaries = diaries.filter(d => new Date(d.date) >= weekAgo);
-            break;
-        case 'month':
-            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            targetDiaries = diaries.filter(d => new Date(d.date) >= monthAgo);
-            break;
-        case 'all':
-            targetDiaries = [...diaries];
-            break;
-    }
-
-    if (targetDiaries.length === 0) {
-        alert('该时间范围内没有日记！');
-        return;
-    }
-
-    // 拼接日记内容
-    let diaryContent = targetDiaries.map(d => `【${d.date}】\n${d.content}`).join('\n\n');
-    
-    // 显示加载状态
-    const resultEl = document.getElementById('analysisResult');
-    resultEl.style.display = 'block';
-    resultEl.innerHTML = '<div class="loading">正在分析中，请稍候...</div>';
-
-    try {
-        // 拼接多视角提示词
-        const viewsText = viewNames.join('、');
-        const prompt = config.analysisPrompt
-            .replace('{视角}', viewsText)
-            .replace('{字数}', config.maxTokens * 0.75)
-            .replace('{日记内容}', diaryContent);
-
-        const result = await callAI(prompt);
-        
-        // 保存分析历史（✅ 确认：分析结果会永久保存到本地）
-        const historyItem = {
-            id: Date.now(),
-            view: viewsText, // 保存所有选中的视角名称
-            timeRange: timeRange,
-            diaryCount: targetDiaries.length,
-            result: result,
-            createdAt: new Date().toLocaleString()
-        };
-        analysisHistory.unshift(historyItem);
-        localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
-
-        // 显示结果
-        resultEl.innerHTML = `
-            <div class="analysis-result">
-                <h4>📊 ${viewsText} 分析结果</h4>
-                <div class="analysis-meta">分析范围: ${getTimeRangeText(timeRange)} | 共${targetDiaries.length}篇日记 | ${historyItem.createdAt}</div>
-                <div>${marked.parse(result)}</div>
-                <div style="margin-top:20px;display:flex;gap:12px">
-                    <button class="btn btn-outline" onclick="copyResult()">复制结果</button>
-                    <button class="btn btn-outline" onclick="exportResult()">导出为Markdown</button>
-                </div>
-            </div>
-        `;
-    } catch (err) {
-        resultEl.innerHTML = `<div style="color:var(--danger);text-align:center;padding:20px">分析失败: ${err.message}</div>`;
-    }
-}
-
-// 新增：全选/取消全选视角功能
-function toggleSelectAll() {
-    const selectAll = document.getElementById('selectAll');
-    const allViews = document.querySelectorAll('input[name="view"]');
-    allViews.forEach(cb => cb.checked = selectAll.checked);
-    // 同步显示自定义视角输入框
-    document.getElementById('customViewInput').style.display = document.querySelector('input[value="custom"]').checked ? 'block' : 'none';
-}
-
-// 新增：监听自定义视角复选框变化
-document.addEventListener('DOMContentLoaded', () => {
-    // ... 保留原来的初始化代码 ...
-    
-    // 监听自定义视角复选框
-    document.querySelector('input[value="custom"]').addEventListener('change', (e) => {
-        document.getElementById('customViewInput').style.display = e.target.checked ? 'block' : 'none';
-    });
-});
         };
         reader.readAsText(file);
     });
 }
 
-// 添加单篇日记
+// 添加单篇
 function addDiary() {
     const content = document.getElementById('diaryInput').value.trim();
-    if (!content) {
-        alert('日记内容不能为空！');
-        return;
-    }
+    if (!content) { alert('日记内容不能为空！'); return; }
     addDiaryItem(new Date().toLocaleDateString(), content, '手动输入');
     document.getElementById('diaryInput').value = '';
 }
 
-// 智能解析多篇日记
+// 批量解析按钮
 async function parseMultiDiary() {
     const content = document.getElementById('diaryInput').value.trim();
-    if (!content) {
-        alert('请先粘贴日记内容！');
-        return;
-    }
+    if (!content) { alert('请先粘贴日记！'); return; }
     await parseAndAddMultiDiary(content, '智能解析');
     document.getElementById('diaryInput').value = '';
 }
 
+// 解析分发：无key=本地正则；有key=AI解析
 async function parseAndAddMultiDiary(content, source) {
     if (!config.apiKey) {
-        // 没有配置AI时，尝试简单解析
         simpleParseMultiDiary(content, source);
         return;
     }
-
     try {
         const prompt = config.parsePrompt.replace('{文本内容}', content);
-        const result = await callAI(prompt);
-        const diaries = JSON.parse(result);
-        diaries.forEach(item => {
-            addDiaryItem(item.date, item.content, source);
-        });
-        alert(`成功解析 ${diaries.length} 篇日记！`);
+        const res = await callAI(prompt);
+        const arr = JSON.parse(res);
+        arr.forEach(i=>addDiaryItem(i.date,i.content,source));
+        alert(`AI解析成功，共${arr.length}篇`);
     } catch (err) {
-        console.error('AI解析失败，使用简单解析:', err);
-        simpleParseMultiDiary(content, source);
+        console.log(err);
+        simpleParseMultiDiary(content,source);
     }
 }
 
+// 本地简易正则拆分（不用AI）
 function simpleParseMultiDiary(content, source) {
-    // 简单的日期正则匹配
-    const dateRegex = /(?:^|\n)(\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}|\d{1,2}月\d{1,2}日)/g;
-    const parts = content.split(dateRegex);
-    
-    if (parts.length > 1) {
-        let count = 0;
-        for (let i = 1; i < parts.length; i += 2) {
-            const date = parts[i];
-            const text = parts[i + 1]?.trim() || '';
-            if (text) {
-                addDiaryItem(date, text, source);
-                count++;
-            }
+    const reg = /(?:^|\n)(\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}|\d{1,2}月\d{1,2}日)/g;
+    const arr = content.split(reg);
+    let count =0;
+    if(arr.length>1){
+        for(let i=1;i<arr.length;i+=2){
+            let d = arr[i];
+            let txt = arr[i+1]?.trim()||'';
+            if(txt){addDiaryItem(d,txt,source);count++}
         }
-        alert(`简单解析完成，共导入 ${count} 篇日记`);
-    } else {
-        // 没有找到日期，当作单篇
-        addDiaryItem(new Date().toLocaleDateString(), content, source);
-        alert('未识别到多个日期，已作为单篇日记导入');
+        alert(`本地解析完成，${count}篇`);
+    }else{
+        addDiaryItem(new Date().toLocaleDateString(),content,source);
+        alert('未识别多日期，作为单篇保存');
     }
 }
 
-function addDiaryItem(date, content, source) {
-    const diary = {
-        id: Date.now() + Math.random(),
-        date: date,
-        content: content.trim(),
-        source: source,
-        createdAt: new Date().toISOString()
-    };
-    diaries.unshift(diary);
-    saveDiaries();
-    renderDiaryList();
+function addDiaryItem(date,content,source){
+    const obj = {
+        id:Date.now()+Math.random(),
+        date:date,
+        content:content.trim(),
+        source:source,
+        createdAt:new Date().toISOString()
+    }
+    diaries.unshift(obj);
+    saveDiaries();renderDiaryList();
 }
+function saveDiaries(){localStorage.setItem('diaries',JSON.stringify(diaries))}
 
-function saveDiaries() {
-    localStorage.setItem('diaries', JSON.stringify(diaries));
-}
-
+// 渲染列表
 function renderDiaryList() {
-    const listEl = document.getElementById('diaryList');
-    const searchKey = document.getElementById('searchInput').value.toLowerCase();
-    
-    const filtered = diaries.filter(d => 
-        d.content.toLowerCase().includes(searchKey) || 
-        d.date.toLowerCase().includes(searchKey)
-    );
-
-    if (filtered.length === 0) {
-        listEl.innerHTML = '<div class="empty-state">没有找到匹配的日记</div>';
-        return;
-    }
-
-    let html = '';
-    filtered.forEach(diary => {
-        html += `
-        <div class="diary-item" data-id="${diary.id}">
-            <div class="diary-header">
-                <span class="diary-date">📅 ${diary.date}</span>
-                <span class="diary-source">${diary.source}</span>
-            </div>
-            <div class="diary-preview">${diary.content}</div>
+    const kw = document.getElementById('searchInput').value.toLowerCase();
+    let list = diaries.filter(d=>d.content.toLowerCase().includes(kw)||d.date.includes(kw));
+    const wrap = document.getElementById('diaryList');
+    if(!list.length){wrap.innerHTML='<div class="empty-state">没有找到匹配日记</div>';return;}
+    let html='';
+    list.forEach(d=>{
+        html+=`
+        <div class="diary-item" data-id="${d.id}">
+            <div class="diary-header"><span class="diary-date">📅${d.date}</span><span class="diary-source">${d.source}</span></div>
+            <div class="diary-preview">${d.content}</div>
             <div class="diary-actions">
-                <button class="btn btn-outline btn-sm" onclick="selectDiary(${diary.id})">选中分析</button>
-                <button class="btn btn-outline btn-sm" onclick="viewDiary(${diary.id})">查看全文</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteDiary(${diary.id})">删除</button>
+                <button class="btn btn-outline" onclick="selectDiary(${d.id})">选中分析</button>
+                <button class="btn btn-outline" onclick="viewDiary(${d.id})">查看全文</button>
+                <button class="btn btn-danger" onclick="deleteDiary(${d.id})">删除</button>
             </div>
-        </div>
-        `;
-    });
-    listEl.innerHTML = html;
+        </div>`
+    })
+    wrap.innerHTML=html;
+}
+document.getElementById('searchInput').oninput=renderDiaryList;
+
+function selectDiary(id){selectedDiaryId=id;document.getElementById('timeRange').value='single';alert('已选中');}
+function viewDiary(id){
+    let d=diaries.find(x=>x.id==id);
+    alert(`日期:${d.date}\n${d.content}`)
+}
+function deleteDiary(id){
+    if(!confirm('确定删除？'))return;
+    diaries=diaries.filter(x=>x.id!=id);saveDiaries();renderDiaryList();
+}
+function clearAllDiaries(){
+    if(!confirm('清空全部？不可恢复'))return;
+    diaries=[];saveDiaries();renderDiaryList();
 }
 
-document.getElementById('searchInput').addEventListener('input', renderDiaryList);
-
-function selectDiary(id) {
-    selectedDiaryId = id;
-    document.getElementById('timeRange').value = 'single';
-    alert('已选中该日记，点击"开始AI分析"即可分析');
+// 全选/取消全选
+function toggleSelectAll(){
+    const allCb = document.querySelectorAll('input[name="view"]');
+    const allCheck = document.getElementById('selectAll').checked;
+    allCb.forEach(cb=>cb.checked=allCheck);
+    const customCb = document.querySelector('input[value="custom"]');
+    document.getElementById('customViewInput').style.display = customCb.checked?'block':'none';
 }
 
-function viewDiary(id) {
-    const diary = diaries.find(d => d.id === id);
-    if (!diary) return;
-    alert(`日期：${diary.date}\n\n${diary.content}`);
-}
-
-function deleteDiary(id) {
-    if (!confirm('确定要删除这篇日记吗？')) return;
-    diaries = diaries.filter(d => d.id !== id);
-    saveDiaries();
-    renderDiaryList();
-}
-
-function clearAllDiaries() {
-    if (!confirm('确定要清空所有日记吗？此操作不可恢复！')) return;
-    diaries = [];
-    saveDiaries();
-    renderDiaryList();
-}
-
-// AI分析
+// 【最终 多选视角分析函数】
 async function startAnalysis() {
     if (!config.apiKey) {
-        alert('请先点击右上角⚙️配置AI接口信息！');
-        openModal('configModal');
-        return;
+        alert('请先右上角⚙配置AI密钥');openModal('configModal');return;
     }
+    const range = document.getElementById('timeRange').value;
+    const checkedArr = Array.from(document.querySelectorAll('input[name="view"]:checked')).map(x=>x.value);
+    if(!checkedArr.length){alert('至少勾选一个分析视角');return;}
 
-    const timeRange = document.getElementById('timeRange').value;
-    const view = document.getElementById('analysisView').value;
-    let viewName = '';
-    
     const viewMap = {
-        emotion: '情绪分析',
-        growth: '成长与反思',
-        relationship: '人际关系',
-        productivity: '生产力与时间',
-        health: '健康与生活',
-        summary: '内容总结',
-        custom: document.getElementById('customView').value
-    };
-    
-    viewName = viewMap[view];
-    if (view === 'custom' && !viewName) {
-        alert('请输入自定义分析视角！');
-        return;
+        default:"默认洞察",
+        value:"价值澄清",
+        reverse:"逆向思考",
+        second:"二阶思考",
+        cbt:"CBT疗法",
+        mbti:"MBTI分析",
+        custom:document.getElementById('customView').value.trim()
     }
+    let viewNames = checkedArr.map(k=>viewMap[k]);
+    if(checkedArr.includes('custom')&&!viewMap.custom){alert('勾选自定义后请填写内容');return;}
 
-    // 获取对应时间范围的日记
-    let targetDiaries = [];
-    const now = new Date();
-    
-    switch (timeRange) {
+    // 筛选日记
+    let target=[];
+    const now=new Date();
+    switch(range){
         case 'single':
-            if (!selectedDiaryId) {
-                alert('请先在日记列表中点击"选中分析"选择一篇日记！');
-                return;
-            }
-            targetDiaries = diaries.filter(d => d.id === selectedDiaryId);
-            break;
+            if(!selectedDiaryId){alert('先选中一篇日记');return;}
+            target=diaries.filter(d=>d.id===selectedDiaryId);break;
         case 'today':
-            const today = now.toLocaleDateString();
-            targetDiaries = diaries.filter(d => d.date === today);
-            break;
+            let td=now.toLocaleDateString();
+            target=diaries.filter(d=>d.date===td);break;
         case 'week':
-            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            targetDiaries = diaries.filter(d => new Date(d.date) >= weekAgo);
-            break;
+            let wk=new Date(now.getTime()-7*86400*1000);
+            target=diaries.filter(d=>new Date(d.date)>=wk);break;
         case 'month':
-            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            targetDiaries = diaries.filter(d => new Date(d.date) >= monthAgo);
-            break;
-        case 'all':
-            targetDiaries = [...diaries];
-            break;
+            let m=new Date(now.getTime()-30*86400*1000);
+            target=diaries.filter(d=>new Date(d.date)>=m);break;
+        case 'all':target=[...diaries];break;
     }
+    if(!target.length){alert('所选范围无日记');return;}
 
-    if (targetDiaries.length === 0) {
-        alert('该时间范围内没有日记！');
-        return;
-    }
+    let diaryTxt = target.map(d=>`【${d.date}】\n${d.content}`).join('\n\n');
+    const resWrap = document.getElementById('analysisResult');
+    resWrap.style.display='block';resWrap.innerHTML='<div class="loading">AI分析请求中</div>';
 
-    // 拼接日记内容
-    let diaryContent = targetDiaries.map(d => `【${d.date}】\n${d.content}`).join('\n\n');
-    
-    // 显示加载状态
-    const resultEl = document.getElementById('analysisResult');
-    resultEl.style.display = 'block';
-    resultEl.innerHTML = '<div class="loading">正在分析中，请稍候...</div>';
+    try{
+        const allViewText = viewNames.join('、');
+        let prompt = config.analysisPrompt.replace('{视角}',allViewText).replace('{字数}',config.maxTokens*0.75).replace('{日记内容}',diaryTxt);
+        let aiRes = await callAI(prompt);
+        // 保存历史记录
+        const hisItem = {
+            id:Date.now(),
+            view:allViewText,
+            timeRange:range,
+            diaryCount:target.length,
+            result:aiRes,
+            createdAt:new Date().toLocaleString()
+        }
+        analysisHistory.unshift(hisItem);
+        localStorage.setItem('analysisHistory',JSON.stringify(analysisHistory));
 
-    try {
-        const prompt = config.analysisPrompt
-            .replace('{视角}', viewName)
-            .replace('{字数}', config.maxTokens * 0.75)
-            .replace('{日记内容}', diaryContent);
-
-        const result = await callAI(prompt);
-        
-        // 保存分析历史
-        const historyItem = {
-            id: Date.now(),
-            view: viewName,
-            timeRange: timeRange,
-            diaryCount: targetDiaries.length,
-            result: result,
-            createdAt: new Date().toLocaleString()
-        };
-        analysisHistory.unshift(historyItem);
-        localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
-
-        // 显示结果
-        resultEl.innerHTML = `
-            <div class="analysis-result">
-                <h4>📊 ${viewName} 分析结果</h4>
-                <div class="analysis-meta">分析范围: ${getTimeRangeText(timeRange)} | 共${targetDiaries.length}篇日记 | ${historyItem.createdAt}</div>
-                <div>${marked.parse(result)}</div>
-                <div style="margin-top:20px;display:flex;gap:12px">
-                    <button class="btn btn-outline" onclick="copyResult()">复制结果</button>
-                    <button class="btn btn-outline" onclick="exportResult()">导出为Markdown</button>
-                </div>
+        resWrap.innerHTML = `
+        <div class="analysis-result">
+            <h4>📊${allViewText} 分析结果</h4>
+            <div class="analysis-meta">范围:${getRangeName(range)}｜${target.length}篇｜${hisItem.createdAt}</div>
+            <div>${marked.parse(aiRes)}</div>
+            <div style="margin-top:20px;display:flex;gap:12px">
+                <button class="btn btn-outline" onclick="copyResult()">复制结果</button>
+                <button class="btn btn-outline" onclick="exportResult()">导出md</button>
             </div>
-        `;
-    } catch (err) {
-        resultEl.innerHTML = `<div style="color:var(--danger);text-align:center;padding:20px">分析失败: ${err.message}</div>`;
+        </div>`
+    }catch(e){
+        resWrap.innerHTML=`<div style="color:var(--danger);padding:20px;text-align:center">失败：${e.message}</div>`
     }
 }
-
-function getTimeRangeText(range) {
-    const map = {
-        single: '单篇日记',
-        today: '今日',
-        week: '近7天',
-        month: '近30天',
-        all: '全部'
-    };
-    return map[range];
+function getRangeName(s){
+    const map={single:'单篇',today:'今日',week:'近7天',month:'近30天',all:'全部'}
+    return map[s]
 }
 
-async function callAI(prompt) {
-    const response = await fetch(`${config.apiBase}/chat/completions`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${config.apiKey}`
+// AI请求接口
+async function callAI(prompt){
+    const res = await fetch(`${config.apiBase}/chat/completions`,{
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'Authorization':`Bearer ${config.apiKey}`
         },
-        body: JSON.stringify({
-            model: config.modelName,
-            messages: [{ role: 'user', content: prompt }],
-            temperature: parseFloat(config.temperature),
-            max_tokens: parseInt(config.maxTokens)
+        body:JSON.stringify({
+            model:config.modelName,
+            messages:[{role:'user',content:prompt}],
+            temperature:Number(config.temperature),
+            max_tokens:Number(config.maxTokens)
         })
-    });
-
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'API请求失败');
+    })
+    if(!res.ok){
+        let err=await res.json();
+        throw new Error(err.error?.message||'接口异常');
     }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    let json=await res.json();
+    return json.choices[0].message.content;
 }
 
-function copyResult() {
-    const resultText = document.querySelector('.analysis-result > div:nth-child(3)').textContent;
-    navigator.clipboard.writeText(resultText).then(() => {
-        alert('已复制到剪贴板！');
-    });
+// 复制/导出
+function copyResult(){
+    let text = document.querySelector('.analysis-result>div:nth-child(3)').innerText;
+    navigator.clipboard.writeText(text).then(()=>alert('已复制'));
+}
+function exportResult(){
+    let text = document.querySelector('.analysis-result>div:nth-child(3)').innerText;
+    const blob = new Blob([text],{type:'text/markdown'});
+    let a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`日记分析_${new Date().toLocaleDateString()}.md`;
+    a.click();URL.revokeObjectURL(a.href);
 }
 
-function exportResult() {
-    const resultText = document.querySelector('.analysis-result > div:nth-child(3)').textContent;
-    const blob = new Blob([resultText], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `日记分析_${new Date().toLocaleDateString()}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-function viewHistory() {
-    const listEl = document.getElementById('historyList');
-    if (analysisHistory.length === 0) {
-        listEl.innerHTML = '<div class="empty-state">还没有分析记录</div>';
-        openModal('historyModal');
-        return;
-    }
-
-    let html = '';
-    analysisHistory.forEach(item => {
-        html += `
+// 历史记录
+function viewHistory(){
+    const wrap=document.getElementById('historyList');
+    if(!analysisHistory.length){wrap.innerHTML='<div class="empty-state">暂无历史</div>';openModal('historyModal');return;}
+    let html='';
+    analysisHistory.forEach(item=>{
+        html+=`
         <div class="diary-item">
-            <div class="diary-header">
-                <span class="diary-date">📊 ${item.view}</span>
-                <span class="diary-source">${item.createdAt}</span>
-            </div>
-            <div style="color:var(--text-secondary);margin-bottom:8px">
-                分析范围: ${getTimeRangeText(item.timeRange)} | 共${item.diaryCount}篇日记
-            </div>
+            <div class="diary-header"><span class="diary-date">📊${item.view}</span><span class="diary-source">${item.createdAt}</span></div>
+            <div style="color:var(--text-secondary)">范围：${getRangeName(item.timeRange)}｜${item.diaryCount}篇</div>
             <div class="diary-preview">${item.result}</div>
             <div class="diary-actions">
-                <button class="btn btn-outline btn-sm" onclick="viewHistoryDetail(${item.id})">查看详情</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteHistory(${item.id})">删除</button>
+                <button class="btn btn-outline" onclick="viewHistoryDetail(${item.id})">查看详情</button>
+                <button class="btn btn-danger" onclick="deleteHistory(${item.id})">删除</button>
             </div>
-        </div>
-        `;
-    });
-    listEl.innerHTML = html;
-    openModal('historyModal');
+        </div>`
+    })
+    wrap.innerHTML=html;openModal('historyModal');
 }
-
-function viewHistoryDetail(id) {
-    const item = analysisHistory.find(h => h.id === id);
-    if (!item) return;
-    
-    const resultEl = document.getElementById('analysisResult');
-    resultEl.style.display = 'block';
-    resultEl.innerHTML = `
-        <div class="analysis-result">
-            <h4>📊 ${item.view} 分析结果（历史记录）</h4>
-            <div class="analysis-meta">分析范围: ${getTimeRangeText(item.timeRange)} | 共${item.diaryCount}篇日记 | ${item.createdAt}</div>
-            <div>${marked.parse(item.result)}</div>
-        </div>
-    `;
+function viewHistoryDetail(id){
+    let item = analysisHistory.find(x=>x.id===id);
+    const resWrap = document.getElementById('analysisResult');
+    resWrap.style.display='block';
+    resWrap.innerHTML=`
+    <div class="analysis-result">
+        <h4>📊${item.view}（历史记录）</h4>
+        <div class="analysis-meta">范围：${getRangeName(item.timeRange)}｜${item.diaryCount}篇｜${item.createdAt}</div>
+        <div>${marked.parse(item.result)}</div>
+    </div>`
     closeModal('historyModal');
 }
-
-function deleteHistory(id) {
-    if (!confirm('确定要删除这条分析记录吗？')) return;
-    analysisHistory = analysisHistory.filter(h => h.id !== id);
-    localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
+function deleteHistory(id){
+    if(!confirm('删除本条记录？'))return;
+    analysisHistory=analysisHistory.filter(x=>x.id!==id);
+    localStorage.setItem('analysisHistory',JSON.stringify(analysisHistory));
     viewHistory();
 }
 
-// 配置相关
-function openModal(id) {
-    document.getElementById(id).style.display = 'flex';
+// 弹窗
+function openModal(id){document.getElementById(id).style.display='flex'}
+function closeModal(id){document.getElementById(id).style.display='none'}
+document.getElementById('configBtn').onclick=()=>{loadConfigToForm();openModal('configModal')};
+
+// 配置读写
+function loadConfigToForm(){
+    document.getElementById('apiKey').value=config.apiKey;
+    document.getElementById('apiBase').value=config.apiBase;
+    document.getElementById('modelName').value=config.modelName;
+    document.getElementById('temperature').value=config.temperature;
+    document.getElementById('maxTokens').value=config.maxTokens;
+    document.getElementById('analysisPrompt').value=config.analysisPrompt;
+    document.getElementById('parsePrompt').value=config.parsePrompt;
 }
-
-function closeModal(id) {
-    document.getElementById(id).style.display = 'none';
+function saveConfig(){
+    config={
+        apiKey:document.getElementById('apiKey').value.trim(),
+        apiBase:document.getElementById('apiBase').value.trim(),
+        modelName:document.getElementById('modelName').value.trim(),
+        temperature:document.getElementById('temperature').value,
+        maxTokens:document.getElementById('maxTokens').value,
+        analysisPrompt:document.getElementById('analysisPrompt').value,
+        parsePrompt:document.getElementById('parsePrompt').value
+    }
+    localStorage.setItem('aiConfig',JSON.stringify(config));
+    alert('配置保存成功');closeModal('configModal');
 }
-
-document.getElementById('configBtn').addEventListener('click', () => {
-    loadConfigToForm();
-    openModal('configModal');
-});
-
-function loadConfigToForm() {
-    document.getElementById('apiKey').value = config.apiKey;
-    document.getElementById('apiBase').value = config.apiBase;
-    document.getElementById('modelName').value = config.modelName;
-    document.getElementById('temperature').value = config.temperature;
-    document.getElementById('maxTokens').value = config.maxTokens;
-    document.getElementById('analysisPrompt').value = config.analysisPrompt;
-    document.getElementById('parsePrompt').value = config.parsePrompt;
-}
-
-function saveConfig() {
-    config = {
-        apiKey: document.getElementById('apiKey').value.trim(),
-        apiBase: document.getElementById('apiBase').value.trim(),
-        modelName: document.getElementById('modelName').value.trim(),
-        temperature: document.getElementById('temperature').value,
-        maxTokens: document.getElementById('maxTokens').value,
-        analysisPrompt: document.getElementById('analysisPrompt').value,
-        parsePrompt: document.getElementById('parsePrompt').value
-    };
-    localStorage.setItem('aiConfig', JSON.stringify(config));
-    alert('配置已保存！');
-    closeModal('configModal');
-}
-
-function resetPrompts() {
-    if (!confirm('确定要恢复默认提示词吗？当前修改将丢失！')) return;
-    document.getElementById('analysisPrompt').value = `你是一位专业的日记分析师，请根据用户提供的日记内容，从{视角}角度进行深入、客观、温暖的分析。
+function resetPrompts(){
+    if(!confirm('恢复默认提示词？现有修改丢失'))return;
+    document.getElementById('analysisPrompt').value=`你是一位专业的日记分析师，请根据用户提供的日记内容，从{视角}角度进行深入、客观、温暖的分析。
 
 要求：
 1. 分析要具体，结合日记中的具体内容，不要空泛
@@ -930,7 +700,7 @@ function resetPrompts() {
 
 现在开始分析以下日记内容：
 {日记内容}`;
-    document.getElementById('parsePrompt').value = `请将以下文本解析为多篇独立的日记，每篇日记包含日期和内容。
+    document.getElementById('parsePrompt').value=`请将以下文本解析为多篇独立的日记，每篇日记包含日期和内容。
 
 要求：
 1. 识别每篇日记的开头日期，支持格式：YYYY-MM-DD、YYYY/MM/DD、MM-DD、X月X日
@@ -943,30 +713,20 @@ function resetPrompts() {
 {文本内容}`;
 }
 
-// 导出所有数据
-document.getElementById('exportBtn').addEventListener('click', () => {
-    const data = {
-        diaries: diaries,
-        analysisHistory: analysisHistory,
-        exportTime: new Date().toISOString()
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `AI日记分析数据_${new Date().toLocaleDateString()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-});
+// 全部数据导出
+document.getElementById('exportBtn').addEventListener('click',()=>{
+    const allData={diaries,analysisHistory,exportTime:new Date().toISOString()};
+    const blob = new Blob([JSON.stringify(allData,null,2)],{type:'application/json'});
+    let a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`日记全量备份_${new Date().toLocaleDateString()}.json`;
+    a.click();URL.revokeObjectURL(a.href);
+})
 
-// 点击模态框外部关闭
-document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-});
+// 弹窗点击空白关闭
+document.querySelectorAll('.modal').forEach(m=>{
+    m.onclick=e=>{if(e.target===m)m.style.display='none'}
+})
 </script>
 </body>
 </html>
