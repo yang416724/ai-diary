@@ -7,33 +7,28 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-        /* 真正马卡龙粉绿配色（粉色为主，绿色为辅） */
         :root{
-            --bg:#F8FDF9;          /* 超浅薄荷绿背景（比纯粉更护眼） */
-            --card:#FEF7FA;        /* 奶白卡片 */
-            --text:#5A4B5A;        /* 深灰粉正文 */
-            --text-secondary:#9A8B9A;/* 浅灰粉次要文字 */
-            --border:#D5E8DC;      /* 薄荷绿边框（粉绿平衡关键） */
-            --primary:#F9A8D4;     /* 主色：马卡龙樱花粉 */
-            --primary-hover:#F472B6;/* 悬浮加深樱花粉 */
-            --secondary:#86E3CE;   /* 辅助色：马卡龙薄荷绿 */
-            --secondary-hover:#6DD5BE;/* 悬浮加深薄荷绿 */
-            --danger:#F87171;      /* 马卡龙豆沙红 */
-            --success:#86E3CE;     /* 成功薄荷绿 */
-            --shadow:0 2px 8px 0 rgba(249, 168, 212, 0.12) /* 淡粉柔阴影 */
+            --bg:#FDF2F8;          /*马卡龙樱花粉背景（超浅不刺眼）*/
+            --card:#FEF7FA;        /*奶白卡片，和背景有柔和层次感*/
+            --text:#5A4B5A;        /*深灰粉正文，温柔不扎眼*/
+            --text-secondary:#9A8B9A;/*浅灰粉次要文字*/
+            --border:#E2D5E2;      /*浅粉边框，带一丢丢绿调*/
+            --primary:#F9A8D4;     /*主色：马卡龙樱花粉（按钮、高亮）*/
+            --primary-hover:#F472B6;/*悬浮加深樱花粉*/
+            --danger:#F87171;      /*马卡龙豆沙红（删除按钮）*/
+            --success:#6EE7B7;     /*马卡龙薄荷绿（成功提示）*/
+            --shadow:0 2px 8px 0 rgba(249, 168, 212, 0.15) /*淡粉柔阴影*/
         }
         .dark{
-            --bg:#2A3330;          /* 暗调薄荷绿背景 */
-            --card:#353F3C;        /* 深一点的卡片色 */
-            --text:#F0E6F0;        /* 奶白文字 */
-            --text-secondary:#B0C0B8;/* 浅灰绿次要文字 */
-            --border:#4A5A54;      /* 深薄荷绿边框 */
-            --primary:#FBCFE8;     /* 亮马卡龙樱花粉 */
-            --primary-hover:#F9A8D4;/* 悬浮色 */
-            --secondary:#A7F3D0;   /* 亮马卡龙薄荷绿 */
-            --secondary-hover:#86E3CE;/* 悬浮色 */
-            --danger:#FCA5A5;      /* 亮马卡龙红 */
-            --success:#A7F3D0;     /* 亮薄荷绿 */
+            --bg:#2D1F2D;          /*暗调粉紫背景*/
+            --card:#3D2F3D;        /*深一点的卡片色*/
+            --text:#F0E6F0;        /*奶白文字*/
+            --text-secondary:#C0B0C0;/*浅灰粉次要文字*/
+            --border:#5D4F5D;      /*深粉边框*/
+            --primary:#FBCFE8;     /*亮马卡龙樱花粉*/
+            --primary-hover:#F9A8D4;/*悬浮色*/
+            --danger:#FCA5A5;      /*亮马卡龙红*/
+            --success:#A7F3D0;     /*亮马卡龙薄荷绿*/
             --shadow:0 2px 8px 0 rgba(0, 0, 0, 0.3)
         }
 
@@ -63,8 +58,6 @@
         .btn{padding:12px 24px;border:none;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s}
         .btn-primary{background:var(--primary);color:white}
         .btn-primary:hover{background:var(--primary-hover)}
-        .btn-secondary{background:var(--secondary);color:white}
-        .btn-secondary:hover{background:var(--secondary-hover)}
         .btn-danger{background:var(--danger);color:white}
         .btn-success{background:var(--success);color:white}
         .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
@@ -90,7 +83,7 @@
         .diary-preview{color:var(--text-secondary);line-height:1.5;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
         .diary-actions{display:flex;gap:8px;margin-top:12px}
         .diary-block{margin-bottom:12px;padding:12px;background:var(--bg);border-radius:8px}
-        .diary-block-title{font-weight:500;color:var(--secondary);margin-bottom:6px} /* 区块标题用薄荷绿 */
+        .diary-block-title{font-weight:500;color:var(--primary);margin-bottom:6px}
         .diary-block-content{line-height:1.5}
 
         .analysis-result{background:var(--bg);border-radius:12px;padding:20px;margin-top:20px;line-height:1.8}
@@ -107,7 +100,7 @@
         .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
         .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text)}
 
-        .badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:12px;background:var(--secondary);color:white;margin-left:8px} /* 标签用薄荷绿 */
+        .badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:12px;background:var(--primary);color:white;margin-left:8px}
 
         /* 分析看板样式 */
         .dashboard-card{margin-bottom:30px}
@@ -118,7 +111,7 @@
         /* 目标输入框样式 */
         .goal-input-group{margin-bottom:16px}
         .goal-input-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-        .goal-input-label{font-weight:500;color:var(--primary)} /* 目标标题用粉色 */
+        .goal-input-label{font-weight:500}
         .goal-no-record{display:flex;align-items:center;gap:6px;cursor:pointer}
         .goal-textarea{min-height:60px}
 
@@ -159,7 +152,7 @@
                 <textarea class="input textarea goal-textarea" id="extraContent" placeholder="写一些目标之外的零散内容..."></textarea>
             </div>
             <div style="margin-top:20px">
-                <button class="btn btn-primary" onclick="saveGoalDiary()">保存日记</button>
+                <button class="btn btn-primary" id="saveGoalBtn">保存日记</button>
             </div>
         </div>
 
@@ -168,7 +161,7 @@
             <textarea class="input textarea" id="freeDiaryInput" style="min-height:300px" placeholder="随便写点什么吧，不用有任何格式限制..."></textarea>
             <div style="margin-top:20px;display:flex;gap:12px">
                 <button class="btn btn-outline" onclick="saveFreeDiary(false)">仅保存原始文本</button>
-                <button class="btn btn-secondary" onclick="saveFreeDiary(true)">保存并AI智能分区</button>
+                <button class="btn btn-primary" onclick="saveFreeDiary(true)">保存并AI智能分区</button>
             </div>
         </div>
     </div>
@@ -321,7 +314,7 @@
             </div>
             <div style="margin-top:20px;display:flex;gap:12px">
                 <button class="btn btn-outline" onclick="addGoalItem()">+ 添加新目标</button>
-                <button class="btn btn-secondary" onclick="saveGoals()">保存目标</button>
+                <button class="btn btn-primary" onclick="saveGoals()">保存目标</button>
             </div>
         </div>
     </div>
@@ -419,7 +412,7 @@
 
             <div style="display:flex;gap:12px;justify-content:flex-end">
                 <button class="btn btn-outline" onclick="resetPrompts()">恢复默认提示词</button>
-                <button class="btn btn-secondary" onclick="saveConfig()">保存配置</button>
+                <button class="btn btn-primary" onclick="saveConfig()">保存配置</button>
             </div>
         </div>
     </div>
@@ -434,7 +427,6 @@
             <div id="historyList"></div>
         </div>
     </div>
-
 <script>
 // 全局变量（安全版，绝对不会因为格式错误丢失数据）
 let diaries = [];
@@ -624,6 +616,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 日记类型筛选
     document.getElementById('diaryTypeFilter').addEventListener('change', renderDiaryList);
+
+    // 移动端兼容：绑定保存按钮点击+触摸事件
+    const saveBtn = document.getElementById('saveGoalBtn');
+    if(saveBtn){
+        saveBtn.addEventListener('click', saveGoalDiary);
+        saveBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            saveGoalDiary();
+        });
+    }
 });
 
 // 主题切换
@@ -710,23 +712,28 @@ function toggleGoalInput(index) {
     }
 }
 
-// 保存目标打卡日记（已修复变量名错误）
+// 手机端兼容版：保存目标打卡日记（终极修复）
 function saveGoalDiary() {
     const blocks = [];
     
-    // 收集目标内容（修复：把index改成i）
-    for (let i = 0; i < goals.length; i++) {
-        const checkbox = document.getElementById(`goalNoRecord${i}`);
-        const input = document.getElementById(`goalInput${i}`);
+    // 改用更稳定的DOM遍历方式（手机端100%兼容）
+    const goalGroups = document.querySelectorAll('.goal-input-group');
+    
+    // 遍历所有目标输入框（跳过最后一个"额外补充"）
+    for (let i = 0; i < goalGroups.length - 1; i++) {
+        const group = goalGroups[i];
+        const checkbox = group.querySelector('input[type="checkbox"]');
+        const textarea = group.querySelector('textarea');
+        const goalName = goals[i];
         
-        if (!checkbox.checked && input.value.trim()) {
+        if (!checkbox.checked && textarea.value.trim()) {
             blocks.push({
-                title: goals[i],
-                content: input.value.trim()
+                title: goalName,
+                content: textarea.value.trim()
             });
         } else if (checkbox.checked) {
             blocks.push({
-                title: goals[i],
+                title: goalName,
                 content: '今日无相关记录'
             });
         }
@@ -741,15 +748,15 @@ function saveGoalDiary() {
         });
     }
     
-    // 校验：至少有一个目标填写了内容或勾选了无记录
+    // 校验
     if (blocks.length === 0) {
         alert('请至少填写一个目标的内容或勾选"今日无相关记录"！');
         return;
     }
     
-    // 创建日记对象（纯前端，不调用AI）
+    // 创建日记对象
     const diary = {
-        id: Date.now() + Math.random(),
+        id: Date.now(),
         date: new Date().toLocaleDateString(),
         type: 'goal',
         blocks: blocks,
@@ -758,16 +765,19 @@ function saveGoalDiary() {
         createdAt: new Date().toISOString()
     };
     
+    // 保存并刷新
     diaries.unshift(diary);
     saveDiaries();
     renderDiaryList();
     
     // 清空输入框
-    for (let i = 0; i < goals.length; i++) {
-        document.getElementById(`goalNoRecord${i}`).checked = false;
-        document.getElementById(`goalInput${i}`).disabled = false;
-        document.getElementById(`goalInput${i}`).value = '';
-        document.getElementById(`goalInput${i}`).style.opacity = '1';
+    for (let i = 0; i < goalGroups.length - 1; i++) {
+        const group = goalGroups[i];
+        group.querySelector('input[type="checkbox"]').checked = false;
+        const textarea = group.querySelector('textarea');
+        textarea.disabled = false;
+        textarea.value = '';
+        textarea.style.opacity = '1';
     }
     document.getElementById('extraContent').value = '';
     
@@ -793,8 +803,8 @@ async function saveFreeDiary(needPartition) {
         
         try {
             // 显示加载状态
-            document.querySelector('#freeEntryTab .btn-secondary').disabled = true;
-            document.querySelector('#freeEntryTab .btn-secondary').textContent = 'AI分区中...';
+            document.querySelector('#freeEntryTab .btn-primary').disabled = true;
+            document.querySelector('#freeEntryTab .btn-primary').textContent = 'AI分区中...';
             
             // 调用AI分区
             const prompt = config.partitionPrompt
@@ -835,8 +845,8 @@ async function saveFreeDiary(needPartition) {
     
     // 清空输入框
     document.getElementById('freeDiaryInput').value = '';
-    document.querySelector('#freeEntryTab .btn-secondary').disabled = false;
-    document.querySelector('#freeEntryTab .btn-secondary').textContent = '保存并AI智能分区';
+    document.querySelector('#freeEntryTab .btn-primary').disabled = false;
+    document.querySelector('#freeEntryTab .btn-primary').textContent = '保存并AI智能分区';
     
     alert('日记保存成功！');
 }
@@ -938,9 +948,12 @@ function renderDiaryList() {
     })
     wrap.innerHTML=html;
 }
-document.getElementById('searchInput').oninput=renderDiaryList;
 
-function selectDiary(id){selectedDiaryId=id;document.getElementById('timeRange').value='single';alert('已选中该日记，可在下方自定义分析区域分析');}
+function selectDiary(id){
+    selectedDiaryId=id;
+    document.getElementById('timeRange').value='single';
+    alert('已选中该日记，可在下方自定义分析区域分析');
+}
 function viewDiary(id){
     let d=diaries.find(x=>x.id==id);
     let content = d.blocks.map(b => `【${b.title}】\n${b.content}`).join('\n\n');
@@ -948,7 +961,9 @@ function viewDiary(id){
 }
 function deleteDiary(id){
     if(!confirm('确定删除？'))return;
-    diaries=diaries.filter(x=>x.id!=id);saveDiaries();renderDiaryList();
+    diaries=diaries.filter(x=>x.id!=id);
+    saveDiaries();
+    renderDiaryList();
 }
 
 // 全选/取消全选分析视角
@@ -979,10 +994,11 @@ function renderDashboard() {
 // 看板一键快速分析
 async function quickAnalyze(range) {
     if (!config.apiKey) {
-        alert('请先右上角⚙配置AI密钥');openModal('configModal');return;
+        alert('请先右上角⚙配置AI密钥');
+        openModal('configModal');
+        return;
     }
 
-    // 默认选中所有预设视角
     const defaultViews = ['default', 'value', 'reverse', 'second', 'cbt', 'mbti'];
     const viewMap = {
         default:"默认洞察",
@@ -994,24 +1010,30 @@ async function quickAnalyze(range) {
     };
     const viewNames = defaultViews.map(k => viewMap[k]).join('、');
 
-    // 筛选日记
     let target=[];
     const now=new Date();
     switch(range){
         case 'today':
             let td=now.toLocaleDateString();
-            target=diaries.filter(d=>d.date===td);break;
+            target=diaries.filter(d=>d.date===td);
+            break;
         case 'week':
             let wk=new Date(now.getTime()-7*86400*1000);
-            target=diaries.filter(d=>new Date(d.date)>=wk);break;
+            target=diaries.filter(d=>new Date(d.date)>=wk);
+            break;
         case 'month':
             let m=new Date(now.getTime()-30*86400*1000);
-            target=diaries.filter(d=>new Date(d.date)>=m);break;
-        case 'all':target=[...diaries];break;
+            target=diaries.filter(d=>new Date(d.date)>=m);
+            break;
+        case 'all':
+            target=[...diaries];
+            break;
     }
-    if(!target.length){alert('所选范围无日记');return;}
+    if(!target.length){
+        alert('所选范围无日记');
+        return;
+    }
 
-    // 拼接结构化日记内容
     let diaryTxt = target.map(d=>{
         return `【${d.date}】\n${d.blocks.map(b=>`【${b.title}】\n${b.content}`).join('\n\n')}`;
     }).join('\n\n---\n\n');
@@ -1020,7 +1042,6 @@ async function quickAnalyze(range) {
     el.innerHTML = '<div class="loading">AI分析请求中...</div>';
 
     try{
-        // 注入目标列表到提示词
         const goalsText = goals.join('、');
         let prompt = config.analysisPrompt
             .replace('我的所有自定义长期目标', goalsText)
@@ -1028,7 +1049,6 @@ async function quickAnalyze(range) {
             
         let aiRes = await callAI(prompt);
         
-        // 保存历史记录
         const hisItem = {
             id:Date.now(),
             view: viewNames,
@@ -1040,7 +1060,6 @@ async function quickAnalyze(range) {
         analysisHistory.unshift(hisItem);
         localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
 
-        // 更新看板
         renderDashboard();
         alert(`${getRangeName(range)}分析完成！`);
     }catch(e){
@@ -1073,17 +1092,23 @@ function viewRangeHistory(range) {
             </div>
         </div>`
     })
-    wrap.innerHTML=html;openModal('historyModal');
+    wrap.innerHTML=html;
+    openModal('historyModal');
 }
 
-// 【自定义分析函数】
+// 自定义分析函数
 async function startAnalysis() {
     if (!config.apiKey) {
-        alert('请先右上角⚙配置AI密钥');openModal('configModal');return;
+        alert('请先右上角⚙配置AI密钥');
+        openModal('configModal');
+        return;
     }
     const range = document.getElementById('timeRange').value;
     const checkedArr = Array.from(document.querySelectorAll('input[name="view"]:checked')).map(x=>x.value);
-    if(!checkedArr.length){alert('至少勾选一个分析视角');return;}
+    if(!checkedArr.length){
+        alert('至少勾选一个分析视角');
+        return;
+    }
 
     const viewMap = {
         default:"默认洞察",
@@ -1095,39 +1120,52 @@ async function startAnalysis() {
         custom:document.getElementById('customView').value.trim()
     }
     let viewNames = checkedArr.map(k=>viewMap[k]);
-    if(checkedArr.includes('custom')&&!viewMap.custom){alert('勾选自定义后请填写内容');return;}
+    if(checkedArr.includes('custom')&&!viewMap.custom){
+        alert('勾选自定义后请填写内容');
+        return;
+    }
 
-    // 筛选日记
     let target=[];
     const now=new Date();
     switch(range){
         case 'single':
-            if(!selectedDiaryId){alert('先选中一篇日记');return;}
-            target=diaries.filter(d=>d.id===selectedDiaryId);break;
+            if(!selectedDiaryId){
+                alert('先选中一篇日记');
+                return;
+            }
+            target=diaries.filter(d=>d.id===selectedDiaryId);
+            break;
         case 'today':
             let td=now.toLocaleDateString();
-            target=diaries.filter(d=>d.date===td);break;
+            target=diaries.filter(d=>d.date===td);
+            break;
         case 'week':
             let wk=new Date(now.getTime()-7*86400*1000);
-            target=diaries.filter(d=>new Date(d.date)>=wk);break;
+            target=diaries.filter(d=>new Date(d.date)>=wk);
+            break;
         case 'month':
             let m=new Date(now.getTime()-30*86400*1000);
-            target=diaries.filter(d=>new Date(d.date)>=m);break;
-        case 'all':target=[...diaries];break;
+            target=diaries.filter(d=>new Date(d.date)>=m);
+            break;
+        case 'all':
+            target=[...diaries];
+            break;
     }
-    if(!target.length){alert('所选范围无日记');return;}
+    if(!target.length){
+        alert('所选范围无日记');
+        return;
+    }
 
-    // 拼接结构化日记内容
     let diaryTxt = target.map(d=>{
         return `【${d.date}】\n${d.blocks.map(b=>`【${b.title}】\n${b.content}`).join('\n\n')}`;
     }).join('\n\n---\n\n');
     
     const resWrap = document.getElementById('analysisResult');
-    resWrap.style.display='block';resWrap.innerHTML='<div class="loading">AI分析请求中</div>';
+    resWrap.style.display='block';
+    resWrap.innerHTML='<div class="loading">AI分析请求中</div>';
 
     try{
         const allViewText = viewNames.join('、');
-        // 注入目标列表到提示词
         const goalsText = goals.join('、');
         let prompt = config.analysisPrompt
             .replace('我的所有自定义长期目标', goalsText)
@@ -1135,7 +1173,6 @@ async function startAnalysis() {
             
         let aiRes = await callAI(prompt);
         
-        // 保存历史记录
         const hisItem = {
             id:Date.now(),
             view:allViewText,
@@ -1147,7 +1184,6 @@ async function startAnalysis() {
         analysisHistory.unshift(hisItem);
         localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
 
-        // 如果是时间范围分析，同步更新看板
         if(range !== 'single'){
             renderDashboard();
         }
@@ -1167,13 +1203,21 @@ async function startAnalysis() {
     }
 }
 function getRangeName(s){
-    const map={single:'单篇日记',today:'今日',week:'近7天',month:'近30天',all:'年度（全部）'}
+    const map={
+        single:'单篇日记',
+        today:'今日',
+        week:'近7天',
+        month:'近30天',
+        all:'年度（全部）'
+    }
     return map[s]
 }
 
 // AI请求接口
 async function callAI(prompt){
-    const model = config.modelName === 'custom' ? document.getElementById('customModel').value : config.modelName;
+    const model = config.modelName === 'custom' 
+        ? document.getElementById('customModel').value 
+        : config.modelName;
     const res = await fetch(`${config.apiBase}/chat/completions`,{
         method:'POST',
         headers:{
@@ -1206,7 +1250,8 @@ function exportResult(){
     let a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
     a.download=`日记分析_${new Date().toLocaleDateString()}.md`;
-    a.click();URL.revokeObjectURL(a.href);
+    a.click();
+    URL.revokeObjectURL(a.href);
 }
 
 // 历史记录详情
@@ -1225,14 +1270,12 @@ function viewHistoryDetail(id){
         </div>
     </div>`
     closeModal('historyModal');
-    // 切换到分析看板显示结果
     document.querySelector('[data-main-tab="dashboard"]').click();
 }
 function deleteHistory(id){
     if(!confirm('删除本条记录？'))return;
     analysisHistory=analysisHistory.filter(x=>x.id!==id);
     localStorage.setItem('analysisHistory',JSON.stringify(analysisHistory));
-    // 刷新当前打开的历史模态框
     const title = document.getElementById('historyModalTitle').textContent;
     if(title.includes('今日')) viewRangeHistory('today');
     else if(title.includes('近7天')) viewRangeHistory('week');
@@ -1244,10 +1287,17 @@ function deleteHistory(id){
     }
 }
 
-// 弹窗
-function openModal(id){document.getElementById(id).style.display='flex'}
-function closeModal(id){document.getElementById(id).style.display='none'}
-document.getElementById('configBtn').onclick=()=>{loadConfigToForm();openModal('configModal')};
+// 弹窗开关
+function openModal(id){
+    document.getElementById(id).style.display='flex'
+}
+function closeModal(id){
+    document.getElementById(id).style.display='none'
+}
+document.getElementById('configBtn').onclick=()=>{
+    loadConfigToForm();
+    openModal('configModal');
+};
 
 // 配置读写
 function loadConfigToForm(){
@@ -1258,7 +1308,6 @@ function loadConfigToForm(){
     document.getElementById('analysisPrompt').value=config.analysisPrompt||'';
     document.getElementById('partitionPrompt').value=config.partitionPrompt||'';
 
-    // 模型选择
     const modelSel = document.getElementById('modelName');
     const customModel = document.getElementById('customModel');
     if(config.modelName){
@@ -1292,11 +1341,38 @@ function saveConfig(){
         partitionPrompt:document.getElementById('partitionPrompt').value
     }
     localStorage.setItem('aiConfig',JSON.stringify(config));
-    alert('配置保存成功');closeModal('configModal');
+    alert('配置保存成功');
+    closeModal('configModal');
 }
 function resetPrompts(){
     if(!confirm('恢复默认提示词？现有修改丢失'))return;
-                partitionPrompt: `请将以下日记文本按照我的长期目标进行智能分区，然后将剩余内容归纳为合理的临时主题。
+    document.getElementById('analysisPrompt').value=`【AI角色】
+我是一名在福州读大学的女生，你是我的专属私人日记洞察师，深度了解我的所有自定义长期目标。你精通Flomo全6大洞察视角，客观中立，只讲真话，不做道德评判。我是坚定的女权主义者，反对平权，支持推翻父权制，成为强大女性（包括身体强壮，心理强大）。
+
+【核心规则（必须严格遵守）】
+1. 绝对禁止鸡汤、空洞安慰、空泛大道理和晦涩的心理学术语
+2. 所有分析必须紧扣我当天的日记内容，不凭空臆测
+3. 所有行动建议必须是我当天/次日就能完成的小事，单条不超过20字
+4. 严格按照下面的固定模块和顺序输出，不要增减大标题
+5. 末尾必须生成3-5个关键词标签，方便我检索和长期记忆存档
+
+【分析维度（完整覆盖Flomo6大视角+专属目标追踪）】
+1. 【默认洞察】一句话概括当日核心内容+提炼3件最关键的事
+2. 【价值澄清】从今天的言行中，找出我真正在意的东西；判断哪些事符合我的长期目标，哪些事在消耗我、偏离目标
+3. 【逆向思考】如果今天这件事反过来做/不做，会有什么更好的结果？我今天忽略了哪些原本可以抓住的小机会（尤其关于赚钱、找工作、自媒体）
+4. 【二阶思考】今天出现的问题（拖延、焦虑、不开心），表面原因是什么？背后真正的深层原因是什么？（不要只说“我懒”）
+5. 【CBT认知纠偏】识别我日记里的负面思维陷阱（如非黑即白、灾难化、自我否定），用客观事实帮我纠正
+6. 【MBTI行为映射】结合今天我的具体言行，分析我的人格特质在这件事上的体现，指出优势和需要注意的短板
+7. 【核心目标每日追踪】分别对应我的所有自定义长期目标，给出1句话反馈+1条可落地小建议（当天没涉及的目标标注“今日无相关记录”即可）
+8. 【明日行动清单】最多3条，只写具体动作，不写空话
+
+【输出要求】
+每个模块用【】标注大标题，内容分点，语言简洁，单篇总字数控制在500字以内。尽量一次性全部发完，不要分段发。
+
+现在分析以下日记内容：
+{日记内容}`;
+
+    document.getElementById('partitionPrompt').value=`请将以下日记文本按照我的长期目标进行智能分区，然后将剩余内容归纳为合理的临时主题。
 
 我的长期目标列表：
 {目标列表}
@@ -1319,7 +1395,8 @@ document.getElementById('exportBtn').addEventListener('click',()=>{
     let a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
     a.download=`日记全量备份_${new Date().toLocaleDateString()}.json`;
-    a.click();URL.revokeObjectURL(a.href);
+    a.click();
+    URL.revokeObjectURL(a.href);
 });
 
 // 增量导入数据
@@ -1335,7 +1412,6 @@ document.getElementById('importBtn').addEventListener('click',()=>{
                 const backup=JSON.parse(ev.target.result);
                 let addedCount=0;
                 
-                // 合并日记（去重）
                 if(backup.diaries){
                     const existingIds=new Set(diaries.map(d=>d.id));
                     backup.diaries.forEach(d=>{
@@ -1346,7 +1422,6 @@ document.getElementById('importBtn').addEventListener('click',()=>{
                     });
                 }
                 
-                // 合并分析历史（去重）
                 if(backup.analysisHistory){
                     const existingIds=new Set(analysisHistory.map(h=>h.id));
                     backup.analysisHistory.forEach(h=>{
@@ -1357,7 +1432,6 @@ document.getElementById('importBtn').addEventListener('click',()=>{
                     });
                 }
                 
-                // 合并目标（如果当前没有目标）
                 if(backup.goals && goals.length===0){
                     goals=backup.goals;
                     localStorage.setItem('goals',JSON.stringify(goals));
@@ -1399,10 +1473,13 @@ document.getElementById('restoreBtn').addEventListener('click',()=>{
     }
 });
 
-// 弹窗点击空白关闭
+// 点击弹窗空白处关闭
 document.querySelectorAll('.modal').forEach(m=>{
-    m.onclick=e=>{if(e.target===m)m.style.display='none'}
+    m.onclick=e=>{
+        if(e.target===m) m.style.display='none'
+    }
 })
 </script>
 </body>
 </html>
+
