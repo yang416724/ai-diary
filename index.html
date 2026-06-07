@@ -4,80 +4,116 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI日记分析</title>
+    <!-- 可爱字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+        *{margin:0;padding:0;box-sizing:border-box}
         :root{
-            --bg:#FDF2F8;--card:#FEF7FA;--text:#5A4B5A;--text-secondary:#9A8B9A;--border:#E2D5E2;
-            --primary:#F9A8D4;--primary-hover:#F472B6;--danger:#F87171;--success:#6EE7B7;
-            --shadow:0 2px 8px 0 rgba(249,168,212,0.15)
+            --bg:#FFF0F5;                /* 浅粉背景 */
+            --card:#FFFFFF;
+            --text:#5A4B5A;
+            --text-secondary:#9A8B9A;
+            --border:#FFD1DC;            /* 浅粉边框 */
+            --primary:#FFB7C5;           /* 主粉 */
+            --primary-hover:#FF9AAE;
+            --danger:#FF8A80;
+            --success:#B2DFDB;           /* 薄荷绿 */
+            --shadow:0 2px 12px rgba(255,183,197,0.2);
+            --font:'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', cursive, sans-serif;
         }
         .dark{
-            --bg:#2D1F2D;--card:#3D2F3D;--text:#F0E6F0;--text-secondary:#C0B0C0;--border:#5D4F5D;
-            --primary:#FBCFE8;--primary-hover:#F9A8D4;--danger:#FCA5A5;--success:#A7F3D0;
-            --shadow:0 2px 8px 0 rgba(0,0,0,0.3)
+            --bg:#3A2D34;
+            --card:#4A3D44;
+            --text:#FDE8EC;
+            --text-secondary:#C9B8BE;
+            --border:#6A5760;
+            --primary:#F8BBD0;
+            --primary-hover:#F48FB1;
+            --danger:#EF9A9A;
+            --success:#80CBC4;
+            --shadow:0 2px 12px rgba(0,0,0,0.3);
         }
-        .card{border-radius:24px}.input,.select,.btn{border-radius:12px}
-        body{background:var(--bg);color:var(--text);padding:20px;max-width:1000px;margin:0 auto;transition:all 0.3s ease}
+        body{
+            background:var(--bg);
+            color:var(--text);
+            font-family:var(--font);
+            padding:20px;
+            max-width:1000px;
+            margin:0 auto;
+            transition:all 0.3s ease;
+            font-size:16px;
+        }
+        .card{border-radius:24px}
+        .input,.select,.btn{border-radius:16px;font-family:var(--font);}
         .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
-        .top-bar h1{font-size:28px;color:var(--primary);display:flex;align-items:center;gap:8px}
-        .top-actions{display:flex;gap:16px;align-items:center}
-        .icon-btn{background:transparent;border:none;font-size:22px;cursor:pointer;color:var(--text);padding:8px;border-radius:8px;transition:background 0.2s}
+        .top-bar h1{font-size:30px;color:var(--primary);display:flex;align-items:center;gap:8px}
+        .top-actions{display:flex;gap:12px;align-items:center}
+        .icon-btn{background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--text);padding:8px;border-radius:12px;transition:background 0.2s}
         .icon-btn:hover{background:var(--border)}
         .card{background:var(--card);padding:24px;margin-bottom:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
-        .card h2{font-size:22px;margin-bottom:20px;color:var(--text)}
-        .card h3{font-size:18px;margin:16px 0 12px;color:var(--text)}
+        .card h2{font-size:24px;margin-bottom:16px;color:var(--text)}
+        .card h3{font-size:20px;margin:12px 0 8px;color:var(--text)}
         .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
         @media (max-width:768px){.grid-2{grid-template-columns:1fr}}
         .input{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:16px;outline:none;transition:border-color 0.2s}
         .input:focus{border-color:var(--primary)}
         .textarea{min-height:120px;resize:vertical;line-height:1.6}
-        .select{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:16px;cursor:pointer}
-        .btn{padding:12px 24px;border:none;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s}
-        .btn-primary{background:var(--primary);color:white}.btn-primary:hover{background:var(--primary-hover)}
-        .btn-danger{background:var(--danger);color:white}.btn-success{background:var(--success);color:white}
-        .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}.btn-outline:hover{background:var(--border)}
-        .btn-sm{padding:8px 16px;font-size:14px}
-        .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:8px}
-        .tab{padding:8px 16px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:8px;font-size:16px;transition:all 0.2s}
+        .select{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:16px;cursor:pointer;border-radius:16px}
+        .btn{padding:10px 20px;border:none;font-size:16px;font-weight:bold;cursor:pointer;transition:all 0.2s;letter-spacing:1px}
+        .btn-primary{background:var(--primary);color:white}
+        .btn-primary:hover{background:var(--primary-hover)}
+        .btn-danger{background:var(--danger);color:white}
+        .btn-success{background:var(--success);color:white}
+        .btn-outline{background:transparent;border:2px solid var(--border);color:var(--text)}
+        .btn-outline:hover{background:var(--border)}
+        .btn-sm{padding:6px 14px;font-size:14px}
+        .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:2px solid var(--border);padding-bottom:8px}
+        .tab{padding:8px 20px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:20px;font-size:18px;font-weight:bold;transition:all 0.2s}
         .tab.active{background:var(--primary);color:white}
-        .diary-item{border-bottom:1px solid var(--border);padding:16px 0}
+        .diary-item{border-bottom:1px solid var(--border);padding:16px 0;display:flex;align-items:flex-start;gap:12px}
         .diary-item:last-child{border-bottom:none}
+        .diary-checkbox{width:20px;height:20px;margin-top:4px;cursor:pointer;accent-color:var(--primary)}
+        .diary-body{flex:1}
         .diary-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-        .diary-date{font-weight:500;color:var(--text)}.diary-source{font-size:14px;color:var(--text-secondary)}
+        .diary-date{font-weight:bold;color:var(--text)}
+        .diary-source{font-size:14px;color:var(--text-secondary);background:var(--bg);padding:2px 10px;border-radius:12px}
         .diary-preview{color:var(--text-secondary);line-height:1.5;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
         .diary-actions{display:flex;gap:8px;margin-top:12px}
-        .diary-block{margin-bottom:12px;padding:12px;background:var(--bg);border-radius:8px}
-        .diary-block-title{font-weight:500;color:var(--primary);margin-bottom:6px}
+        .diary-block{margin-bottom:12px;padding:12px;background:var(--bg);border-radius:16px}
+        .diary-block-title{font-weight:bold;color:var(--primary);margin-bottom:6px}
         .diary-block-content{line-height:1.5}
-        .analysis-result{background:var(--bg);border-radius:12px;padding:20px;margin-top:20px;line-height:1.8}
+        .analysis-result{background:var(--bg);border-radius:20px;padding:20px;margin-top:20px;line-height:1.8}
         .analysis-result h4{margin-bottom:12px;color:var(--primary)}
         .analysis-meta{font-size:14px;color:var(--text-secondary);margin-bottom:16px}
-        .empty-state{text-align:center;padding:60px 20px;color:var(--text-secondary)}
+        .empty-state{text-align:center;padding:60px 20px;color:var(--text-secondary);font-size:18px}
         .loading{text-align:center;padding:40px;color:var(--text-secondary)}
-        .loading::after{content:"";display:inline-block;width:20px;height:20px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite}
+        .loading::after{content:"";display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
         .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
-        .modal-content{background:var(--card);border-radius:20px;padding:24px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto}
+        .modal-content{background:var(--card);border-radius:24px;padding:24px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto}
         .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-        .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text)}
-        .badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:12px;background:var(--primary);color:white;margin-left:8px}
+        .modal-close{background:none;border:none;font-size:28px;cursor:pointer;color:var(--text)}
+        .badge{display:inline-block;padding:4px 12px;border-radius:12px;font-size:14px;background:var(--primary);color:white;margin-left:8px}
         .dashboard-card{margin-bottom:30px}
         .dashboard-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
         .dashboard-actions{display:flex;gap:8px}
-        .latest-result{max-height:300px;overflow-y:auto;padding:16px;background:var(--bg);border-radius:12px}
+        .latest-result{max-height:300px;overflow-y:auto;padding:16px;background:var(--bg);border-radius:16px}
         .goal-input-group{margin-bottom:16px}
         .goal-input-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-        .goal-input-label{font-weight:500}
-        .goal-no-record{display:flex;align-items:center;gap:6px;cursor:pointer}
+        .goal-input-label{font-weight:bold}
+        .goal-no-record{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px}
         .goal-textarea{min-height:60px}
-        .goal-item{display:flex;align-items:center;gap:12px;margin-bottom:12px}.goal-item input{flex:1}
-        .warning-bar{background:#FFF3CD;border:1px solid #FFECB5;border-radius:12px;padding:12px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+        .goal-item{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+        .goal-item input{flex:1}
+        .batch-actions{display:flex;gap:8px;margin-bottom:16px;align-items:center}
+        .batch-actions .btn{font-size:14px}
+        .selected-count{color:var(--primary);font-weight:bold;margin-right:8px}
     </style>
 </head>
 <body>
     <div class="top-bar">
-        <h1>📘 AI日记分析</h1>
+        <h1>🌸 AI日记分析</h1>
         <div class="top-actions">
             <button class="icon-btn" id="themeBtn" title="切换主题">🌙</button>
             <button class="icon-btn" id="goalConfigBtn" title="目标配置">🎯</button>
@@ -91,7 +127,7 @@
     <div class="card">
         <div class="tabs">
             <button class="tab active" data-entry-tab="goal">🎯 目标打卡记</button>
-            <button class="tab" data-entry-tab="free">✍️ 随心随笔记</button>
+            <button class="tab" data-entry-tab="free">✍️ 随心记</button>
         </div>
         <div id="goalEntryTab" class="entry-tab-content">
             <div id="goalInputsContainer"></div>
@@ -99,13 +135,13 @@
                 <div class="goal-input-header"><span class="goal-input-label">📝 额外补充（可选）</span></div>
                 <textarea class="input textarea goal-textarea" id="extraContent" placeholder="写一些目标之外的零散内容..."></textarea>
             </div>
-            <div style="margin-top:20px"><button class="btn btn-primary" id="saveGoalBtn">保存日记</button></div>
+            <div style="margin-top:20px"><button class="btn btn-primary" id="saveGoalBtn">💾 保存日记</button></div>
         </div>
         <div id="freeEntryTab" class="entry-tab-content" style="display:none">
             <textarea class="input textarea" id="freeDiaryInput" style="min-height:300px" placeholder="随便写点什么吧，不用有任何格式限制..."></textarea>
             <div style="margin-top:20px;display:flex;gap:12px">
                 <button class="btn btn-outline" onclick="saveFreeDiary(false)">仅保存原始文本</button>
-                <button class="btn btn-primary" onclick="saveFreeDiary(true)">保存并AI智能分区</button>
+                <button class="btn btn-primary" onclick="saveFreeDiary(true)">✨ 保存并AI智能分区</button>
             </div>
         </div>
     </div>
@@ -124,25 +160,34 @@
 
     <div id="diaryListTab" class="main-tab-content" style="display:none">
         <div class="card">
-            <h2>日记列表</h2>
-            <div style="display:flex;gap:12px;margin-bottom:20px">
+            <h2>📚 日记列表</h2>
+            <div style="display:flex;gap:12px;margin-bottom:12px">
                 <input type="text" class="input" id="searchInput" placeholder="搜索日记内容或日期..." style="flex:1">
-                <select class="select" id="diaryTypeFilter" style="width:150px">
-                    <option value="all">全部类型</option><option value="goal">目标打卡</option><option value="free">随心随笔</option>
+                <select class="select" id="diaryTypeFilter" style="width:140px">
+                    <option value="all">全部类型</option>
+                    <option value="goal">目标打卡</option>
+                    <option value="free">随心记</option>
                 </select>
             </div>
-            <div id="diaryList"><div class="empty-state">还没有日记</div></div>
+            <!-- 批量操作栏 -->
+            <div id="batchBar" class="batch-actions" style="display:none">
+                <span class="selected-count" id="selectedCount">已选0篇</span>
+                <button class="btn btn-outline btn-sm" onclick="toggleSelectAll()">全选</button>
+                <button class="btn btn-outline btn-sm" onclick="clearSelection()">取消选择</button>
+                <button class="btn btn-danger btn-sm" onclick="batchDelete()">🗑️ 批量删除</button>
+            </div>
+            <div id="diaryList"><div class="empty-state">还没有日记，开始写第一篇吧 ✨</div></div>
         </div>
     </div>
 
     <div class="card">
-        <h2>自定义分析 <span class="badge">手动触发</span></h2>
+        <h2>🔍 自定义分析 <span class="badge">手动触发</span></h2>
         <div class="grid-2">
             <div><label>分析时间范围</label><select class="select" id="timeRange"><option value="single">当前选中日记</option><option value="today">今日日记</option><option value="week">近7天日记</option><option value="month">近30天日记</option><option value="all">全部日记</option></select></div>
             <div>
                 <label>分析视角（可多选）</label>
                 <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"> 全选（内置）</label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="selectAll" onchange="toggleAllViews()"> 全选（内置）</label>
                     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" name="view" value="default"> 默认洞察</label>
                     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" name="view" value="value"> 价值澄清</label>
                     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" name="view" value="reverse"> 逆向思考</label>
@@ -154,7 +199,7 @@
             </div>
         </div>
         <div id="customViewInput" style="margin-top:12px;display:none"><input type="text" class="input" id="customView" placeholder="输入你想要的额外分析视角"></div>
-        <div style="margin-top:20px"><button class="btn btn-primary" onclick="startAnalysis()">开始AI分析</button></div>
+        <div style="margin-top:20px"><button class="btn btn-primary" onclick="startAnalysis()">✨ 开始AI分析</button></div>
         <div id="analysisResult" style="display:none"></div>
     </div>
 
@@ -163,14 +208,14 @@
         <div class="modal-content">
             <div class="modal-header"><h2>🎯 长期目标配置</h2><button class="modal-close" onclick="closeModal('goalConfigModal')">×</button></div>
             <div id="goalConfigList"></div>
-            <div style="margin-top:20px;display:flex;gap:12px"><button class="btn btn-outline" onclick="addGoalItem()">+ 添加新目标</button><button class="btn btn-primary" onclick="saveGoals()">保存目标</button></div>
+            <div style="margin-top:20px;display:flex;gap:12px"><button class="btn btn-outline" onclick="addGoalItem()">+ 添加新目标</button><button class="btn btn-primary" onclick="saveGoals()">💾 保存目标</button></div>
         </div>
     </div>
 
     <!-- AI配置模态框 -->
     <div id="configModal" class="modal" style="display:none">
         <div class="modal-content">
-            <div class="modal-header"><h2>AI接口配置</h2><button class="modal-close" onclick="closeModal('configModal')">×</button></div>
+            <div class="modal-header"><h2>⚙️ AI接口配置</h2><button class="modal-close" onclick="closeModal('configModal')">×</button></div>
             <h3>基础配置</h3>
             <div class="grid-2" style="margin-bottom:16px"><div><label>API 密钥</label><input type="password" class="input" id="apiKey"></div><div><label>API 节点地址</label><input type="text" class="input" id="apiBase" value="https://api.openai.com/v1"></div></div>
             <div class="grid-2" style="margin-bottom:16px">
@@ -181,7 +226,7 @@
             <h3>提示词配置（可修改）</h3>
             <div style="margin-bottom:16px"><label>日记分析提示词</label><textarea class="input textarea" id="analysisPrompt" style="min-height:300px"></textarea></div>
             <div style="margin-bottom:24px"><label>AI智能分区提示词</label><textarea class="input textarea" id="partitionPrompt" style="min-height:200px"></textarea></div>
-            <div style="display:flex;gap:12px;justify-content:flex-end"><button class="btn btn-outline" onclick="resetPrompts()">恢复默认</button><button class="btn btn-primary" onclick="saveConfig()">保存配置</button></div>
+            <div style="display:flex;gap:12px;justify-content:flex-end"><button class="btn btn-outline" onclick="resetPrompts()">恢复默认</button><button class="btn btn-primary" onclick="saveConfig()">💾 保存配置</button></div>
         </div>
     </div>
 
@@ -190,17 +235,17 @@
         <div class="modal-content"><div class="modal-header"><h2 id="historyModalTitle">历史分析记录</h2><button class="modal-close" onclick="closeModal('historyModal')">×</button></div><div id="historyList"></div></div>
     </div>
 
-    <!-- 日记编辑模态框 -->
+    <!-- 编辑模态框 -->
     <div id="editModal" class="modal" style="display:none">
         <div class="modal-content">
             <div class="modal-header"><h2>✏️ 编辑日记</h2><button class="modal-close" onclick="closeModal('editModal')">×</button></div>
             <div id="editContent"></div>
-            <div style="margin-top:20px;display:flex;gap:12px"><button class="btn btn-outline" onclick="closeModal('editModal')">取消</button><button class="btn btn-primary" id="saveEditBtn">保存修改</button></div>
+            <div style="margin-top:20px;display:flex;gap:12px"><button class="btn btn-outline" onclick="closeModal('editModal')">取消</button><button class="btn btn-primary" id="saveEditBtn">💾 保存修改</button></div>
         </div>
     </div>
 
 <script>
-// ========== 安全工具函数 ==========
+// ========== 安全工具 ==========
 function isValidDiary(d) { return d && typeof d === 'object' && Array.isArray(d.blocks); }
 function getValidDiaries() { return Array.isArray(diaries) ? diaries.filter(isValidDiary) : []; }
 function safeBlocks(d) { return isValidDiary(d) ? d.blocks : []; }
@@ -211,17 +256,10 @@ let analysisHistory = [];
 let goals = [];
 let selectedDiaryId = null;
 let config = {};
-let editingDiaryId = null; // 当前正在编辑的日记ID
+let editingDiaryId = null;
+let selectedIds = new Set(); // 多选删除
 
-// ========== 默认配置 ==========
-function getDefaultAnalysisPrompt() {
-    return "【AI角色】\n我是一名在福州读大学的女生，你是我的专属私人日记洞察师...\n（完整提示词见配置弹窗）";
-}
-function getDefaultPartitionPrompt() {
-    return "请将以下日记文本按照我的长期目标进行智能分区...\n{目标列表}\n{文本内容}";
-}
-
-// 实际默认提示词用函数动态生成，避免 HTML 中直接写复杂模板
+// ========== 默认提示词 ==========
 function getFullDefaultAnalysisPrompt() {
     return `【AI角色】
 我是一名在福州读大学的女生，你是我的专属私人日记洞察师，深度了解我的所有自定义长期目标。你精通Flomo全6大洞察视角，客观中立，只讲真话，不做道德评判。我是坚定的女权主义者，反对平权，支持推翻父权制，成为强大女性（包括身体强壮，心理强大）。
@@ -267,13 +305,12 @@ function getFullDefaultPartitionPrompt() {
 {文本内容}`;
 }
 
-// ========== 加载数据 ==========
+// ========== 数据加载 ==========
 function safeLoadData() {
     try {
         const d = localStorage.getItem('diaries');
         diaries = d ? JSON.parse(d) : [];
         if (!Array.isArray(diaries)) diaries = [];
-        // 过滤无效条目
         diaries = diaries.filter(isValidDiary);
     } catch(e) { diaries = []; }
     try {
@@ -349,7 +386,6 @@ function renderGoalInputs() {
         </div>`;
     });
 }
-
 function toggleGoalInput(i) {
     const cb = document.getElementById('goalNoRecord'+i);
     const ta = document.getElementById('goalInput'+i);
@@ -371,12 +407,11 @@ function saveGoalDiary() {
     const extra = document.getElementById('extraContent').value.trim();
     if (extra) blocks.push({ title: '额外补充', content: extra });
     if (blocks.length === 0) return alert('请至少填写一个目标或勾选“今日无相关记录”');
-
     const diary = {
         id: Date.now(),
         date: new Date().toLocaleDateString(),
         type: 'goal',
-        blocks: blocks,
+        blocks,
         rawText: '',
         source: '目标打卡',
         createdAt: new Date().toISOString()
@@ -384,7 +419,6 @@ function saveGoalDiary() {
     diaries.unshift(diary);
     saveDiaries();
     renderDiaryList();
-    // 清空
     groups.forEach((group, i) => {
         group.querySelector('input[type="checkbox"]').checked = false;
         const ta = group.querySelector('textarea');
@@ -410,7 +444,7 @@ async function saveFreeDiary(needPartition) {
             alert('AI分区失败，已保存原始文本');
             blocks = [{ title: '原始内容', content: raw }];
         }
-        btn.disabled = false; btn.textContent = '保存并AI智能分区';
+        btn.disabled = false; btn.textContent = '✨ 保存并AI智能分区';
     } else {
         blocks = [{ title: '原始内容', content: raw }];
     }
@@ -418,9 +452,9 @@ async function saveFreeDiary(needPartition) {
         id: Date.now() + Math.random(),
         date: new Date().toLocaleDateString(),
         type: 'free',
-        blocks: blocks,
+        blocks,
         rawText: raw,
-        source: '随心随笔',
+        source: '随心记',
         createdAt: new Date().toISOString()
     };
     diaries.unshift(diary);
@@ -458,7 +492,7 @@ function saveGoals() {
     alert('目标已保存！建议对历史日记重新分析以保证目标追踪准确性。');
 }
 
-// ========== 日记列表（含编辑功能） ==========
+// ========== 日记列表（多选删除支持） ==========
 function renderDiaryList() {
     const validDiaries = getValidDiaries();
     const kw = document.getElementById('searchInput').value.toLowerCase();
@@ -469,30 +503,97 @@ function renderDiaryList() {
         return matchKw && matchType;
     });
     const wrap = document.getElementById('diaryList');
-    if (!list.length) { wrap.innerHTML = '<div class="empty-state">没有找到匹配日记</div>'; return; }
+    if (!list.length) {
+        wrap.innerHTML = '<div class="empty-state">没有找到匹配日记 🌸</div>';
+        updateBatchBar();
+        return;
+    }
     let html = '';
     list.forEach(d => {
-        let preview = '';
         const blocks = safeBlocks(d);
+        let preview = '';
         blocks.slice(0,2).forEach(b => {
             preview += `<div class="diary-block"><div class="diary-block-title">【${b.title||''}】</div><div class="diary-block-content">${(b.content||'').slice(0,100)}${b.content&&b.content.length>100?'...':''}</div></div>`;
         });
         if (blocks.length > 2) preview += `<div style="color:var(--text-secondary);font-size:14px">还有${blocks.length-2}个区块...</div>`;
+        const checked = selectedIds.has(d.id) ? 'checked' : '';
         html += `
         <div class="diary-item">
-            <div class="diary-header"><span class="diary-date">📅${d.date||''}</span><span class="diary-source">${d.source||''}</span></div>
-            ${preview}
-            <div class="diary-actions">
-                <button class="btn btn-outline btn-sm" onclick="selectDiary(${d.id})">选中分析</button>
-                <button class="btn btn-outline btn-sm" onclick="viewDiary(${d.id})">查看全文</button>
-                <button class="btn btn-outline btn-sm" onclick="editDiary(${d.id})">✏️ 编辑</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteDiary(${d.id})">删除</button>
+            <input type="checkbox" class="diary-checkbox" data-id="${d.id}" ${checked} onchange="toggleSelectDiary(${d.id}, this.checked)">
+            <div class="diary-body">
+                <div class="diary-header"><span class="diary-date">📅 ${d.date||''}</span><span class="diary-source">${d.source||''}</span></div>
+                ${preview}
+                <div class="diary-actions">
+                    <button class="btn btn-outline btn-sm" onclick="selectDiary(${d.id})">选中分析</button>
+                    <button class="btn btn-outline btn-sm" onclick="viewDiary(${d.id})">查看全文</button>
+                    <button class="btn btn-outline btn-sm" onclick="editDiary(${d.id})">✏️ 编辑</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteDiary(${d.id})">🗑️ 删除</button>
+                </div>
             </div>
         </div>`;
     });
     wrap.innerHTML = html;
+    updateBatchBar();
 }
 
+// 多选相关
+function toggleSelectDiary(id, checked) {
+    if (checked) selectedIds.add(id);
+    else selectedIds.delete(id);
+    updateBatchBar();
+}
+
+function toggleSelectAll() {
+    const validDiaries = getValidDiaries().filter(d => { /* 根据当前过滤条件 */ });
+    // 简化：直接全选当前列表显示的日记
+    const checkboxes = document.querySelectorAll('.diary-checkbox');
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => {
+        cb.checked = !allChecked;
+        const id = Number(cb.dataset.id);
+        if (!allChecked) selectedIds.add(id);
+        else selectedIds.delete(id);
+    });
+    updateBatchBar();
+}
+
+function clearSelection() {
+    selectedIds.clear();
+    document.querySelectorAll('.diary-checkbox').forEach(cb => cb.checked = false);
+    updateBatchBar();
+}
+
+function batchDelete() {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`确定删除选中的 ${selectedIds.size} 篇日记吗？此操作不可恢复。`)) return;
+    diaries = diaries.filter(d => !selectedIds.has(d.id));
+    selectedIds.clear();
+    saveDiaries();
+    renderDiaryList();
+    alert('已删除所选日记');
+}
+
+function updateBatchBar() {
+    const bar = document.getElementById('batchBar');
+    const count = document.getElementById('selectedCount');
+    if (selectedIds.size > 0) {
+        bar.style.display = 'flex';
+        count.textContent = `已选 ${selectedIds.size} 篇`;
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
+// 单条删除
+function deleteDiary(id) {
+    if (!confirm('确定删除这篇日记吗？')) return;
+    diaries = diaries.filter(d => d.id !== id);
+    selectedIds.delete(id);
+    saveDiaries();
+    renderDiaryList();
+}
+
+// 其他操作
 function selectDiary(id) { selectedDiaryId = id; document.getElementById('timeRange').value = 'single'; alert('已选中该日记'); }
 function viewDiary(id) {
     const d = diaries.find(x => x && x.id === id);
@@ -500,23 +601,16 @@ function viewDiary(id) {
     const blocks = safeBlocks(d);
     alert(`日期:${d.date}\n\n${blocks.map(b=>`【${b.title||''}】\n${b.content||''}`).join('\n\n')}`);
 }
-function deleteDiary(id) {
-    if (!confirm('确定删除？')) return;
-    diaries = diaries.filter(x => x && x.id !== id);
-    saveDiaries(); renderDiaryList();
-}
 
 // ========== 编辑日记 ==========
 function editDiary(id) {
     const d = diaries.find(x => x && x.id === id);
-    if (!isValidDiary(d)) return alert('该日记数据损坏，无法编辑');
+    if (!isValidDiary(d)) return alert('该日记数据损坏');
     editingDiaryId = id;
-    const modal = document.getElementById('editModal');
     const content = document.getElementById('editContent');
     if (d.type === 'goal') {
         let html = '';
         const blocks = safeBlocks(d);
-        // 按照当前goals顺序重建输入框，并尝试匹配已有内容
         const blockMap = {};
         blocks.forEach(b => { if (b.title) blockMap[b.title] = b.content; });
         goals.forEach((goal, i) => {
@@ -531,17 +625,15 @@ function editDiary(id) {
                 <textarea class="input textarea goal-textarea" id="editGoalInput${i}" ${noRecord?'disabled style="opacity:0.5"':''}>${noRecord ? '' : val}</textarea>
             </div>`;
         });
-        // 额外补充
         const extra = blockMap['额外补充'] || '';
         html += `<div class="goal-input-group"><div class="goal-input-header"><span class="goal-input-label">📝 额外补充</span></div><textarea class="input textarea goal-textarea" id="editExtra">${extra}</textarea></div>`;
         content.innerHTML = html;
-    } else { // free
+    } else {
         content.innerHTML = `<textarea class="input textarea" id="editFreeInput" style="min-height:200px">${d.rawText||''}</textarea>`;
     }
     openModal('editModal');
 }
 
-// 辅助：编辑界面切换无记录
 function toggleEditGoalRecord(i) {
     const cb = event.target;
     const ta = document.getElementById('editGoalInput'+i);
@@ -550,7 +642,6 @@ function toggleEditGoalRecord(i) {
     if (cb.checked) ta.value = '';
 }
 
-// 保存编辑
 document.getElementById('saveEditBtn').addEventListener('click', () => {
     if (!editingDiaryId) return;
     const d = diaries.find(x => x && x.id === editingDiaryId);
@@ -558,7 +649,8 @@ document.getElementById('saveEditBtn').addEventListener('click', () => {
     if (d.type === 'goal') {
         const newBlocks = [];
         goals.forEach((goal, i) => {
-            const cb = document.getElementById('editGoalInput'+i)?.previousElementSibling?.querySelector('input[type="checkbox"]');
+            const group = document.getElementById('editGoalInput'+i)?.closest('.goal-input-group');
+            const cb = group?.querySelector('input[type="checkbox"]');
             const ta = document.getElementById('editGoalInput'+i);
             if (cb && ta) {
                 if (!cb.checked && ta.value.trim()) newBlocks.push({ title: goal, content: ta.value.trim() });
@@ -569,7 +661,7 @@ document.getElementById('saveEditBtn').addEventListener('click', () => {
         if (extra) newBlocks.push({ title: '额外补充', content: extra });
         if (newBlocks.length === 0) return alert('请至少填写一个目标');
         d.blocks = newBlocks;
-    } else { // free
+    } else {
         const newRaw = document.getElementById('editFreeInput')?.value.trim();
         if (!newRaw) return alert('内容不能为空');
         d.rawText = newRaw;
@@ -579,11 +671,11 @@ document.getElementById('saveEditBtn').addEventListener('click', () => {
     renderDiaryList();
     closeModal('editModal');
     editingDiaryId = null;
-    alert('日记已更新');
+    alert('日记已更新 ✨');
 });
 
-// ========== 全选视角 ==========
-function toggleSelectAll() {
+// ========== 视角全选 ==========
+function toggleAllViews() {
     const checked = document.getElementById('selectAll').checked;
     document.querySelectorAll('input[name="view"]').forEach(cb => {
         if (cb.value === 'custom') return;
@@ -598,7 +690,7 @@ document.addEventListener('change', function(e) {
     }
 });
 
-// ========== 看板 ==========
+// ========== 看板与快速分析 ==========
 function renderDashboard() {
     ['today','week','month','all'].forEach(range => {
         const latest = analysisHistory.filter(h => h && h.timeRange === range && h.timeRange !== 'single')[0];
@@ -606,7 +698,7 @@ function renderDashboard() {
         if (latest && latest.result) {
             el.innerHTML = `<div class="analysis-meta">最后更新：${latest.createdAt} | 共${latest.diaryCount}篇日记</div><div>${marked.parse(latest.result.slice(0,500)+(latest.result.length>500?'...':''))}</div><div style="margin-top:12px;color:var(--text-secondary);font-size:14px">点击“查看历史”查看完整内容</div>`;
         } else {
-            el.innerHTML = '<div class="empty-state">还没有分析记录</div>';
+            el.innerHTML = '<div class="empty-state">还没有分析记录 🌸</div>';
         }
     });
 }
@@ -663,7 +755,7 @@ async function startAnalysis() {
     const diaryTxt = target.map(d => `【${d.date}】\n${safeBlocks(d).map(b=>`【${b.title||''}】\n${b.content||''}`).join('\n\n')}`).join('\n\n---\n\n');
     const resWrap = document.getElementById('analysisResult');
     resWrap.style.display = 'block';
-    resWrap.innerHTML = '<div class="loading">AI分析请求中</div>';
+    resWrap.innerHTML = '<div class="loading">AI分析请求中...</div>';
     try {
         const prompt = config.analysisPrompt.replace('我的所有自定义长期目标', goals.join('、')).replace('{日记内容}', diaryTxt);
         const aiRes = await callAI(prompt);
@@ -671,7 +763,7 @@ async function startAnalysis() {
         analysisHistory.unshift(item);
         localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
         if (range !== 'single') renderDashboard();
-        resWrap.innerHTML = `<div class="analysis-result"><h4>📊${viewNames} 分析结果</h4><div class="analysis-meta">范围:${getRangeName(range)}｜${target.length}篇｜${item.createdAt}</div><div id="analysisBody">${marked.parse(aiRes)}</div><div style="margin-top:20px;display:flex;gap:12px"><button class="btn btn-outline" onclick="copyResult()">复制结果</button><button class="btn btn-outline" onclick="exportResult()">导出md</button></div></div>`;
+        resWrap.innerHTML = `<div class="analysis-result"><h4>📊 ${viewNames} 分析结果</h4><div class="analysis-meta">范围:${getRangeName(range)}｜${target.length}篇｜${item.createdAt}</div><div id="analysisBody">${marked.parse(aiRes)}</div><div style="margin-top:20px;display:flex;gap:12px"><button class="btn btn-outline" onclick="copyResult()">复制结果</button><button class="btn btn-outline" onclick="exportResult()">导出md</button></div></div>`;
     } catch(e) {
         resWrap.innerHTML = `<div style="color:var(--danger);padding:20px;text-align:center">失败：${e.message}</div>`;
     }
@@ -715,10 +807,12 @@ function viewRangeHistory(range) {
     if (!list.length) { wrap.innerHTML = '<div class="empty-state">暂无历史记录</div>'; openModal('historyModal'); return; }
     wrap.innerHTML = list.map(item => `
         <div class="diary-item">
-            <div class="diary-header"><span class="diary-date">📊${item.view}</span><span class="diary-source">${item.createdAt}</span></div>
-            <div style="color:var(--text-secondary)">共${item.diaryCount}篇日记</div>
-            <div class="diary-preview">${item.result||''}</div>
-            <div class="diary-actions"><button class="btn btn-outline btn-sm" onclick="viewHistoryDetail(${item.id})">查看完整</button><button class="btn btn-danger btn-sm" onclick="deleteHistory(${item.id})">删除</button></div>
+            <div class="diary-body">
+                <div class="diary-header"><span class="diary-date">📊 ${item.view}</span><span class="diary-source">${item.createdAt}</span></div>
+                <div style="color:var(--text-secondary)">共${item.diaryCount}篇日记</div>
+                <div class="diary-preview">${item.result||''}</div>
+                <div class="diary-actions"><button class="btn btn-outline btn-sm" onclick="viewHistoryDetail(${item.id})">查看完整</button><button class="btn btn-danger btn-sm" onclick="deleteHistory(${item.id})">删除</button></div>
+            </div>
         </div>`).join('');
     openModal('historyModal');
 }
@@ -727,7 +821,7 @@ function viewHistoryDetail(id) {
     if (!item) return alert('记录不存在');
     const resWrap = document.getElementById('analysisResult');
     resWrap.style.display = 'block';
-    resWrap.innerHTML = `<div class="analysis-result"><h4>📊${item.view}（历史记录）</h4><div class="analysis-meta">范围：${getRangeName(item.timeRange)}｜${item.diaryCount}篇｜${item.createdAt}</div><div id="analysisBody">${marked.parse(item.result||'')}</div><div style="margin-top:20px;display:flex;gap:12px"><button class="btn btn-outline" onclick="copyResult()">复制</button><button class="btn btn-outline" onclick="exportResult()">导出md</button></div></div>`;
+    resWrap.innerHTML = `<div class="analysis-result"><h4>📊 ${item.view}（历史记录）</h4><div class="analysis-meta">范围：${getRangeName(item.timeRange)}｜${item.diaryCount}篇｜${item.createdAt}</div><div id="analysisBody">${marked.parse(item.result||'')}</div><div style="margin-top:20px;display:flex;gap:12px"><button class="btn btn-outline" onclick="copyResult()">复制</button><button class="btn btn-outline" onclick="exportResult()">导出md</button></div></div>`;
     closeModal('historyModal');
     document.querySelector('[data-main-tab="dashboard"]').click();
 }
@@ -748,7 +842,7 @@ function openModal(id) { document.getElementById(id).style.display = 'flex'; }
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.style.display = 'none'; }));
 
-// ========== 配置界面 ==========
+// ========== 配置 ==========
 document.getElementById('configBtn').onclick = () => { loadConfigToForm(); openModal('configModal'); };
 document.getElementById('goalConfigBtn').onclick = () => { renderGoalConfigList(); openModal('goalConfigModal'); };
 
@@ -781,7 +875,7 @@ function saveConfig() {
         partitionPrompt: document.getElementById('partitionPrompt').value
     };
     localStorage.setItem('aiConfig', JSON.stringify(config));
-    alert('配置已保存');
+    alert('配置已保存 ✨');
     closeModal('configModal');
 }
 
@@ -828,7 +922,7 @@ document.getElementById('importBtn').addEventListener('click', () => {
                 localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
                 localStorage.setItem('goals', JSON.stringify(goals));
                 renderDiaryList(); renderDashboard(); renderGoalInputs();
-                alert(`导入完成，新增${added}条数据`);
+                alert(`导入完成，新增 ${added} 条数据 🌟`);
                 location.reload();
             } catch { alert('文件格式错误'); }
         };
@@ -843,7 +937,7 @@ document.getElementById('restoreBtn').addEventListener('click', () => {
     if (!backup) return alert('没有备份数据');
     diaries = JSON.parse(backup);
     saveDiaries();
-    alert('恢复成功');
+    alert('恢复成功 ✨');
     location.reload();
 });
 
