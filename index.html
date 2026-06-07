@@ -67,6 +67,7 @@
         .goal-no-record{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px}
         .date-picker{display:flex;align-items:center;gap:8px;margin-bottom:16px;background:var(--success-light);padding:8px 12px;border-radius:12px}
         .date-picker input{border:none;background:transparent;color:var(--text);font-size:16px;font-family:var(--font)}
+        .entry-toggle{text-align:center;margin:20px 0}
     </style>
 </head>
 <body>
@@ -79,45 +80,54 @@
         </div>
     </div>
 
+    <!-- 主标签：日记 / 分析 -->
     <div class="tabs">
-        <button class="tab active" data-main-tab="record">📝 记录日记</button>
-        <button class="tab" data-main-tab="analyze">📊 分析日记</button>
+        <button class="tab active" data-main-tab="diary">📝 日记</button>
+        <button class="tab" data-main-tab="analyze">📊 分析</button>
     </div>
 
-    <div id="recordTab" class="main-tab-content">
-        <div class="date-picker"><span>📅 日记日期：</span><input type="date" id="diaryDate"></div>
-        <div class="tabs">
-            <button class="tab active" data-entry-tab="goal">🎯 目标打卡记</button>
-            <button class="tab" data-entry-tab="free">✍️ 随心记</button>
+    <!-- ========== 日记页（录入+列表合一） ========== -->
+    <div id="diaryTab" class="main-tab-content">
+        <!-- 写新日记按钮（有日记时显示） -->
+        <div class="entry-toggle" id="showEntryBtn" style="display:none">
+            <button class="btn btn-success" onclick="showEntryForm()">✍️ 写新日记</button>
         </div>
-        <div id="goalEntryTab" class="entry-tab-content">
-            <div id="goalInputsContainer"></div>
-            <div class="goal-input-group">
-                <div class="goal-input-header"><span>📝 额外补充（可选）</span></div>
-                <textarea class="input textarea goal-textarea" id="extraContent" placeholder="写一些目标之外的零散内容..."></textarea>
-            </div>
-            <div style="margin-top:20px"><button class="btn btn-primary" id="saveGoalBtn">💾 保存日记</button></div>
-        </div>
-        <div id="freeEntryTab" class="entry-tab-content" style="display:none">
-            <textarea class="input textarea" id="freeDiaryInput" style="min-height:300px" placeholder="随便写点什么吧，不用有任何格式限制..."></textarea>
-            <div style="margin-top:20px;display:flex;gap:12px">
-                <button class="btn btn-outline" onclick="saveFreeDiary(false)">仅保存原始文本</button>
-                <button class="btn btn-primary" onclick="saveFreeDiary(true)">✨ 保存并AI智能分区</button>
-            </div>
-        </div>
-    </div>
 
-    <div id="analyzeTab" class="main-tab-content" style="display:none">
-        <div class="card"><div class="dashboard-header"><h3>☀️ 今日分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('today')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('today')">查看历史</button></div></div><div id="todayResult" class="latest-result"><div class="empty-state">还没有今日分析</div></div></div>
-        <div class="card"><div class="dashboard-header"><h3>📅 近7天分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('week')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('week')">查看历史</button></div></div><div id="weekResult" class="latest-result"><div class="empty-state">还没有近7天分析</div></div></div>
-        <div class="card"><div class="dashboard-header"><h3>📆 近30天分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('month')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('month')">查看历史</button></div></div><div id="monthResult" class="latest-result"><div class="empty-state">还没有近30天分析</div></div></div>
-        <div class="card"><div class="dashboard-header"><h3>📈 年度分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('all')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('all')">查看历史</button></div></div><div id="allResult" class="latest-result"><div class="empty-state">还没有年度分析</div></div></div>
+        <!-- 录入区域（默认显示或点击按钮显示） -->
+        <div id="entryFormArea" style="display:none">
+            <div class="card">
+                <div class="date-picker"><span>📅 日记日期：</span><input type="date" id="diaryDate"></div>
+                <div class="tabs">
+                    <button class="tab active" data-entry-tab="goal">🎯 目标打卡记</button>
+                    <button class="tab" data-entry-tab="free">✍️ 随心记</button>
+                </div>
+                <div id="goalEntryTab" class="entry-tab-content">
+                    <div id="goalInputsContainer"></div>
+                    <div class="goal-input-group">
+                        <div class="goal-input-header"><span>📝 额外补充（可选）</span></div>
+                        <textarea class="input textarea goal-textarea" id="extraContent" placeholder="写一些目标之外的零散内容..."></textarea>
+                    </div>
+                    <div style="margin-top:20px"><button class="btn btn-primary" id="saveGoalBtn">💾 保存日记</button></div>
+                </div>
+                <div id="freeEntryTab" class="entry-tab-content" style="display:none">
+                    <textarea class="input textarea" id="freeDiaryInput" style="min-height:300px" placeholder="随便写点什么吧，不用有任何格式限制..."></textarea>
+                    <div style="margin-top:20px;display:flex;gap:12px">
+                        <button class="btn btn-outline" onclick="saveFreeDiary(false)">仅保存原始文本</button>
+                        <button class="btn btn-primary" onclick="saveFreeDiary(true)">✨ 保存并AI智能分区</button>
+                    </div>
+                </div>
+                <div class="entry-toggle"><button class="btn btn-outline btn-sm" onclick="hideEntryForm()">取消</button></div>
+            </div>
+        </div>
 
-        <div class="card">
-            <h2>📚 日记列表</h2>
+        <!-- 日记列表区域 -->
+        <div class="card" id="diaryListCard">
+            <h2>📚 我的日记</h2>
             <div style="display:flex;gap:12px;margin-bottom:12px">
                 <input type="text" class="input" id="searchInput" placeholder="搜索内容或日期..." style="flex:1">
-                <select class="select" id="diaryTypeFilter" style="width:140px"><option value="all">全部</option><option value="goal">目标打卡</option><option value="free">随心记</option></select>
+                <select class="select" id="diaryTypeFilter" style="width:140px">
+                    <option value="all">全部类型</option><option value="goal">目标打卡</option><option value="free">随心记</option>
+                </select>
             </div>
             <div id="batchBar" class="batch-actions" style="display:none">
                 <span id="selectedCount" style="color:var(--success);font-weight:bold">已选0篇</span>
@@ -125,13 +135,22 @@
                 <button class="btn btn-outline btn-sm" onclick="clearSelection()">取消</button>
                 <button class="btn btn-danger btn-sm" onclick="batchDelete()">🗑️ 批量删除</button>
             </div>
-            <div id="diaryList"><div class="empty-state">还没有日记</div></div>
+            <div id="diaryList"><div class="empty-state">还没有日记，开始写第一篇吧 ✨</div></div>
         </div>
+    </div>
+
+    <!-- ========== 分析页（看板+自定义分析） ========== -->
+    <div id="analyzeTab" class="main-tab-content" style="display:none">
+        <div class="card"><div class="dashboard-header"><h3>☀️ 今日分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('today')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('today')">查看历史</button></div></div><div id="todayResult" class="latest-result"><div class="empty-state">还没有今日分析</div></div></div>
+        <div class="card"><div class="dashboard-header"><h3>📅 近7天分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('week')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('week')">查看历史</button></div></div><div id="weekResult" class="latest-result"><div class="empty-state">还没有近7天分析</div></div></div>
+        <div class="card"><div class="dashboard-header"><h3>📆 近30天分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('month')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('month')">查看历史</button></div></div><div id="monthResult" class="latest-result"><div class="empty-state">还没有近30天分析</div></div></div>
+        <div class="card"><div class="dashboard-header"><h3>📈 年度分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('all')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('all')">查看历史</button></div></div><div id="allResult" class="latest-result"><div class="empty-state">还没有年度分析</div></div></div>
 
         <div class="card">
             <h2>🔍 自定义分析 <span class="badge">手动</span></h2>
+            <p style="color:var(--text-secondary);margin-bottom:12px">💡 请在「日记」页选中一篇日记，再回到这里选择“当前选中日记”进行分析</p>
             <div class="grid-2">
-                <div><label>时间范围</label><select class="select" id="timeRange"><option value="single">选中日记</option><option value="today">今日</option><option value="week">近7天</option><option value="month">近30天</option><option value="all">全部</option></select></div>
+                <div><label>时间范围</label><select class="select" id="timeRange"><option value="single">当前选中日记</option><option value="today">今日</option><option value="week">近7天</option><option value="month">近30天</option><option value="all">全部</option></select></div>
                 <div>
                     <label>分析视角</label>
                     <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -152,6 +171,7 @@
         </div>
     </div>
 
+    <!-- 目标配置模态框 -->
     <div id="goalConfigModal" class="modal" style="display:none">
         <div class="modal-content">
             <div class="modal-header"><h2>🎯 长期目标配置</h2><button class="modal-close" onclick="closeModal('goalConfigModal')">×</button></div>
@@ -160,6 +180,7 @@
         </div>
     </div>
 
+    <!-- 设置模态框 -->
     <div id="configModal" class="modal" style="display:none">
         <div class="modal-content">
             <div class="modal-header"><h2>⚙️ 设置</h2><button class="modal-close" onclick="closeModal('configModal')">×</button></div>
@@ -176,24 +197,26 @@
         </div>
     </div>
 
+    <!-- 历史模态框 -->
     <div id="historyModal" class="modal" style="display:none">
         <div class="modal-content"><div class="modal-header"><h2 id="historyModalTitle">历史</h2><button class="modal-close" onclick="closeModal('historyModal')">×</button></div><div id="historyList"></div></div>
     </div>
 
+    <!-- 编辑模态框 -->
     <div id="editModal" class="modal" style="display:none">
         <div class="modal-content"><div class="modal-header"><h2>✏️ 编辑日记</h2><button class="modal-close" onclick="closeModal('editModal')">×</button></div><div id="editContent"></div><div style="margin-top:20px"><button class="btn btn-outline" onclick="closeModal('editModal')">取消</button><button class="btn btn-primary" id="saveEditBtn">💾 保存修改</button></div></div>
     </div>
 
 <script>
-// 安全工具
+// ========== 安全工具 ==========
 function isValidDiary(d) { return d && typeof d === 'object' && Array.isArray(d.blocks); }
 function getValidDiaries() { return Array.isArray(diaries) ? diaries.filter(isValidDiary) : []; }
 function safeBlocks(d) { return isValidDiary(d) ? d.blocks : []; }
 
 let diaries = [], analysisHistory = [], goals = [], selectedDiaryId = null, config = {}, editingDiaryId = null, selectedIds = new Set();
 
-function getFullDefaultAnalysisPrompt() { return "【AI角色】\n我是福州在读女生...\n（详细提示词见配置）\n{日记内容}"; }
-function getFullDefaultPartitionPrompt() { return "将以下文本按目标分区...\n{目标列表}\n{文本内容}"; }
+function getFullDefaultAnalysisPrompt() { return "【AI角色】\n我是福州在读女生...\n{日记内容}"; }
+function getFullDefaultPartitionPrompt() { return "将文本按目标分区...\n{目标列表}\n{文本内容}"; }
 
 function safeLoadData() {
     try { diaries = JSON.parse(localStorage.getItem('diaries')||'[]'); if(!Array.isArray(diaries)) diaries=[]; diaries=diaries.filter(isValidDiary); } catch(e){ diaries=[]; }
@@ -206,7 +229,7 @@ function safeLoadData() {
 }
 safeLoadData();
 
-// 主题
+// ========== 主题 ==========
 function initTheme() {
     if(localStorage.getItem('theme')==='dark'){ document.body.classList.add('dark'); document.getElementById('themeBtn').textContent='☀️'; }
     document.getElementById('themeBtn').onclick = () => {
@@ -216,7 +239,7 @@ function initTheme() {
     };
 }
 
-// 标签页
+// ========== 标签切换 ==========
 function initTabs() {
     document.querySelectorAll('[data-main-tab]').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -236,21 +259,43 @@ function initTabs() {
     });
 }
 
-// 日期默认今天
+// ========== 日记录入与列表切换 ==========
+function showEntryForm() {
+    document.getElementById('entryFormArea').style.display='block';
+    document.getElementById('showEntryBtn').style.display='none';
+    setDefaultDate();
+}
+function hideEntryForm() {
+    document.getElementById('entryFormArea').style.display='none';
+    const hasDiaries = getValidDiaries().length > 0;
+    document.getElementById('showEntryBtn').style.display = hasDiaries ? 'block' : 'none';
+    if (!hasDiaries) document.getElementById('entryFormArea').style.display='block'; // 无日记时强制显示
+}
+function decideEntryDisplay() {
+    const hasDiaries = getValidDiaries().length > 0;
+    if (hasDiaries) {
+        document.getElementById('entryFormArea').style.display='none';
+        document.getElementById('showEntryBtn').style.display='block';
+    } else {
+        document.getElementById('entryFormArea').style.display='block';
+        document.getElementById('showEntryBtn').style.display='none';
+    }
+}
+
 function setDefaultDate() {
     const d = new Date();
     const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     document.getElementById('diaryDate').value = dateStr;
 }
 
-// 目标输入框
+// ========== 目标输入框 ==========
 function renderGoalInputs() {
     const container = document.getElementById('goalInputsContainer');
     container.innerHTML = '';
     goals.forEach((goal,i) => {
         container.innerHTML += `
         <div class="goal-input-group">
-            <div class="goal-input-header"><span>🎯 ${goal}</span><label class="goal-no-record"><input type="checkbox" onchange="toggleGoalInput(${i})"> 今日无记录</label></div>
+            <div class="goal-input-header"><span>🎯 ${goal}</span><label class="goal-no-record"><input type="checkbox" id="goalNoRecord${i}" onchange="toggleGoalInput(${i})"> 今日无记录</label></div>
             <textarea class="input textarea goal-textarea" id="goalInput${i}" placeholder="记录今天关于「${goal}」的进展..."></textarea>
         </div>`;
     });
@@ -264,7 +309,7 @@ function toggleGoalInput(i) {
 
 function getSelectedDate() { return document.getElementById('diaryDate').value; }
 
-// 保存日记
+// ========== 保存日记 ==========
 function saveGoalDiary() {
     const groups = document.querySelectorAll('#goalInputsContainer .goal-input-group');
     const blocks = [];
@@ -279,18 +324,17 @@ function saveGoalDiary() {
     if(blocks.length===0) return alert('请至少填写一个目标');
 
     diaries.unshift({
-        id: Date.now(),
-        date: getSelectedDate(),
-        type:'goal', blocks, rawText:'', source:'目标打卡', createdAt: new Date().toISOString()
+        id: Date.now(), date: getSelectedDate(), type:'goal', blocks, rawText:'', source:'目标打卡', createdAt: new Date().toISOString()
     });
-    saveDiaries();
-    renderDiaryList();
+    saveDiaries(); renderDiaryList();
+    // 清空
     groups.forEach((group,i) => {
-        group.querySelector('input[type="checkbox"]').checked = false;
-        const ta = group.querySelector('textarea'); ta.disabled = false; ta.value = ''; ta.style.opacity = '1';
+        const cb = group.querySelector('input[type="checkbox"]'); const ta = group.querySelector('textarea');
+        cb.checked = false; ta.disabled = false; ta.value = ''; ta.style.opacity = '1';
     });
     document.getElementById('extraContent').value = '';
     alert('日记保存成功！');
+    hideEntryForm();
 }
 
 async function saveFreeDiary(needPartition) {
@@ -309,14 +353,12 @@ async function saveFreeDiary(needPartition) {
         btn.disabled = false; btn.textContent = '✨ 保存并AI智能分区';
     } else blocks = [{title:'原始内容', content:raw}];
     diaries.unshift({
-        id: Date.now()+Math.random(),
-        date: getSelectedDate(),
-        type:'free', blocks, rawText:raw, source:'随心记', createdAt: new Date().toISOString()
+        id: Date.now()+Math.random(), date: getSelectedDate(), type:'free', blocks, rawText:raw, source:'随心记', createdAt: new Date().toISOString()
     });
-    saveDiaries();
-    renderDiaryList();
+    saveDiaries(); renderDiaryList();
     document.getElementById('freeDiaryInput').value = '';
     alert('日记保存成功！');
+    hideEntryForm();
 }
 
 function saveDiaries() {
@@ -324,7 +366,7 @@ function saveDiaries() {
     localStorage.setItem('diaries', JSON.stringify(diaries));
 }
 
-// 目标配置
+// ========== 目标配置 ==========
 function renderGoalConfigList() {
     document.getElementById('goalConfigList').innerHTML = goals.map((g,i) => `<div class="goal-item"><input type="text" class="input" value="${g}"><button class="btn btn-danger btn-sm" onclick="removeGoalItem(${i})">删除</button></div>`).join('');
 }
@@ -337,7 +379,7 @@ function saveGoals() {
     renderGoalInputs(); closeModal('goalConfigModal'); alert('目标已保存');
 }
 
-// 日记列表
+// ========== 日记列表 ==========
 function renderDiaryList() {
     const valid = getValidDiaries();
     const kw = document.getElementById('searchInput').value.toLowerCase();
@@ -355,10 +397,12 @@ function renderDiaryList() {
         return `<div class="diary-item">
             <input type="checkbox" class="diary-checkbox" data-id="${d.id}" ${selectedIds.has(d.id)?'checked':''} onchange="toggleSelectDiary(${d.id},this.checked)">
             <div class="diary-body"><div class="diary-header"><span>📅 ${d.date}</span><span class="diary-source">${d.source}</span></div>${preview}
-            <div class="diary-actions"><button class="btn btn-outline btn-sm" onclick="selectDiary(${d.id})">分析</button><button class="btn btn-outline btn-sm" onclick="viewDiary(${d.id})">查看</button><button class="btn btn-outline btn-sm" onclick="editDiary(${d.id})">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteDiary(${d.id})">删除</button></div></div></div>`;
+            <div class="diary-actions"><button class="btn btn-outline btn-sm" onclick="selectDiary(${d.id})">选中分析</button><button class="btn btn-outline btn-sm" onclick="viewDiary(${d.id})">查看</button><button class="btn btn-outline btn-sm" onclick="editDiary(${d.id})">✏️ 编辑</button><button class="btn btn-danger btn-sm" onclick="deleteDiary(${d.id})">删除</button></div></div></div>`;
     }).join('');
     updateBatchBar();
+    decideEntryDisplay(); // 根据列表是否为空调整录入区显示
 }
+
 function toggleSelectDiary(id, checked) { if(checked) selectedIds.add(id); else selectedIds.delete(id); updateBatchBar(); }
 function toggleSelectAll() {
     const boxes = document.querySelectorAll('.diary-checkbox');
@@ -379,14 +423,14 @@ function updateBatchBar() {
     else bar.style.display='none';
 }
 function deleteDiary(id) { if(!confirm('删除这篇日记？')) return; diaries = diaries.filter(d=>d.id!==id); saveDiaries(); renderDiaryList(); }
-function selectDiary(id) { selectedDiaryId = id; document.getElementById('timeRange').value='single'; alert('已选中'); }
+function selectDiary(id) { selectedDiaryId = id; alert('已选中日记，可前往「分析」页进行自定义分析'); }
 function viewDiary(id) {
     const d = diaries.find(x=>x.id===id);
     if(!isValidDiary(d)) return alert('数据损坏');
     alert(`日期:${d.date}\n\n${safeBlocks(d).map(b=>`【${b.title||''}】\n${b.content||''}`).join('\n\n')}`);
 }
 
-// 编辑日记
+// ========== 编辑日记 ==========
 function editDiary(id) {
     const d = diaries.find(x=>x.id===id);
     if(!isValidDiary(d)) return alert('数据损坏');
@@ -436,7 +480,7 @@ document.getElementById('saveEditBtn').addEventListener('click', () => {
     saveDiaries(); renderDiaryList(); closeModal('editModal'); editingDiaryId=null; alert('已更新');
 });
 
-// 视角全选
+// ========== 视角全选 ==========
 function toggleAllViews() {
     const checked = document.getElementById('selectAll').checked;
     document.querySelectorAll('input[name="view"]').forEach(cb => { if(cb.value!=='custom') cb.checked = checked; });
@@ -447,7 +491,7 @@ document.addEventListener('change', e => {
     if(e.target.name==='view' && e.target.value==='custom') document.getElementById('customViewInput').style.display = e.target.checked?'block':'none';
 });
 
-// 看板
+// ========== 看板 ==========
 function renderDashboard() {
     ['today','week','month','all'].forEach(range => {
         const latest = analysisHistory.filter(h=>h&&h.timeRange===range)[0];
@@ -482,7 +526,7 @@ async function startAnalysis() {
     const views = Array.from(document.querySelectorAll('input[name="view"]:checked')).map(cb=>cb.value);
     if(!views.length) return alert('请勾选视角');
     let target; const now = new Date();
-    if(range==='single') { if(!selectedDiaryId) return alert('请选中日记'); target = diaries.filter(d=>d.id===selectedDiaryId); }
+    if(range==='single') { if(!selectedDiaryId) return alert('请先在日记页选中一篇日记'); target = diaries.filter(d=>d.id===selectedDiaryId); }
     else if(range==='today') target = diaries.filter(d=>d.date===now.toLocaleDateString());
     else if(range==='week') target = diaries.filter(d=>new Date(d.date) >= new Date(now.getTime()-7*86400000));
     else if(range==='month') target = diaries.filter(d=>new Date(d.date) >= new Date(now.getTime()-30*86400000));
@@ -513,7 +557,7 @@ async function callAI(prompt) {
 }
 function copyResult() { const t = document.querySelector('#analysisResult div:first-child')?.innerText; if(t) navigator.clipboard.writeText(t).then(()=>alert('已复制')); }
 
-// 历史
+// ========== 历史 ==========
 function viewRangeHistory(range) {
     const list = analysisHistory.filter(h=>h.timeRange===range);
     document.getElementById('historyModalTitle').textContent = `${range} 历史`;
@@ -521,12 +565,12 @@ function viewRangeHistory(range) {
     openModal('historyModal');
 }
 
-// 弹窗
+// ========== 弹窗 ==========
 function openModal(id) { document.getElementById(id).style.display='flex'; }
 function closeModal(id) { document.getElementById(id).style.display='none'; }
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.style.display='none'; }));
 
-// 配置与数据管理
+// ========== 配置与数据 ==========
 document.getElementById('configBtn').onclick = () => { loadConfigToForm(); openModal('configModal'); };
 document.getElementById('goalConfigBtn').onclick = () => { renderGoalConfigList(); openModal('goalConfigModal'); };
 function loadConfigToForm() {
@@ -583,11 +627,11 @@ document.getElementById('restoreBtn').addEventListener('click', ()=>{
     diaries = JSON.parse(backup); saveDiaries(); alert('恢复成功'); location.reload();
 });
 
-// 搜索
+// ========== 搜索 ==========
 document.getElementById('searchInput').addEventListener('input', renderDiaryList);
 document.getElementById('diaryTypeFilter').addEventListener('change', renderDiaryList);
 
-// 初始化（关键：绑定保存按钮）
+// ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', () => {
     setDefaultDate();
     initTheme();
@@ -595,7 +639,9 @@ document.addEventListener('DOMContentLoaded', () => {
     renderGoalInputs();
     renderDiaryList();
     renderDashboard();
-    // 绑定目标打卡保存按钮
+    decideEntryDisplay(); // 初始决定是否显示录入表单
+
+    // 绑定保存按钮
     document.getElementById('saveGoalBtn').addEventListener('click', saveGoalDiary);
     document.getElementById('saveGoalBtn').addEventListener('touchstart', (e) => { e.preventDefault(); saveGoalDiary(); });
 });
