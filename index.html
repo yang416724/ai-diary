@@ -89,13 +89,11 @@
 
 <!-- 日记页 -->
 <div id="diaryTab" class="main-tab-content">
-    <!-- 子标签 -->
     <div class="tabs" style="border-bottom:0;margin-bottom:0">
         <button class="tab active" data-sub-tab="big">📖 大日记本</button>
         <button class="tab" data-sub-tab="small">📚 小本子</button>
     </div>
 
-    <!-- 大日记本 -->
     <div id="bigNotebook" class="sub-tab-content">
         <div class="card">
             <div class="date-nav">
@@ -127,7 +125,6 @@
         </div>
     </div>
 
-    <!-- 小本子 -->
     <div id="smallNotebook" class="sub-tab-content" style="display:none">
         <div class="card">
             <h3>📚 目标小本子</h3>
@@ -242,7 +239,7 @@
 <div id="batchImportModal" class="modal" style="display:none">
     <div class="modal-content">
         <div class="modal-header"><h2>📥 批量导入旧日记</h2><button class="modal-close" onclick="closeModal('batchImportModal')">×</button></div>
-        <p style="color:var(--text-secondary);margin-bottom:12px">粘贴你以前写的多日期纯文本日记，AI 会自动识别日期并归类到对应目标</p>
+        <p style="color:var(--text-secondary);margin-bottom:12px">粘贴你以前写的多日期纯文本日记，AI 会自动识别日期并归类到对应目标。导入可能需要几秒钟，请耐心等待。</p>
         <textarea class="input textarea" id="batchTextInput" style="min-height:300px" placeholder="在此粘贴旧日记文本..."></textarea>
         <div style="margin-top:12px;display:flex;gap:12px">
             <button class="btn btn-success" id="batchImportBtn" onclick="batchImportDiaries()">✨ AI解析并导入</button>
@@ -348,7 +345,6 @@ function initTheme() {
 }
 function initTabs() {
     document.querySelectorAll('[data-main-tab]').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('[data-main-tab]').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.main-tab-content').forEach(c=>c.style.display='none'); tab.classList.add('active'); document.getElementById(tab.dataset.mainTab+'Tab').style.display='block'; }); });
-    // 子标签（大日记本/小本子）
     document.querySelectorAll('[data-sub-tab]').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('[data-sub-tab]').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.sub-tab-content').forEach(c=>c.style.display='none'); tab.classList.add('active'); document.getElementById(tab.dataset.subTab==='big'?'bigNotebook':'smallNotebook').style.display='block'; if(tab.dataset.subTab==='small') renderNotebook(); }); });
 }
 
@@ -442,7 +438,6 @@ function renderNotebook() {
 }
 
 window.jumpToDate = function(dateStr) {
-    // 切换回大日记本，并设置日期
     document.querySelector('[data-sub-tab="big"]').click();
     const parts = dateStr.split('/');
     const date = new Date(parts[2], parts[0]-1, parts[1]);
@@ -456,14 +451,9 @@ window.jumpToDate = function(dateStr) {
 async function analyzeNotebook() {
     if(!selectedNotebookGoal) return alert('请先选择目标');
     if(!config.apiKey) { openModal('configModal'); return alert('请配置AI密钥'); }
-    // 收集该目标下所有日记内容
     const entries = getValidDiaries().filter(d => d.blocks.some(b => b.title === selectedNotebookGoal));
     if(entries.length === 0) return alert('该目标暂无记录');
-    const text = entries.map(d => {
-        const block = d.blocks.find(b => b.title === selectedNotebookGoal);
-        return `【${d.date}】\n${block.content}`;
-    }).join('\n---\n');
-    // 输出到今日分析区域
+    const text = entries.map(d => { const block = d.blocks.find(b => b.title === selectedNotebookGoal); return `【${d.date}】\n${block.content}`; }).join('\n---\n');
     document.getElementById('todayResult').innerHTML = '<div class="loading">分析中...</div>';
     try {
         const prompt = config.analysisPrompt.replace('我的所有自定义长期目标', goals.join('、')).replace('{日记内容}', text);
@@ -584,33 +574,79 @@ function openModal(id) { document.getElementById(id).style.display='flex'; }
 function closeModal(id) { document.getElementById(id).style.display='none'; }
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.style.display='none'; }));
 
-// ========== 批量导入旧日记 ==========
+// ========== 批量导入旧日记（优化版） ==========
 async function batchImportDiaries() {
     const rawText = document.getElementById('batchTextInput').value.trim();
     if (!rawText) return alert('请粘贴旧日记文本');
-    if (!config.apiKey) return alert('请先配置AI密钥');
-    const btn = document.getElementById('batchImportBtn'); const status = document.getElementById('batchStatus');
-    btn.disabled = true; btn.textContent = '解析中...'; status.textContent = 'AI正在分析文本，请稍候...';
+    if (!config.apiKey) { openModal('configModal'); return alert('请先配置AI密钥'); }
+    const btn = document.getElementById('batchImportBtn');
+    const status = document.getElementById('batchStatus');
+    btn.disabled = true; btn.textContent = '解析中...';
+    status.textContent = 'AI正在分析文本，请稍候...';
     try {
-        const prompt = `你是一个专业的日记整理助手。下面是一段跨越多天的日记文本，请完成以下任务：\n1. 识别出每条日记的日期（如果没有明确日期，尽量根据上下文推测，如推测不出则使用"未知"）。\n2. 对每条日记的内容，按照以下长期目标进行智能分区，并将剩余内容放入"其他"：\n${goals.join('、')}\n3. 输出格式必须为严格的JSON数组，每个元素如下：\n{\n  "date": "YYYY-MM-DD或原文字符串",\n  "blocks": [\n    {"title": "目标名称或临时主题", "content": "具体内容"}\n  ]\n}\n4. 不要添加任何额外解释，只输出JSON。\n5. 保留原文信息，不要修改内容。\n\n需要整理的文本：\n${rawText}`;
-        const result = await callAI(prompt); const jsonStr = result.replace(/```json/g, '').replace(/```/g, '').trim();
-        const data = JSON.parse(jsonStr); if (!Array.isArray(data)) throw new Error('返回数据不是数组');
-        let importedCount = 0; const today = new Date().toLocaleDateString();
+        // 构造更简洁的提示词
+        const prompt = `你是一个日记整理助手。请将下面的多日期文本分割成多条日记，每条日记提取日期（如2024年1月1日或1/1/2024），并将内容按以下目标归类：${goals.join('、')}。无关内容放入"其他"。输出严格JSON数组，格式：[{"date":"YYYY-MM-DD","blocks":[{"title":"目标","content":"内容"}]}]。只输出JSON。\n文本：\n${rawText}`;
+        
+        // 使用较大的 max_tokens 避免截断
+        const model = config.modelName==='custom' ? (document.getElementById('customModel')?.value || config.modelName) : config.modelName;
+        const res = await fetch(`${config.apiBase}/chat/completions`, {
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':`Bearer ${config.apiKey}`},
+            body: JSON.stringify({ model, messages:[{role:'user',content:prompt}], temperature:0.3, max_tokens:3000 })
+        });
+        if(!res.ok) throw new Error((await res.json()).error?.message||'请求失败');
+        const json = await res.json();
+        const result = json.choices[0].message.content;
+        const jsonStr = result.replace(/```json/g, '').replace(/```/g, '').trim();
+        let data;
+        try {
+            data = JSON.parse(jsonStr);
+        } catch (e) {
+            throw new Error('AI返回内容无法解析为JSON，请检查日记文本格式或重试。');
+        }
+        if (!Array.isArray(data)) throw new Error('返回数据格式错误');
+        let importedCount = 0;
+        const today = new Date().toLocaleDateString();
         data.forEach(entry => {
             let dateStr = entry.date || today;
-            const parsedDate = new Date(dateStr); if (!isNaN(parsedDate.getTime())) dateStr = parsedDate.toLocaleDateString();
-            const match = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/); if (match) dateStr = new Date(match[1], match[2]-1, match[3]).toLocaleDateString();
+            const parsedDate = new Date(dateStr);
+            if (!isNaN(parsedDate.getTime())) dateStr = parsedDate.toLocaleDateString();
+            const match = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+            if (match) dateStr = new Date(match[1], match[2]-1, match[3]).toLocaleDateString();
             if (!entry.blocks || !Array.isArray(entry.blocks)) return;
-            const blocks = entry.blocks.filter(b => b.title && b.content); if (blocks.length === 0) return;
+            const blocks = entry.blocks.filter(b => b.title && b.content);
+            if (blocks.length === 0) return;
             const existing = getDiaryByDate(dateStr);
-            if (existing) { blocks.forEach(b => { const existingBlock = existing.blocks.find(eb => eb.title === b.title); if (existingBlock) existingBlock.content = existingBlock.content + '\n' + b.content; else existing.blocks.push({ title: b.title, content: b.content }); }); existing.source = '批量导入'; }
-            else { diaries.unshift({ id: Date.now() + Math.random(), date: dateStr, type: 'goal', blocks: blocks, rawText: '', source: '批量导入', createdAt: new Date().toISOString() }); }
+            if (existing) {
+                blocks.forEach(b => {
+                    const existingBlock = existing.blocks.find(eb => eb.title === b.title);
+                    if (existingBlock) existingBlock.content = existingBlock.content + '\n' + b.content;
+                    else existing.blocks.push({ title: b.title, content: b.content });
+                });
+                existing.source = '批量导入';
+            } else {
+                diaries.unshift({
+                    id: Date.now() + Math.random(),
+                    date: dateStr,
+                    type: 'goal',
+                    blocks: blocks,
+                    rawText: '',
+                    source: '批量导入',
+                    createdAt: new Date().toISOString()
+                });
+            }
             importedCount++;
         });
-        saveDiaries(); loadDiaryByDate(); status.textContent = `导入完成！成功导入 ${importedCount} 天日记`;
-        btn.disabled = false; btn.textContent = '✨ AI解析并导入'; document.getElementById('batchTextInput').value = '';
+        saveDiaries();
+        loadDiaryByDate();
+        status.textContent = `导入完成！成功导入 ${importedCount} 天日记`;
+        btn.disabled = false; btn.textContent = '✨ AI解析并导入';
+        document.getElementById('batchTextInput').value = '';
         setTimeout(() => { status.textContent = ''; }, 3000);
-    } catch (e) { status.textContent = '导入失败: ' + e.message; btn.disabled = false; btn.textContent = '✨ AI解析并导入'; }
+    } catch (e) {
+        status.textContent = '导入失败: ' + e.message;
+        btn.disabled = false; btn.textContent = '✨ AI解析并导入';
+    }
 }
 
 // ========== 设置面板 ==========
