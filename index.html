@@ -64,7 +64,10 @@
         .config-selector select{flex:1}
         .config-selector button{white-space:nowrap}
         .fetch-models-btn{margin-top:8px}
-        .toggle-btn{color:var(--primary);cursor:pointer;font-size:14px;margin-left:8px;text-decoration:underline;background:none;border:none;font-family:var(--font)}
+        .result-content{position:relative;margin:8px 0}
+        .result-content.collapsed{max-height:200px;overflow:hidden}
+        .result-content.collapsed::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent, var(--bg))}
+        .toggle-btn{color:var(--primary);cursor:pointer;font-size:14px;margin-top:4px;background:none;border:none;font-family:var(--font);text-decoration:underline}
     </style>
 </head>
 <body>
@@ -209,7 +212,7 @@
 </div>
 
 <script>
-// ========== 默认提示词（增加禁止重复规则） ==========
+// ========== 默认提示词（含禁止重复规则） ==========
 function getDefaultAnalysisPrompt() {
     return `【AI角色】
 我是一名在福州读大学的女生，你是我的专属私人日记洞察师，深度了解我的所有自定义长期目标。你精通Flomo全6大洞察视角，客观中立，只讲真话，不做道德评判。我是坚定的女权主义者，反对平权，支持推翻父权制，成为强大女性（包括身体强壮，心理强大）。
@@ -268,51 +271,25 @@ function initConfigs() {
     const savedConfigs = localStorage.getItem('apiConfigs');
     const savedCurrentId = localStorage.getItem('currentConfigId');
     const oldConfig = localStorage.getItem('aiConfig');
-
-    if (savedConfigs) {
-        apiConfigs = JSON.parse(savedConfigs);
-        if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) apiConfigs = [];
-    }
+    if (savedConfigs) { apiConfigs = JSON.parse(savedConfigs); if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) apiConfigs = []; }
     if (apiConfigs.length === 0 && oldConfig) {
         const old = JSON.parse(oldConfig);
-        apiConfigs.push({
-            id: Date.now().toString(), name: '默认配置',
-            apiKey: old.apiKey || '', apiBase: old.apiBase || 'https://api.openai.com/v1',
-            modelName: old.modelName || 'gpt-3.5-turbo', customModel: old.customModel || '',
-            temperature: old.temperature ?? 0.7, maxTokens: old.maxTokens ?? 2000
-        });
-        if (old.analysisPrompt || old.partitionPrompt) {
-            localStorage.setItem('prompts', JSON.stringify({ analysisPrompt: old.analysisPrompt || getDefaultAnalysisPrompt(), partitionPrompt: old.partitionPrompt || getDefaultPartitionPrompt() }));
-        }
+        apiConfigs.push({ id: Date.now().toString(), name: '默认配置', apiKey: old.apiKey || '', apiBase: old.apiBase || 'https://api.openai.com/v1', modelName: old.modelName || 'gpt-3.5-turbo', customModel: old.customModel || '', temperature: old.temperature ?? 0.7, maxTokens: old.maxTokens ?? 2000 });
+        if (old.analysisPrompt || old.partitionPrompt) localStorage.setItem('prompts', JSON.stringify({ analysisPrompt: old.analysisPrompt || getDefaultAnalysisPrompt(), partitionPrompt: old.partitionPrompt || getDefaultPartitionPrompt() }));
     }
-    if (apiConfigs.length === 0) {
-        apiConfigs.push({
-            id: Date.now().toString(), name: '默认配置',
-            apiKey: '', apiBase: 'https://api.openai.com/v1',
-            modelName: 'gpt-3.5-turbo', customModel: '', temperature: 0.7, maxTokens: 2000
-        });
-    }
+    if (apiConfigs.length === 0) apiConfigs.push({ id: Date.now().toString(), name: '默认配置', apiKey: '', apiBase: 'https://api.openai.com/v1', modelName: 'gpt-3.5-turbo', customModel: '', temperature: 0.7, maxTokens: 2000 });
     currentConfigId = savedCurrentId || apiConfigs[0].id;
     if (!apiConfigs.find(c => c.id === currentConfigId)) currentConfigId = apiConfigs[0].id;
-    if (!localStorage.getItem('prompts')) {
-        localStorage.setItem('prompts', JSON.stringify({ analysisPrompt: getDefaultAnalysisPrompt(), partitionPrompt: getDefaultPartitionPrompt() }));
-    }
+    if (!localStorage.getItem('prompts')) localStorage.setItem('prompts', JSON.stringify({ analysisPrompt: getDefaultAnalysisPrompt(), partitionPrompt: getDefaultPartitionPrompt() }));
     syncCurrentConfig();
 }
 
 function syncCurrentConfig() {
     const cfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0];
-    config.apiKey = cfg.apiKey; config.apiBase = cfg.apiBase;
-    config.modelName = cfg.modelName; config.temperature = cfg.temperature; config.maxTokens = cfg.maxTokens;
+    config.apiKey = cfg.apiKey; config.apiBase = cfg.apiBase; config.modelName = cfg.modelName; config.temperature = cfg.temperature; config.maxTokens = cfg.maxTokens;
     const savedPrompts = localStorage.getItem('prompts');
-    if (savedPrompts) {
-        const prompts = JSON.parse(savedPrompts);
-        config.analysisPrompt = prompts.analysisPrompt || getDefaultAnalysisPrompt();
-        config.partitionPrompt = prompts.partitionPrompt || getDefaultPartitionPrompt();
-    } else {
-        config.analysisPrompt = getDefaultAnalysisPrompt();
-        config.partitionPrompt = getDefaultPartitionPrompt();
-    }
+    if (savedPrompts) { const prompts = JSON.parse(savedPrompts); config.analysisPrompt = prompts.analysisPrompt || getDefaultAnalysisPrompt(); config.partitionPrompt = prompts.partitionPrompt || getDefaultPartitionPrompt(); }
+    else { config.analysisPrompt = getDefaultAnalysisPrompt(); config.partitionPrompt = getDefaultPartitionPrompt(); }
 }
 
 function saveConfigs() {
@@ -333,178 +310,93 @@ safeLoadData();
 // ========== 主题与标签 ==========
 function initTheme() {
     if(localStorage.getItem('theme')==='dark'){ document.body.classList.add('dark'); document.getElementById('themeBtn').textContent='☀️'; }
-    document.getElementById('themeBtn').onclick = () => {
-        document.body.classList.toggle('dark');
-        localStorage.setItem('theme', document.body.classList.contains('dark')?'dark':'light');
-        document.getElementById('themeBtn').textContent = document.body.classList.contains('dark')?'☀️':'🌙';
-    };
+    document.getElementById('themeBtn').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark')?'dark':'light'); document.getElementById('themeBtn').textContent = document.body.classList.contains('dark')?'☀️':'🌙'; };
 }
 function initTabs() {
-    document.querySelectorAll('[data-main-tab]').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('[data-main-tab]').forEach(t=>t.classList.remove('active'));
-            document.querySelectorAll('.main-tab-content').forEach(c=>c.style.display='none');
-            tab.classList.add('active');
-            document.getElementById(tab.dataset.mainTab+'Tab').style.display='block';
-        });
-    });
+    document.querySelectorAll('[data-main-tab]').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('[data-main-tab]').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.main-tab-content').forEach(c=>c.style.display='none'); tab.classList.add('active'); document.getElementById(tab.dataset.mainTab+'Tab').style.display='block'; }); });
 }
 
-// ========== 展开/收起辅助函数 ==========
-function createToggleableContent(fullText, maxLen = 300) {
-    if (!fullText || fullText.length <= maxLen) return fullText;
-    const id = 'toggle_' + Math.random().toString(36).substr(2, 9);
-    const shortText = fullText.slice(0, maxLen) + '...';
-    return `<span id="${id}">${shortText}</span><button class="toggle-btn" onclick="toggleContent('${id}', \`${fullText.replace(/`/g,'\\`').replace(/\\/g,'\\\\')}\`)">展开全文</button>`;
+// ========== 展开/折叠功能 ==========
+function renderAnalysisBlock(content, showToggle = true) {
+    if (!content) return '';
+    const parsed = marked.parse(content);
+    const temp = document.createElement('div'); temp.innerHTML = parsed;
+    const textLen = temp.textContent.length;
+    if (textLen <= 500 || !showToggle) return `<div class="result-content">${parsed}</div>`;
+    const id = 'block_' + Math.random().toString(36).substr(2, 9);
+    return `<div class="result-content collapsed" id="${id}">${parsed}</div><button class="toggle-btn" data-target="${id}" onclick="toggleAnalysisBlock('${id}')">展开全文</button>`;
 }
-
-window.toggleContent = function(id, fullText) {
-    const el = document.getElementById(id);
-    const btn = el.nextElementSibling;
-    if (el.textContent.endsWith('...')) {
-        el.innerHTML = fullText;
-        btn.textContent = '收起';
-    } else {
-        el.innerHTML = fullText.slice(0, 300) + '...';
-        btn.textContent = '展开全文';
-    }
+window.toggleAnalysisBlock = function(id) {
+    const block = document.getElementById(id);
+    const btn = document.querySelector(`button[data-target="${id}"]`);
+    if (!block || !btn) return;
+    if (block.classList.contains('collapsed')) { block.classList.remove('collapsed'); btn.textContent = '收起'; }
+    else { block.classList.add('collapsed'); btn.textContent = '展开全文'; }
 };
 
 // ========== 日期与日记 ==========
-function getCurrentDateStr() {
-    const d = document.getElementById('diaryDate').value;
-    if(!d) return new Date().toLocaleDateString();
-    const parts = d.split('-');
-    return new Date(parts[0], parts[1]-1, parts[2]).toLocaleDateString();
-}
-function changeDate(delta) {
-    const dateInput = document.getElementById('diaryDate');
-    const parts = dateInput.value.split('-');
-    const date = new Date(parts[0], parts[1]-1, parts[2]);
-    date.setDate(date.getDate() + delta);
-    dateInput.value = date.toISOString().split('T')[0];
-    loadDiaryByDate();
-}
+function getCurrentDateStr() { const d = document.getElementById('diaryDate').value; if(!d) return new Date().toLocaleDateString(); const parts = d.split('-'); return new Date(parts[0], parts[1]-1, parts[2]).toLocaleDateString(); }
+function changeDate(delta) { const dateInput = document.getElementById('diaryDate'); const parts = dateInput.value.split('-'); const date = new Date(parts[0], parts[1]-1, parts[2]); date.setDate(date.getDate() + delta); dateInput.value = date.toISOString().split('T')[0]; loadDiaryByDate(); }
 function setToday() { document.getElementById('diaryDate').value = new Date().toISOString().split('T')[0]; loadDiaryByDate(); }
 function getDiaryByDate(dateStr) { return getValidDiaries().find(d => d.date === dateStr); }
 
 function loadDiaryByDate() {
-    const dateStr = getCurrentDateStr();
-    const diary = getDiaryByDate(dateStr);
-    const container = document.getElementById('goalRows');
-    let html = '';
-    goals.forEach((goal, i) => {
-        let content = '';
-        if(diary) { const block = diary.blocks.find(b => b.title === goal); if(block && block.content !== '今日无相关记录') content = block.content; }
-        html += `<div class="goal-row"><label>🎯 ${goal}</label><textarea class="input textarea" id="goalInput${i}">${content}</textarea></div>`;
-    });
+    const dateStr = getCurrentDateStr(); const diary = getDiaryByDate(dateStr);
+    const container = document.getElementById('goalRows'); let html = '';
+    goals.forEach((goal, i) => { let content = ''; if(diary){ const block = diary.blocks.find(b => b.title === goal); if(block && block.content !== '今日无相关记录') content = block.content; } html += `<div class="goal-row"><label>🎯 ${goal}</label><textarea class="input textarea" id="goalInput${i}">${content}</textarea></div>`; });
     container.innerHTML = html;
-    let otherContent = '';
-    if(diary) { const otherBlock = diary.blocks.find(b => b.title === '其他' || b.title === '额外补充'); if(otherBlock) otherContent = otherBlock.content; }
-    document.getElementById('otherBlock').value = otherContent;
-    document.getElementById('freeInput').value = '';
-    selectedDiaryId = diary ? diary.id : null;
+    let otherContent = ''; if(diary){ const otherBlock = diary.blocks.find(b => b.title === '其他' || b.title === '额外补充'); if(otherBlock) otherContent = otherBlock.content; }
+    document.getElementById('otherBlock').value = otherContent; document.getElementById('freeInput').value = ''; selectedDiaryId = diary ? diary.id : null;
 }
 
 function saveCurrentDiary() {
-    const dateStr = getCurrentDateStr();
-    const blocks = [];
+    const dateStr = getCurrentDateStr(); const blocks = [];
     goals.forEach((goal, i) => { const ta = document.getElementById('goalInput'+i); if(ta && ta.value.trim()) blocks.push({ title: goal, content: ta.value.trim() }); });
-    const other = document.getElementById('otherBlock').value.trim();
-    if(other) blocks.push({ title: '其他', content: other });
-    if(blocks.length === 0) {
-        const existing = getDiaryByDate(dateStr);
-        if(existing) { if(confirm('当天日记为空，是否删除原有记录？')) { diaries = diaries.filter(d => d.date !== dateStr); saveDiaries(); loadDiaryByDate(); } }
-        else alert('请至少填写一个目标或“其他”内容');
-        return;
-    }
-    const existing = getDiaryByDate(dateStr);
-    if(existing) { existing.blocks = blocks; existing.source = '目标打卡'; }
-    else diaries.unshift({ id: Date.now(), date: dateStr, type: 'goal', blocks, rawText:'', source:'目标打卡', createdAt: new Date().toISOString() });
+    const other = document.getElementById('otherBlock').value.trim(); if(other) blocks.push({ title: '其他', content: other });
+    if(blocks.length === 0) { const existing = getDiaryByDate(dateStr); if(existing) { if(confirm('当天日记为空，是否删除原有记录？')) { diaries = diaries.filter(d => d.date !== dateStr); saveDiaries(); loadDiaryByDate(); } } else alert('请至少填写一个目标或“其他”内容'); return; }
+    const existing = getDiaryByDate(dateStr); if(existing) { existing.blocks = blocks; existing.source = '目标打卡'; } else diaries.unshift({ id: Date.now(), date: dateStr, type: 'goal', blocks, rawText:'', source:'目标打卡', createdAt: new Date().toISOString() });
     saveDiaries(); loadDiaryByDate(); alert('日记已保存 ✨');
 }
-function deleteCurrentDiary() {
-    if(!getDiaryByDate(getCurrentDateStr())) return alert('当天没有日记');
-    if(!confirm(`删除 ${getCurrentDateStr()} 的日记？`)) return;
-    diaries = diaries.filter(d => d.date !== getCurrentDateStr());
-    saveDiaries(); loadDiaryByDate(); alert('已删除');
-}
+function deleteCurrentDiary() { const dateStr = getCurrentDateStr(); if(!getDiaryByDate(dateStr)) return alert('当天没有日记'); if(!confirm(`删除 ${dateStr} 的日记？`)) return; diaries = diaries.filter(d => d.date !== dateStr); saveDiaries(); loadDiaryByDate(); alert('已删除'); }
 function saveDiaries() { localStorage.setItem('diaries_backup', JSON.stringify(diaries)); localStorage.setItem('diaries', JSON.stringify(diaries)); }
 
 // ========== AI 分区 ==========
 async function aiPartition() {
-    const raw = document.getElementById('freeInput').value.trim();
-    if(!raw) return alert('请输入内容');
-    if(!config.apiKey) return alert('请先在设置中配置API密钥');
-    const btn = document.getElementById('aiPartitionBtn');
-    btn.disabled = true; btn.textContent = '分区中...';
+    const raw = document.getElementById('freeInput').value.trim(); if(!raw) return alert('请输入内容'); if(!config.apiKey) return alert('请先配置API密钥');
+    const btn = document.getElementById('aiPartitionBtn'); btn.disabled = true; btn.textContent = '分区中...';
     try {
         const prompt = config.partitionPrompt.replace('{目标列表}', goals.join('、')).replace('{文本内容}', raw);
-        const result = await callAI(prompt);
-        const parsed = JSON.parse(result);
-        parsed.forEach(item => {
-            if(!item.title || !item.content) return;
-            let matched = false;
-            goals.forEach((goal, i) => {
-                if(item.title === goal || item.title.includes(goal)) {
-                    const ta = document.getElementById('goalInput'+i);
-                    if(ta) { ta.value = (ta.value ? ta.value + '\n' : '') + item.content; matched = true; }
-                }
-            });
-            if(!matched) document.getElementById('otherBlock').value = (document.getElementById('otherBlock').value ? document.getElementById('otherBlock').value + '\n' : '') + `【${item.title}】${item.content}`;
-        });
-        document.getElementById('freeInput').value = '';
-        alert('归类完成！请检查并保存');
+        const result = await callAI(prompt); const parsed = JSON.parse(result);
+        parsed.forEach(item => { if(!item.title || !item.content) return; let matched = false; goals.forEach((goal, i) => { if(item.title === goal || item.title.includes(goal)) { const ta = document.getElementById('goalInput'+i); if(ta) { ta.value = (ta.value ? ta.value + '\n' : '') + item.content; matched = true; } } }); if(!matched) document.getElementById('otherBlock').value = (document.getElementById('otherBlock').value ? document.getElementById('otherBlock').value + '\n' : '') + `【${item.title}】${item.content}`; });
+        document.getElementById('freeInput').value = ''; alert('归类完成！请检查并保存');
     } catch(e) { alert('分区失败: '+e.message); }
     btn.disabled = false; btn.textContent = '✨ AI智能归类';
 }
-
-function selectCurrentForAnalysis() {
-    const diary = getDiaryByDate(getCurrentDateStr());
-    if(!diary) return alert('当天还没有日记');
-    selectedDiaryId = diary.id; alert('已选中当天日记，可前往分析页进行自定义分析');
-}
+function selectCurrentForAnalysis() { const diary = getDiaryByDate(getCurrentDateStr()); if(!diary) return alert('当天还没有日记'); selectedDiaryId = diary.id; alert('已选中当天日记'); }
 
 // ========== 目标配置 ==========
 function renderGoalConfigList() { document.getElementById('goalConfigList').innerHTML = goals.map((g,i)=>`<div class="goal-item"><input class="input" value="${g}"><button class="btn btn-danger btn-sm" onclick="removeGoalItem(${i})">删除</button></div>`).join(''); }
 function addGoalItem() { goals.push('新目标'); renderGoalConfigList(); }
 function removeGoalItem(i) { if(goals.length<=1) return alert('至少一个'); goals.splice(i,1); renderGoalConfigList(); }
-function saveGoals() {
-    goals = Array.from(document.querySelectorAll('#goalConfigList .goal-item input')).map(i=>i.value.trim()).filter(v=>v);
-    if(!goals.length) return alert('至少一个');
-    localStorage.setItem('goals', JSON.stringify(goals)); loadDiaryByDate(); closeModal('goalConfigModal'); alert('目标已保存');
-}
+function saveGoals() { goals = Array.from(document.querySelectorAll('#goalConfigList .goal-item input')).map(i=>i.value.trim()).filter(v=>v); if(!goals.length) return alert('至少一个'); localStorage.setItem('goals', JSON.stringify(goals)); loadDiaryByDate(); closeModal('goalConfigModal'); alert('目标已保存'); }
 
-// ========== 分析看板与历史（带展开功能） ==========
+// ========== 分析看板与历史 ==========
 function renderDashboard() {
     ['today','week','month','all'].forEach(range => {
         const latest = analysisHistory.filter(h=>h&&h.timeRange===range)[0];
         const el = document.getElementById(range+'Result');
-        if(latest) {
-            const fullText = latest.result;
-            el.innerHTML = `<div>${latest.createdAt} | ${latest.diaryCount}篇</div><div>${marked.parse(createToggleableContent(fullText))}</div>`;
-        } else el.innerHTML = '<div class="empty-state">暂无分析</div>';
+        if(latest) el.innerHTML = `<div>${latest.createdAt} | ${latest.diaryCount}篇</div>${renderAnalysisBlock(latest.result)}`;
+        else el.innerHTML = '<div class="empty-state">暂无分析</div>';
     });
 }
 function toggleHistory(range) {
-    const panel = document.getElementById(range+'History');
-    const list = analysisHistory.filter(h=>h.timeRange===range);
+    const panel = document.getElementById(range+'History'), list = analysisHistory.filter(h=>h.timeRange===range);
     if(panel.style.display === 'none' || !panel.style.display) {
-        panel.innerHTML = list.length ? list.map(h => {
-            const fullText = h.result;
-            const shortContent = createToggleableContent(fullText);
-            return `<div class="history-item"><small>${h.createdAt}</small><div>${marked.parse(shortContent)}</div><button class="btn btn-sm btn-outline" onclick="viewFullHistory('${h.id}')">查看完整</button></div>`;
-        }).join('') : '暂无历史记录';
+        panel.innerHTML = list.length ? list.map(h => `<div class="history-item"><small>${h.createdAt}</small>${renderAnalysisBlock(h.result)}<button class="btn btn-sm btn-outline" onclick="viewFullHistory('${h.id}')">查看完整</button></div>`).join('') : '暂无历史记录';
         panel.style.display = 'block';
     } else panel.style.display = 'none';
 }
-function viewFullHistory(id) {
-    const item = analysisHistory.find(h=>h.id==id);
-    if(!item) return;
-    const resDiv = document.getElementById('analysisResult');
-    resDiv.style.display='block';
-    resDiv.innerHTML = `<div><h4>完整分析记录</h4><div>${marked.parse(item.result)}</div></div>`;
-}
+function viewFullHistory(id) { const item = analysisHistory.find(h=>h.id==id); if(!item) return; document.getElementById('analysisResult').style.display='block'; document.getElementById('analysisResult').innerHTML = `<div class="analysis-result"><h4>完整分析</h4><div>${marked.parse(item.result)}</div></div>`; }
 
 async function quickAnalyze(range) {
     if(!config.apiKey) { openModal('configModal'); return alert('请配置AI密钥'); }
@@ -513,8 +405,7 @@ async function quickAnalyze(range) {
     else if(range==='week') target = diaries.filter(d=>new Date(d.date) >= new Date(now.getTime()-7*86400000));
     else if(range==='month') target = diaries.filter(d=>new Date(d.date) >= new Date(now.getTime()-30*86400000));
     else target = [...diaries];
-    target = target.filter(isValidDiary);
-    if(!target.length) return alert('无有效日记');
+    target = target.filter(isValidDiary); if(!target.length) return alert('无有效日记');
     const text = target.map(d => `【${d.date}】\n${d.blocks.map(b=>`【${b.title}】${b.content}`).join('\n')}`).join('\n---\n');
     document.getElementById(range+'Result').innerHTML = '<div class="loading">分析中...</div>';
     try {
@@ -527,11 +418,9 @@ async function quickAnalyze(range) {
 }
 
 async function analyzeSpecificDate() {
-    const dateVal = document.getElementById('analyzeDatePicker').value;
-    if(!dateVal) return alert('请选择日期');
+    const dateVal = document.getElementById('analyzeDatePicker').value; if(!dateVal) return alert('请选择日期');
     const dateStr = new Date(dateVal + 'T00:00:00').toLocaleDateString();
-    const diary = getDiaryByDate(dateStr);
-    if(!diary) return alert('该日期没有日记');
+    const diary = getDiaryByDate(dateStr); if(!diary) return alert('该日期没有日记');
     if(!config.apiKey) { openModal('configModal'); return alert('请配置AI密钥'); }
     const text = `【${diary.date}】\n${diary.blocks.map(b=>`【${b.title}】${b.content}`).join('\n')}`;
     document.getElementById('todayResult').innerHTML = '<div class="loading">分析中...</div>';
@@ -555,26 +444,25 @@ async function startAnalysis() {
     else if(range==='week') target = diaries.filter(d=>new Date(d.date) >= new Date(now.getTime()-7*86400000));
     else if(range==='month') target = diaries.filter(d=>new Date(d.date) >= new Date(now.getTime()-30*86400000));
     else target = [...diaries];
-    target = target.filter(isValidDiary);
-    if(!target.length) return alert('无有效日记');
+    target = target.filter(isValidDiary); if(!target.length) return alert('无有效日记');
     const text = target.map(d => `【${d.date}】\n${d.blocks.map(b=>`【${b.title}】${b.content}`).join('\n')}`).join('\n---\n');
     document.getElementById('analysisResult').style.display='block';
     document.getElementById('analysisResult').innerHTML = '<div class="loading">分析中...</div>';
     try {
         const prompt = config.analysisPrompt.replace('我的所有自定义长期目标', goals.join('、')).replace('{日记内容}', text);
         const res = await callAI(prompt);
-        analysisHistory.unshift({ id:Date.now().toString(), view:views.join('、'), timeRange:range, diaryCount:target.length, result:res, createdAt:new Date().toLocaleString() });
+        const item = { id:Date.now().toString(), view:views.join('、'), timeRange:range, diaryCount:target.length, result:res, createdAt:new Date().toLocaleString() };
+        analysisHistory.unshift(item);
         localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
         if(range!=='single') renderDashboard();
         document.getElementById('analysisResult').innerHTML = `
             <div class="analysis-result">
                 <h4>📊 ${views.join('、')} 分析结果</h4>
-                <div class="analysis-meta">范围:${getRangeName(range)}｜${target.length}篇｜${new Date().toLocaleString()}</div>
-                <div id="analysisBody">${marked.parse(createToggleableContent(res))}</div>
+                <div class="analysis-meta">范围:${getRangeName(range)}｜${target.length}篇｜${item.createdAt}</div>
+                ${renderAnalysisBlock(res)}
             </div>`;
     } catch(e) { document.getElementById('analysisResult').innerHTML = `<div style="color:red">失败：${e.message}</div>`; }
 }
-
 function getRangeName(s) { return { single:'单篇日记', today:'今日', week:'近7天', month:'近30天', all:'全部' }[s] || s; }
 
 async function callAI(prompt) {
@@ -587,12 +475,7 @@ async function callAI(prompt) {
     return (await res.json()).choices[0].message.content;
 }
 
-function toggleAllViews() {
-    const checked = document.getElementById('selectAll').checked;
-    document.querySelectorAll('input[name="view"]').forEach(cb => { if(cb.value!=='custom') cb.checked = checked; });
-    document.querySelector('input[name="view"][value="custom"]').checked = false;
-    document.getElementById('customViewInput').style.display = 'none';
-}
+function toggleAllViews() { const checked = document.getElementById('selectAll').checked; document.querySelectorAll('input[name="view"]').forEach(cb => { if(cb.value!=='custom') cb.checked = checked; }); document.querySelector('input[name="view"][value="custom"]').checked = false; document.getElementById('customViewInput').style.display = 'none'; }
 document.addEventListener('change', e => { if(e.target.name==='view' && e.target.value==='custom') document.getElementById('customViewInput').style.display = e.target.checked?'block':'none'; });
 
 // ========== 弹窗 ==========
@@ -603,27 +486,12 @@ document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e =
 // ========== 设置面板 ==========
 document.getElementById('configBtn').onclick = () => { refreshConfigSelector(); loadConfigToForm(); openModal('configModal'); };
 document.getElementById('goalConfigBtn').onclick = () => { renderGoalConfigList(); openModal('goalConfigModal'); };
-
-function refreshConfigSelector() {
-    const sel = document.getElementById('configSelector');
-    sel.innerHTML = apiConfigs.map(c => `<option value="${c.id}" ${c.id===currentConfigId?'selected':''}>${c.name}</option>`).join('');
-}
-
-window.switchConfig = function(newId) {
-    if (!newId || newId === currentConfigId) return;
-    currentConfigId = newId;
-    syncCurrentConfig();
-    loadConfigToForm();
-    saveConfigs();
-    refreshConfigSelector();
-};
-
+function refreshConfigSelector() { const sel = document.getElementById('configSelector'); sel.innerHTML = apiConfigs.map(c => `<option value="${c.id}" ${c.id===currentConfigId?'selected':''}>${c.name}</option>`).join(''); }
+window.switchConfig = function(newId) { if (!newId || newId === currentConfigId) return; currentConfigId = newId; syncCurrentConfig(); loadConfigToForm(); saveConfigs(); refreshConfigSelector(); };
 function loadConfigToForm() {
     const cfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0];
-    document.getElementById('apiKey').value = cfg.apiKey || '';
-    document.getElementById('apiBase').value = cfg.apiBase || 'https://api.openai.com/v1';
-    document.getElementById('temperature').value = cfg.temperature ?? 0.7;
-    document.getElementById('maxTokens').value = cfg.maxTokens ?? 2000;
+    document.getElementById('apiKey').value = cfg.apiKey || ''; document.getElementById('apiBase').value = cfg.apiBase || 'https://api.openai.com/v1';
+    document.getElementById('temperature').value = cfg.temperature ?? 0.7; document.getElementById('maxTokens').value = cfg.maxTokens ?? 2000;
     const ms = document.getElementById('modelName'), cm = document.getElementById('customModel');
     const existingOptions = Array.from(ms.options).map(o=>o.value);
     if(existingOptions.includes(cfg.modelName)) { ms.value = cfg.modelName; cm.style.display='none'; }
@@ -632,115 +500,25 @@ function loadConfigToForm() {
     document.getElementById('partitionPrompt').value = config.partitionPrompt || getDefaultPartitionPrompt();
 }
 
-document.getElementById('addConfigBtn').addEventListener('click', () => {
-    const name = prompt('请输入新方案名称：');
-    if (!name) return;
-    const newId = Date.now().toString();
-    const currentCfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0];
-    apiConfigs.push({ ...currentCfg, id: newId, name });
-    currentConfigId = newId;
-    syncCurrentConfig(); refreshConfigSelector(); loadConfigToForm(); saveConfigs();
-});
-
-document.getElementById('deleteConfigBtn').addEventListener('click', () => {
-    if (apiConfigs.length <= 1) return alert('至少保留一个配置方案');
-    if (!confirm('确定删除当前方案？')) return;
-    apiConfigs = apiConfigs.filter(c => c.id !== currentConfigId);
-    currentConfigId = apiConfigs[0].id;
-    syncCurrentConfig(); refreshConfigSelector(); loadConfigToForm(); saveConfigs();
-});
-
-document.getElementById('saveConfigBtn').addEventListener('click', () => {
-    const cfg = apiConfigs.find(c => c.id === currentConfigId);
-    if (!cfg) return;
-    cfg.apiKey = document.getElementById('apiKey').value.trim();
-    cfg.apiBase = document.getElementById('apiBase').value.trim();
-    cfg.modelName = document.getElementById('modelName').value === 'custom' ? document.getElementById('customModel').value : document.getElementById('modelName').value;
-    cfg.customModel = document.getElementById('customModel').value;
-    cfg.temperature = document.getElementById('temperature').value;
-    cfg.maxTokens = document.getElementById('maxTokens').value;
-    config.analysisPrompt = document.getElementById('analysisPrompt').value;
-    config.partitionPrompt = document.getElementById('partitionPrompt').value;
-    syncCurrentConfig(); saveConfigs();
-    alert('当前方案已保存'); closeModal('configModal');
-});
-
-document.getElementById('fetchModelsBtn').addEventListener('click', async () => {
-    const base = document.getElementById('apiBase').value.trim(), key = document.getElementById('apiKey').value.trim();
-    if(!base || !key) return alert('请先填写API地址和密钥');
-    const btn = document.getElementById('fetchModelsBtn');
-    btn.disabled = true; btn.textContent = '获取中...';
-    try {
-        const res = await fetch(`${base}/models`, { headers: { 'Authorization': `Bearer ${key}` } });
-        if(!res.ok) throw new Error('请求失败');
-        const data = await res.json();
-        const models = data.data.map(m => m.id).filter(id => id.includes('gpt') || id.includes('claude') || id.includes('deepseek'));
-        document.getElementById('modelName').innerHTML = models.map(id => `<option value="${id}">${id}</option>`).join('') + '<option value="custom">自定义</option>';
-        document.getElementById('customModel').style.display = 'none';
-        alert('模型列表已更新');
-    } catch(e) { alert('获取失败: '+e.message); }
-    btn.disabled = false; btn.textContent = '🔄 拉取模型列表';
-});
-
-function resetPrompts() {
-    if(confirm('恢复默认提示词？当前修改将丢失')) {
-        document.getElementById('analysisPrompt').value = getDefaultAnalysisPrompt();
-        document.getElementById('partitionPrompt').value = getDefaultPartitionPrompt();
-        config.analysisPrompt = getDefaultAnalysisPrompt();
-        config.partitionPrompt = getDefaultPartitionPrompt();
-        saveConfigs();
-        alert('已恢复默认提示词');
-    }
-}
+document.getElementById('addConfigBtn').addEventListener('click', () => { const name = prompt('请输入新方案名称：'); if (!name) return; const newId = Date.now().toString(); const currentCfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0]; apiConfigs.push({ ...currentCfg, id: newId, name }); currentConfigId = newId; syncCurrentConfig(); refreshConfigSelector(); loadConfigToForm(); saveConfigs(); });
+document.getElementById('deleteConfigBtn').addEventListener('click', () => { if (apiConfigs.length <= 1) return alert('至少保留一个配置方案'); if (!confirm('确定删除当前方案？')) return; apiConfigs = apiConfigs.filter(c => c.id !== currentConfigId); currentConfigId = apiConfigs[0].id; syncCurrentConfig(); refreshConfigSelector(); loadConfigToForm(); saveConfigs(); });
+document.getElementById('saveConfigBtn').addEventListener('click', () => { const cfg = apiConfigs.find(c => c.id === currentConfigId); if (!cfg) return; cfg.apiKey = document.getElementById('apiKey').value.trim(); cfg.apiBase = document.getElementById('apiBase').value.trim(); cfg.modelName = document.getElementById('modelName').value === 'custom' ? document.getElementById('customModel').value : document.getElementById('modelName').value; cfg.customModel = document.getElementById('customModel').value; cfg.temperature = document.getElementById('temperature').value; cfg.maxTokens = document.getElementById('maxTokens').value; config.analysisPrompt = document.getElementById('analysisPrompt').value; config.partitionPrompt = document.getElementById('partitionPrompt').value; syncCurrentConfig(); saveConfigs(); alert('当前方案已保存'); closeModal('configModal'); });
+document.getElementById('fetchModelsBtn').addEventListener('click', async () => { const base = document.getElementById('apiBase').value.trim(), key = document.getElementById('apiKey').value.trim(); if(!base || !key) return alert('请先填写API地址和密钥'); const btn = document.getElementById('fetchModelsBtn'); btn.disabled = true; btn.textContent = '获取中...'; try { const res = await fetch(`${base}/models`, { headers: { 'Authorization': `Bearer ${key}` } }); if(!res.ok) throw new Error('请求失败'); const data = await res.json(); const models = data.data.map(m => m.id).filter(id => id.includes('gpt') || id.includes('claude') || id.includes('deepseek')); document.getElementById('modelName').innerHTML = models.map(id => `<option value="${id}">${id}</option>`).join('') + '<option value="custom">自定义</option>'; document.getElementById('customModel').style.display = 'none'; alert('模型列表已更新'); } catch(e) { alert('获取失败: '+e.message); } btn.disabled = false; btn.textContent = '🔄 拉取模型列表'; });
+function resetPrompts() { if(confirm('恢复默认提示词？')) { document.getElementById('analysisPrompt').value = getDefaultAnalysisPrompt(); document.getElementById('partitionPrompt').value = getDefaultPartitionPrompt(); config.analysisPrompt = getDefaultAnalysisPrompt(); config.partitionPrompt = getDefaultPartitionPrompt(); saveConfigs(); alert('已恢复默认提示词'); } }
 document.getElementById('modelName').addEventListener('change', function() { document.getElementById('customModel').style.display = this.value==='custom'?'block':'none'; });
 
-// ========== 数据导入导出 ==========
-document.getElementById('exportBtn').addEventListener('click', ()=>{
-    const all = { diaries, analysisHistory, goals, apiConfigs, currentConfigId, exportTime: new Date().toISOString() };
-    const blob = new Blob([JSON.stringify(all, null, 2)],{type:'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `日记备份_${new Date().toISOString().slice(0,10)}.json`; a.click();
-});
-
-document.getElementById('importBtn').addEventListener('click', ()=>{
-    if(!confirm('导入将合并新增数据，配置方案也会合并')) return;
-    const inp = document.createElement('input'); inp.type='file'; inp.accept='.json';
-    inp.onchange = e => { const reader = new FileReader(); reader.onload = ev => { handleImportData(ev.target.result); }; reader.readAsText(e.target.files[0]); };
-    inp.click();
-});
-
+// ========== 导入导出 ==========
+document.getElementById('exportBtn').addEventListener('click', ()=>{ const all = { diaries, analysisHistory, goals, apiConfigs, currentConfigId, exportTime: new Date().toISOString() }; const blob = new Blob([JSON.stringify(all, null, 2)],{type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `日记备份_${new Date().toISOString().slice(0,10)}.json`; a.click(); });
+document.getElementById('importBtn').addEventListener('click', ()=>{ if(!confirm('导入将合并新增数据')) return; const inp = document.createElement('input'); inp.type='file'; inp.accept='.json'; inp.onchange = e => { const reader = new FileReader(); reader.onload = ev => { handleImportData(ev.target.result); }; reader.readAsText(e.target.files[0]); }; inp.click(); });
 document.getElementById('pasteImportBtn').addEventListener('click', () => { openModal('pasteModal'); document.getElementById('pasteJsonInput').value = ''; });
-function importFromPaste() {
-    const text = document.getElementById('pasteJsonInput').value.trim();
-    if(!text) return alert('请粘贴 JSON 内容');
-    handleImportData(text); closeModal('pasteModal');
-}
-
-function handleImportData(jsonStr) {
-    try {
-        const data = JSON.parse(jsonStr);
-        let added = 0;
-        if(data.diaries) { const ids = new Set(diaries.map(d=>d.id)); data.diaries.forEach(d => { if(!ids.has(d.id)) { diaries.unshift(d); added++; } }); }
-        if(data.analysisHistory) { const ids = new Set(analysisHistory.map(h=>h.id)); data.analysisHistory.forEach(h => { if(!ids.has(h.id)) { analysisHistory.unshift(h); added++; } }); }
-        if(data.goals && !goals.length) goals = data.goals;
-        if(data.apiConfigs) { const ids = new Set(apiConfigs.map(c=>c.id)); data.apiConfigs.forEach(c => { if(!ids.has(c.id)) apiConfigs.push(c); }); if(data.currentConfigId) currentConfigId = data.currentConfigId; }
-        saveDiaries(); localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory)); localStorage.setItem('goals', JSON.stringify(goals)); saveConfigs();
-        syncCurrentConfig(); loadDiaryByDate(); renderDashboard(); renderGoalConfigList();
-        alert(`导入完成，新增 ${added} 条数据`); location.reload();
-    } catch(e) { alert('JSON 格式错误'); }
-}
-
-document.getElementById('restoreBtn').addEventListener('click', ()=>{
-    if(!confirm('恢复到上次自动备份？')) return;
-    const backup = localStorage.getItem('diaries_backup');
-    if(!backup) return alert('无备份');
-    diaries = JSON.parse(backup); saveDiaries(); alert('恢复成功'); location.reload();
-});
+function importFromPaste() { const text = document.getElementById('pasteJsonInput').value.trim(); if(!text) return alert('请粘贴 JSON 内容'); handleImportData(text); closeModal('pasteModal'); }
+function handleImportData(jsonStr) { try { const data = JSON.parse(jsonStr); let added = 0; if(data.diaries) { const ids = new Set(diaries.map(d=>d.id)); data.diaries.forEach(d => { if(!ids.has(d.id)) { diaries.unshift(d); added++; } }); } if(data.analysisHistory) { const ids = new Set(analysisHistory.map(h=>h.id)); data.analysisHistory.forEach(h => { if(!ids.has(h.id)) { analysisHistory.unshift(h); added++; } }); } if(data.goals && !goals.length) goals = data.goals; if(data.apiConfigs) { const ids = new Set(apiConfigs.map(c=>c.id)); data.apiConfigs.forEach(c => { if(!ids.has(c.id)) apiConfigs.push(c); }); if(data.currentConfigId) currentConfigId = data.currentConfigId; } saveDiaries(); localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory)); localStorage.setItem('goals', JSON.stringify(goals)); saveConfigs(); syncCurrentConfig(); loadDiaryByDate(); renderDashboard(); renderGoalConfigList(); alert(`导入完成，新增 ${added} 条数据`); location.reload(); } catch(e) { alert('JSON 格式错误'); } }
+document.getElementById('restoreBtn').addEventListener('click', ()=>{ if(!confirm('恢复到上次自动备份？')) return; const backup = localStorage.getItem('diaries_backup'); if(!backup) return alert('无备份'); diaries = JSON.parse(backup); saveDiaries(); alert('恢复成功'); location.reload(); });
 
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('diaryDate').value = today;
-    document.getElementById('analyzeDatePicker').value = today;
+    document.getElementById('diaryDate').value = today; document.getElementById('analyzeDatePicker').value = today;
     initTheme(); initTabs();
     refreshConfigSelector(); loadDiaryByDate(); renderDashboard();
     document.getElementById('saveDiaryBtn').addEventListener('click', saveCurrentDiary);
