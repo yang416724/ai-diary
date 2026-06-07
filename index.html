@@ -33,7 +33,7 @@
         @media (max-width:768px){.grid-2{grid-template-columns:1fr}}
         .input{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:16px;outline:none;transition:border-color 0.2s}
         .input:focus{border-color:var(--success)}
-        .textarea{min-height:120px;resize:vertical;line-height:1.6}
+        .textarea{min-height:100px;resize:vertical;line-height:1.6}
         .select{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:16px;cursor:pointer;border-radius:16px}
         .btn{padding:10px 20px;border:none;font-size:16px;font-weight:bold;cursor:pointer;transition:all 0.2s;letter-spacing:1px}
         .btn-primary{background:var(--primary);color:white}.btn-primary:hover{background:var(--primary-hover)}
@@ -43,31 +43,25 @@
         .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:2px solid var(--border);padding-bottom:8px}
         .tab{padding:8px 20px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:20px;font-size:18px;font-weight:bold;transition:all 0.2s}
         .tab.active{background:var(--primary);color:white}
-        .diary-item{border-bottom:1px solid var(--border);padding:16px 0;display:flex;align-items:flex-start;gap:12px}
-        .diary-item:last-child{border-bottom:none}
-        .diary-checkbox{width:20px;height:20px;margin-top:4px;cursor:pointer;accent-color:var(--success)}
-        .diary-body{flex:1}.diary-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-        .diary-date{font-weight:bold;color:var(--text)}.diary-source{font-size:14px;color:var(--text-secondary);background:var(--bg);padding:2px 10px;border-radius:12px}
-        .diary-preview{color:var(--text-secondary);line-height:1.5}
-        .diary-actions{display:flex;gap:8px;margin-top:12px}
-        .diary-block{margin-bottom:12px;padding:12px;background:var(--bg);border-radius:16px}
-        .diary-block-title{font-weight:bold;color:var(--primary);margin-bottom:6px}
-        .analysis-result{background:var(--bg);border-radius:20px;padding:20px;margin-top:20px;line-height:1.8}
-        .empty-state{text-align:center;padding:40px;color:var(--text-secondary)}
-        .loading{text-align:center;padding:40px}
-        .loading::after{content:"";display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--success);border-radius:50%;animation:spin 1s linear infinite}
-        @keyframes spin{to{transform:rotate(360deg)}}
+        .date-nav{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+        .date-nav input[type="date"]{border:1px solid var(--border);padding:8px 12px;border-radius:12px;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px}
+        .date-nav button{background:var(--success);border:none;color:white;padding:6px 12px;border-radius:12px;cursor:pointer;font-size:18px}
+        .goal-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+        .goal-row label{width:140px;font-weight:bold;padding-top:14px;flex-shrink:0}
+        .goal-row textarea{flex:1}
+        .other-section{margin-top:24px;padding-top:16px;border-top:2px dashed var(--border)}
+        .free-section{margin-top:24px;padding-top:16px;border-top:2px dashed var(--border)}
+        .ai-actions{display:flex;gap:12px;margin-top:8px}
         .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
         .modal-content{background:var(--card);border-radius:24px;padding:24px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto}
         .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
         .modal-close{background:none;border:none;font-size:28px;cursor:pointer;color:var(--text)}
         .badge{display:inline-block;padding:4px 12px;border-radius:12px;font-size:14px;background:var(--success);color:white;margin-left:8px}
-        .batch-actions{display:flex;gap:8px;margin-bottom:12px;align-items:center}
-        .goal-input-group{margin-bottom:16px}.goal-input-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-        .goal-no-record{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px}
-        .date-picker{display:flex;align-items:center;gap:8px;margin-bottom:16px;background:var(--success-light);padding:8px 12px;border-radius:12px}
-        .date-picker input{border:none;background:transparent;color:var(--text);font-size:16px;font-family:var(--font)}
-        .entry-toggle{text-align:center;margin:20px 0}
+        .analysis-result{background:var(--bg);border-radius:20px;padding:20px;margin-top:20px;line-height:1.8}
+        .empty-state{text-align:center;padding:40px;color:var(--text-secondary)}
+        .loading{text-align:center;padding:40px}
+        .loading::after{content:"";display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--success);border-radius:50%;animation:spin 1s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
     </style>
 </head>
 <body>
@@ -80,75 +74,59 @@
         </div>
     </div>
 
-    <!-- 主标签：日记 / 分析 -->
     <div class="tabs">
         <button class="tab active" data-main-tab="diary">📝 日记</button>
         <button class="tab" data-main-tab="analyze">📊 分析</button>
     </div>
 
-    <!-- ========== 日记页（录入+列表合一） ========== -->
+    <!-- ========== 日记页（一体化） ========== -->
     <div id="diaryTab" class="main-tab-content">
-        <!-- 写新日记按钮（有日记时显示） -->
-        <div class="entry-toggle" id="showEntryBtn" style="display:none">
-            <button class="btn btn-success" onclick="showEntryForm()">✍️ 写新日记</button>
-        </div>
+        <div class="card">
+            <div class="date-nav">
+                <button onclick="changeDate(-1)" title="前一天">◀</button>
+                <input type="date" id="diaryDate" onchange="loadDiaryByDate()">
+                <button onclick="changeDate(1)" title="后一天">▶</button>
+                <button class="btn btn-outline btn-sm" onclick="setToday()">今天</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCurrentDiary()" style="margin-left:auto">🗑️ 删除当天日记</button>
+            </div>
 
-        <!-- 录入区域（默认显示或点击按钮显示） -->
-        <div id="entryFormArea" style="display:none">
-            <div class="card">
-                <div class="date-picker"><span>📅 日记日期：</span><input type="date" id="diaryDate"></div>
-                <div class="tabs">
-                    <button class="tab active" data-entry-tab="goal">🎯 目标打卡记</button>
-                    <button class="tab" data-entry-tab="free">✍️ 随心记</button>
-                </div>
-                <div id="goalEntryTab" class="entry-tab-content">
-                    <div id="goalInputsContainer"></div>
-                    <div class="goal-input-group">
-                        <div class="goal-input-header"><span>📝 额外补充（可选）</span></div>
-                        <textarea class="input textarea goal-textarea" id="extraContent" placeholder="写一些目标之外的零散内容..."></textarea>
-                    </div>
-                    <div style="margin-top:20px"><button class="btn btn-primary" id="saveGoalBtn">💾 保存日记</button></div>
-                </div>
-                <div id="freeEntryTab" class="entry-tab-content" style="display:none">
-                    <textarea class="input textarea" id="freeDiaryInput" style="min-height:300px" placeholder="随便写点什么吧，不用有任何格式限制..."></textarea>
-                    <div style="margin-top:20px;display:flex;gap:12px">
-                        <button class="btn btn-outline" onclick="saveFreeDiary(false)">仅保存原始文本</button>
-                        <button class="btn btn-primary" onclick="saveFreeDiary(true)">✨ 保存并AI智能分区</button>
-                    </div>
-                </div>
-                <div class="entry-toggle"><button class="btn btn-outline btn-sm" onclick="hideEntryForm()">取消</button></div>
-            </div>
-        </div>
+            <!-- 目标区块 -->
+            <h3>🎯 今日目标</h3>
+            <div id="goalRows"></div>
 
-        <!-- 日记列表区域 -->
-        <div class="card" id="diaryListCard">
-            <h2>📚 我的日记</h2>
-            <div style="display:flex;gap:12px;margin-bottom:12px">
-                <input type="text" class="input" id="searchInput" placeholder="搜索内容或日期..." style="flex:1">
-                <select class="select" id="diaryTypeFilter" style="width:140px">
-                    <option value="all">全部类型</option><option value="goal">目标打卡</option><option value="free">随心记</option>
-                </select>
+            <!-- 其他区块 -->
+            <div class="other-section">
+                <h3>📌 其他</h3>
+                <textarea class="input textarea" id="otherBlock" placeholder="不在目标范围内的其他内容..."></textarea>
             </div>
-            <div id="batchBar" class="batch-actions" style="display:none">
-                <span id="selectedCount" style="color:var(--success);font-weight:bold">已选0篇</span>
-                <button class="btn btn-outline btn-sm" onclick="toggleSelectAll()">全选</button>
-                <button class="btn btn-outline btn-sm" onclick="clearSelection()">取消</button>
-                <button class="btn btn-danger btn-sm" onclick="batchDelete()">🗑️ 批量删除</button>
+
+            <!-- 随心记 + AI 归类 -->
+            <div class="free-section">
+                <h3>✍️ 随心记（AI智能归类）</h3>
+                <textarea class="input textarea" id="freeInput" placeholder="随便写点什么，点下方按钮自动归类到对应目标…"></textarea>
+                <div class="ai-actions">
+                    <button class="btn btn-success" id="aiPartitionBtn" onclick="aiPartition()">✨ AI智能归类</button>
+                    <span style="color:var(--text-secondary);font-size:14px;padding-top:10px">归类后手动调整，然后保存</span>
+                </div>
             </div>
-            <div id="diaryList"><div class="empty-state">还没有日记，开始写第一篇吧 ✨</div></div>
+
+            <div style="margin-top:24px;display:flex;gap:12px">
+                <button class="btn btn-primary" id="saveDiaryBtn">💾 保存日记</button>
+                <button class="btn btn-outline" id="selectForAnalysisBtn" onclick="selectCurrentForAnalysis()">🔍 选中当前日记分析</button>
+            </div>
         </div>
     </div>
 
-    <!-- ========== 分析页（看板+自定义分析） ========== -->
+    <!-- ========== 分析页 ========== -->
     <div id="analyzeTab" class="main-tab-content" style="display:none">
-        <div class="card"><div class="dashboard-header"><h3>☀️ 今日分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('today')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('today')">查看历史</button></div></div><div id="todayResult" class="latest-result"><div class="empty-state">还没有今日分析</div></div></div>
-        <div class="card"><div class="dashboard-header"><h3>📅 近7天分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('week')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('week')">查看历史</button></div></div><div id="weekResult" class="latest-result"><div class="empty-state">还没有近7天分析</div></div></div>
-        <div class="card"><div class="dashboard-header"><h3>📆 近30天分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('month')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('month')">查看历史</button></div></div><div id="monthResult" class="latest-result"><div class="empty-state">还没有近30天分析</div></div></div>
-        <div class="card"><div class="dashboard-header"><h3>📈 年度分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('all')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('all')">查看历史</button></div></div><div id="allResult" class="latest-result"><div class="empty-state">还没有年度分析</div></div></div>
+        <div class="card"><h3>☀️ 今日分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('today')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('today')">查看历史</button></div><div id="todayResult"><div class="empty-state">还没有今日分析</div></div></div>
+        <div class="card"><h3>📅 近7天分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('week')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('week')">查看历史</button></div><div id="weekResult"><div class="empty-state">还没有近7天分析</div></div></div>
+        <div class="card"><h3>📆 近30天分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('month')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('month')">查看历史</button></div><div id="monthResult"><div class="empty-state">还没有近30天分析</div></div></div>
+        <div class="card"><h3>📈 年度分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('all')">重新分析</button><button class="btn btn-outline btn-sm" onclick="viewRangeHistory('all')">查看历史</button></div><div id="allResult"><div class="empty-state">还没有年度分析</div></div></div>
 
         <div class="card">
             <h2>🔍 自定义分析 <span class="badge">手动</span></h2>
-            <p style="color:var(--text-secondary);margin-bottom:12px">💡 请在「日记」页选中一篇日记，再回到这里选择“当前选中日记”进行分析</p>
+            <p style="color:var(--text-secondary);margin-bottom:12px">💡 可选中当前日记（日记页点「选中当前日记分析」），或直接选范围</p>
             <div class="grid-2">
                 <div><label>时间范围</label><select class="select" id="timeRange"><option value="single">当前选中日记</option><option value="today">今日</option><option value="week">近7天</option><option value="month">近30天</option><option value="all">全部</option></select></div>
                 <div>
@@ -202,22 +180,18 @@
         <div class="modal-content"><div class="modal-header"><h2 id="historyModalTitle">历史</h2><button class="modal-close" onclick="closeModal('historyModal')">×</button></div><div id="historyList"></div></div>
     </div>
 
-    <!-- 编辑模态框 -->
-    <div id="editModal" class="modal" style="display:none">
-        <div class="modal-content"><div class="modal-header"><h2>✏️ 编辑日记</h2><button class="modal-close" onclick="closeModal('editModal')">×</button></div><div id="editContent"></div><div style="margin-top:20px"><button class="btn btn-outline" onclick="closeModal('editModal')">取消</button><button class="btn btn-primary" id="saveEditBtn">💾 保存修改</button></div></div>
-    </div>
-
 <script>
-// ========== 安全工具 ==========
+// ========== 全局变量 ==========
+let diaries = [], analysisHistory = [], goals = [], config = {};
+let selectedDiaryId = null;
+
 function isValidDiary(d) { return d && typeof d === 'object' && Array.isArray(d.blocks); }
 function getValidDiaries() { return Array.isArray(diaries) ? diaries.filter(isValidDiary) : []; }
-function safeBlocks(d) { return isValidDiary(d) ? d.blocks : []; }
-
-let diaries = [], analysisHistory = [], goals = [], selectedDiaryId = null, config = {}, editingDiaryId = null, selectedIds = new Set();
 
 function getFullDefaultAnalysisPrompt() { return "【AI角色】\n我是福州在读女生...\n{日记内容}"; }
 function getFullDefaultPartitionPrompt() { return "将文本按目标分区...\n{目标列表}\n{文本内容}"; }
 
+// ========== 数据加载 ==========
 function safeLoadData() {
     try { diaries = JSON.parse(localStorage.getItem('diaries')||'[]'); if(!Array.isArray(diaries)) diaries=[]; diaries=diaries.filter(isValidDiary); } catch(e){ diaries=[]; }
     try { analysisHistory = JSON.parse(localStorage.getItem('analysisHistory')||'[]'); } catch(e){ analysisHistory=[]; }
@@ -249,121 +223,189 @@ function initTabs() {
             document.getElementById(tab.dataset.mainTab+'Tab').style.display='block';
         });
     });
-    document.querySelectorAll('[data-entry-tab]').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('[data-entry-tab]').forEach(t=>t.classList.remove('active'));
-            document.querySelectorAll('.entry-tab-content').forEach(c=>c.style.display='none');
-            tab.classList.add('active');
-            document.getElementById(tab.dataset.entryTab+'EntryTab').style.display='block';
-        });
-    });
 }
 
-// ========== 日记录入与列表切换 ==========
-function showEntryForm() {
-    document.getElementById('entryFormArea').style.display='block';
-    document.getElementById('showEntryBtn').style.display='none';
-    setDefaultDate();
-}
-function hideEntryForm() {
-    document.getElementById('entryFormArea').style.display='none';
-    const hasDiaries = getValidDiaries().length > 0;
-    document.getElementById('showEntryBtn').style.display = hasDiaries ? 'block' : 'none';
-    if (!hasDiaries) document.getElementById('entryFormArea').style.display='block'; // 无日记时强制显示
-}
-function decideEntryDisplay() {
-    const hasDiaries = getValidDiaries().length > 0;
-    if (hasDiaries) {
-        document.getElementById('entryFormArea').style.display='none';
-        document.getElementById('showEntryBtn').style.display='block';
-    } else {
-        document.getElementById('entryFormArea').style.display='block';
-        document.getElementById('showEntryBtn').style.display='none';
-    }
+// ========== 日期导航 ==========
+function getCurrentDateStr() {
+    const d = document.getElementById('diaryDate').value;
+    if(!d) return new Date().toLocaleDateString();
+    // 将 yyyy-mm-dd 转为 localDateString 格式，确保与存储一致
+    const parts = d.split('-');
+    const date = new Date(parts[0], parts[1]-1, parts[2]);
+    return date.toLocaleDateString();
 }
 
-function setDefaultDate() {
+function changeDate(delta) {
+    const dateInput = document.getElementById('diaryDate');
+    const parts = dateInput.value.split('-');
+    const date = new Date(parts[0], parts[1]-1, parts[2]);
+    date.setDate(date.getDate() + delta);
+    const y = date.getFullYear();
+    const m = String(date.getMonth()+1).padStart(2,'0');
+    const d = String(date.getDate()).padStart(2,'0');
+    dateInput.value = `${y}-${m}-${d}`;
+    loadDiaryByDate();
+}
+
+function setToday() {
     const d = new Date();
-    const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    document.getElementById('diaryDate').value = dateStr;
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    document.getElementById('diaryDate').value = `${y}-${m}-${dd}`;
+    loadDiaryByDate();
 }
 
-// ========== 目标输入框 ==========
-function renderGoalInputs() {
-    const container = document.getElementById('goalInputsContainer');
-    container.innerHTML = '';
-    goals.forEach((goal,i) => {
-        container.innerHTML += `
-        <div class="goal-input-group">
-            <div class="goal-input-header"><span>🎯 ${goal}</span><label class="goal-no-record"><input type="checkbox" id="goalNoRecord${i}" onchange="toggleGoalInput(${i})"> 今日无记录</label></div>
-            <textarea class="input textarea goal-textarea" id="goalInput${i}" placeholder="记录今天关于「${goal}」的进展..."></textarea>
+// ========== 加载指定日期的日记 ==========
+function getDiaryByDate(dateStr) {
+    return getValidDiaries().find(d => d.date === dateStr);
+}
+
+function loadDiaryByDate() {
+    const dateStr = getCurrentDateStr();
+    const diary = getDiaryByDate(dateStr);
+    // 渲染目标行
+    const container = document.getElementById('goalRows');
+    let html = '';
+    goals.forEach((goal, i) => {
+        let content = '';
+        if(diary) {
+            const block = diary.blocks.find(b => b.title === goal);
+            if(block && block.content !== '今日无相关记录') content = block.content;
+        }
+        html += `<div class="goal-row">
+            <label>🎯 ${goal}</label>
+            <textarea class="input textarea" id="goalInput${i}">${content}</textarea>
         </div>`;
     });
-}
-function toggleGoalInput(i) {
-    const cb = document.getElementById('goalNoRecord'+i);
-    const ta = document.getElementById('goalInput'+i);
-    ta.disabled = cb.checked; ta.style.opacity = cb.checked?'0.5':'1';
-    if(cb.checked) ta.value='';
-}
+    container.innerHTML = html;
 
-function getSelectedDate() { return document.getElementById('diaryDate').value; }
+    // 其他区块
+    let otherContent = '';
+    if(diary) {
+        const otherBlock = diary.blocks.find(b => b.title === '其他' || b.title === '额外补充');
+        if(otherBlock) otherContent = otherBlock.content;
+    }
+    document.getElementById('otherBlock').value = otherContent;
+
+    // 清空随心记输入
+    document.getElementById('freeInput').value = '';
+
+    // 自动将该日记设为选中（用于分析）
+    selectedDiaryId = diary ? diary.id : null;
+}
 
 // ========== 保存日记 ==========
-function saveGoalDiary() {
-    const groups = document.querySelectorAll('#goalInputsContainer .goal-input-group');
+function saveCurrentDiary() {
+    const dateStr = getCurrentDateStr();
     const blocks = [];
-    groups.forEach((group, idx) => {
-        const cb = group.querySelector('input[type="checkbox"]');
-        const ta = group.querySelector('textarea');
-        if(!cb.checked && ta.value.trim()) blocks.push({title:goals[idx], content:ta.value.trim()});
-        else if(cb.checked) blocks.push({title:goals[idx], content:'今日无相关记录'});
+    // 收集目标内容
+    goals.forEach((goal, i) => {
+        const ta = document.getElementById('goalInput'+i);
+        if(ta && ta.value.trim()) {
+            blocks.push({ title: goal, content: ta.value.trim() });
+        }
     });
-    const extra = document.getElementById('extraContent').value.trim();
-    if(extra) blocks.push({title:'额外补充', content:extra});
-    if(blocks.length===0) return alert('请至少填写一个目标');
+    // 其他
+    const other = document.getElementById('otherBlock').value.trim();
+    if(other) blocks.push({ title: '其他', content: other });
 
-    diaries.unshift({
-        id: Date.now(), date: getSelectedDate(), type:'goal', blocks, rawText:'', source:'目标打卡', createdAt: new Date().toISOString()
-    });
-    saveDiaries(); renderDiaryList();
-    // 清空
-    groups.forEach((group,i) => {
-        const cb = group.querySelector('input[type="checkbox"]'); const ta = group.querySelector('textarea');
-        cb.checked = false; ta.disabled = false; ta.value = ''; ta.style.opacity = '1';
-    });
-    document.getElementById('extraContent').value = '';
-    alert('日记保存成功！');
-    hideEntryForm();
+    if(blocks.length === 0) {
+        // 如果全部为空，删除当天日记（如果存在）
+        const existing = getDiaryByDate(dateStr);
+        if(existing) {
+            if(!confirm('当天日记为空，是否删除原有记录？')) return;
+            diaries = diaries.filter(d => d.date !== dateStr);
+            saveDiariesToStorage();
+            loadDiaryByDate();
+            return;
+        }
+        alert('请至少填写一个目标或“其他”内容');
+        return;
+    }
+
+    const existing = getDiaryByDate(dateStr);
+    if(existing) {
+        existing.blocks = blocks;
+        existing.source = '目标打卡'; // 保持类型
+    } else {
+        diaries.unshift({
+            id: Date.now(),
+            date: dateStr,
+            type: 'goal',
+            blocks,
+            rawText: '',
+            source: '目标打卡',
+            createdAt: new Date().toISOString()
+        });
+    }
+    saveDiariesToStorage();
+    loadDiaryByDate(); // 刷新一下（保持选中）
+    alert('日记已保存 ✨');
 }
 
-async function saveFreeDiary(needPartition) {
-    const raw = document.getElementById('freeDiaryInput').value.trim();
-    if(!raw) return alert('内容不能为空');
-    let blocks = [];
-    if(needPartition) {
-        if(!config.apiKey) return alert('请先配置AI密钥');
-        const btn = document.querySelector('#freeEntryTab .btn-primary');
-        btn.disabled = true; btn.textContent = '分区中...';
-        try {
-            const prompt = config.partitionPrompt.replace('{目标列表}', goals.join('、')).replace('{文本内容}', raw);
-            const res = await callAI(prompt);
-            blocks = JSON.parse(res);
-        } catch(e) { alert('AI分区失败，已保存原始文本'); blocks = [{title:'原始内容', content:raw}]; }
-        btn.disabled = false; btn.textContent = '✨ 保存并AI智能分区';
-    } else blocks = [{title:'原始内容', content:raw}];
-    diaries.unshift({
-        id: Date.now()+Math.random(), date: getSelectedDate(), type:'free', blocks, rawText:raw, source:'随心记', createdAt: new Date().toISOString()
-    });
-    saveDiaries(); renderDiaryList();
-    document.getElementById('freeDiaryInput').value = '';
-    alert('日记保存成功！');
-    hideEntryForm();
+function deleteCurrentDiary() {
+    const dateStr = getCurrentDateStr();
+    const diary = getDiaryByDate(dateStr);
+    if(!diary) return alert('当天没有日记');
+    if(!confirm(`确定删除 ${dateStr} 的日记吗？`)) return;
+    diaries = diaries.filter(d => d.date !== dateStr);
+    saveDiariesToStorage();
+    loadDiaryByDate();
+    alert('已删除');
 }
 
-function saveDiaries() {
+function saveDiariesToStorage() {
     localStorage.setItem('diaries_backup', JSON.stringify(diaries));
     localStorage.setItem('diaries', JSON.stringify(diaries));
+}
+
+// ========== AI 分区 ==========
+async function aiPartition() {
+    const raw = document.getElementById('freeInput').value.trim();
+    if(!raw) return alert('请输入随心记内容');
+    if(!config.apiKey) return alert('请先在设置中配置AI密钥');
+    const btn = document.getElementById('aiPartitionBtn');
+    btn.disabled = true; btn.textContent = '分区中...';
+    try {
+        const prompt = config.partitionPrompt.replace('{目标列表}', goals.join('、')).replace('{文本内容}', raw);
+        const result = await callAI(prompt);
+        const parsed = JSON.parse(result); // 期望 [{title, content}, ...]
+        // 分配到目标行和“其他”
+        for(const item of parsed) {
+            if(!item.title || !item.content) continue;
+            // 检查是否匹配某个目标
+            let matched = false;
+            goals.forEach((goal, i) => {
+                if(item.title === goal || item.title.includes(goal)) {
+                    const ta = document.getElementById('goalInput'+i);
+                    if(ta) {
+                        ta.value = (ta.value ? ta.value + '\n' : '') + item.content;
+                        matched = true;
+                    }
+                }
+            });
+            if(!matched) {
+                // 放入其他
+                const other = document.getElementById('otherBlock');
+                other.value = (other.value ? other.value + '\n' : '') + `【${item.title}】${item.content}`;
+            }
+        }
+        document.getElementById('freeInput').value = '';
+        alert('归类完成！请检查并手动调整，然后点击保存');
+    } catch(e) {
+        alert('AI分区失败：' + e.message);
+    }
+    btn.disabled = false; btn.textContent = '✨ AI智能归类';
+}
+
+// ========== 选中当前日记分析 ==========
+function selectCurrentForAnalysis() {
+    const dateStr = getCurrentDateStr();
+    const diary = getDiaryByDate(dateStr);
+    if(!diary) return alert('当天还没有日记');
+    selectedDiaryId = diary.id;
+    alert(`已选中 ${dateStr} 的日记，可前往「分析」页进行自定义分析`);
 }
 
 // ========== 目标配置 ==========
@@ -376,122 +418,11 @@ function saveGoals() {
     goals = Array.from(document.querySelectorAll('#goalConfigList .goal-item input')).map(i=>i.value.trim()).filter(v=>v);
     if(!goals.length) return alert('至少保留一个');
     localStorage.setItem('goals', JSON.stringify(goals));
-    renderGoalInputs(); closeModal('goalConfigModal'); alert('目标已保存');
+    loadDiaryByDate(); // 重新渲染目标行
+    closeModal('goalConfigModal'); alert('目标已保存');
 }
 
-// ========== 日记列表 ==========
-function renderDiaryList() {
-    const valid = getValidDiaries();
-    const kw = document.getElementById('searchInput').value.toLowerCase();
-    const type = document.getElementById('diaryTypeFilter').value;
-    let list = valid.filter(d => {
-        const matchKw = safeBlocks(d).some(b => b?.content?.toLowerCase().includes(kw)) || (d.date||'').includes(kw);
-        return matchKw && (type==='all' || d.type===type);
-    });
-    const wrap = document.getElementById('diaryList');
-    if(!list.length) { wrap.innerHTML = '<div class="empty-state">没有匹配日记</div>'; updateBatchBar(); return; }
-    wrap.innerHTML = list.map(d => {
-        const blocks = safeBlocks(d);
-        let preview = blocks.slice(0,2).map(b => `<div class="diary-block"><div class="diary-block-title">【${b.title||''}】</div><div>${(b.content||'').slice(0,100)}${b.content&&b.content.length>100?'...':''}</div></div>`).join('');
-        if(blocks.length>2) preview += `<div>还有${blocks.length-2}个区块...</div>`;
-        return `<div class="diary-item">
-            <input type="checkbox" class="diary-checkbox" data-id="${d.id}" ${selectedIds.has(d.id)?'checked':''} onchange="toggleSelectDiary(${d.id},this.checked)">
-            <div class="diary-body"><div class="diary-header"><span>📅 ${d.date}</span><span class="diary-source">${d.source}</span></div>${preview}
-            <div class="diary-actions"><button class="btn btn-outline btn-sm" onclick="selectDiary(${d.id})">选中分析</button><button class="btn btn-outline btn-sm" onclick="viewDiary(${d.id})">查看</button><button class="btn btn-outline btn-sm" onclick="editDiary(${d.id})">✏️ 编辑</button><button class="btn btn-danger btn-sm" onclick="deleteDiary(${d.id})">删除</button></div></div></div>`;
-    }).join('');
-    updateBatchBar();
-    decideEntryDisplay(); // 根据列表是否为空调整录入区显示
-}
-
-function toggleSelectDiary(id, checked) { if(checked) selectedIds.add(id); else selectedIds.delete(id); updateBatchBar(); }
-function toggleSelectAll() {
-    const boxes = document.querySelectorAll('.diary-checkbox');
-    const allChecked = Array.from(boxes).every(cb=>cb.checked);
-    boxes.forEach(cb => { cb.checked = !allChecked; const id = Number(cb.dataset.id); if(!allChecked) selectedIds.add(id); else selectedIds.delete(id); });
-    updateBatchBar();
-}
-function clearSelection() { selectedIds.clear(); document.querySelectorAll('.diary-checkbox').forEach(cb=>cb.checked=false); updateBatchBar(); }
-function batchDelete() {
-    if(selectedIds.size===0) return;
-    if(!confirm(`确定删除选中的 ${selectedIds.size} 篇？`)) return;
-    diaries = diaries.filter(d => !selectedIds.has(d.id));
-    selectedIds.clear(); saveDiaries(); renderDiaryList();
-}
-function updateBatchBar() {
-    const bar = document.getElementById('batchBar'), count = document.getElementById('selectedCount');
-    if(selectedIds.size>0) { bar.style.display='flex'; count.textContent = `已选 ${selectedIds.size} 篇`; }
-    else bar.style.display='none';
-}
-function deleteDiary(id) { if(!confirm('删除这篇日记？')) return; diaries = diaries.filter(d=>d.id!==id); saveDiaries(); renderDiaryList(); }
-function selectDiary(id) { selectedDiaryId = id; alert('已选中日记，可前往「分析」页进行自定义分析'); }
-function viewDiary(id) {
-    const d = diaries.find(x=>x.id===id);
-    if(!isValidDiary(d)) return alert('数据损坏');
-    alert(`日期:${d.date}\n\n${safeBlocks(d).map(b=>`【${b.title||''}】\n${b.content||''}`).join('\n\n')}`);
-}
-
-// ========== 编辑日记 ==========
-function editDiary(id) {
-    const d = diaries.find(x=>x.id===id);
-    if(!isValidDiary(d)) return alert('数据损坏');
-    editingDiaryId = id;
-    if(d.type==='goal') {
-        const blockMap = {}; safeBlocks(d).forEach(b => { if(b.title) blockMap[b.title]=b.content; });
-        let html = goals.map((goal,i) => {
-            const val = blockMap[goal]||'', noRecord = val==='今日无相关记录';
-            return `<div class="goal-input-group"><div class="goal-input-header"><span>🎯 ${goal}</span><label class="goal-no-record"><input type="checkbox" onchange="toggleEditGoalRecord(${i})" ${noRecord?'checked':''}> 无记录</label></div><textarea class="input textarea" id="editGoalInput${i}" ${noRecord?'disabled style="opacity:0.5"':''}>${noRecord?'':val}</textarea></div>`;
-        }).join('');
-        html += `<div class="goal-input-group"><span>📝 额外补充</span><textarea class="input textarea" id="editExtra">${blockMap['额外补充']||''}</textarea></div>`;
-        document.getElementById('editContent').innerHTML = html;
-    } else {
-        document.getElementById('editContent').innerHTML = `<textarea class="input textarea" id="editFreeInput" style="min-height:200px">${d.rawText||''}</textarea>`;
-    }
-    openModal('editModal');
-}
-function toggleEditGoalRecord(i) {
-    const cb = event.target, ta = document.getElementById('editGoalInput'+i);
-    ta.disabled = cb.checked; ta.style.opacity = cb.checked?'0.5':'1';
-    if(cb.checked) ta.value='';
-}
-document.getElementById('saveEditBtn').addEventListener('click', () => {
-    if(!editingDiaryId) return;
-    const d = diaries.find(x=>x.id===editingDiaryId);
-    if(!d) return;
-    if(d.type==='goal') {
-        const blocks = [];
-        goals.forEach((goal,i) => {
-            const group = document.getElementById('editGoalInput'+i)?.closest('.goal-input-group');
-            const cb = group?.querySelector('input[type="checkbox"]');
-            const ta = document.getElementById('editGoalInput'+i);
-            if(cb && ta) {
-                if(!cb.checked && ta.value.trim()) blocks.push({title:goal, content:ta.value.trim()});
-                else if(cb.checked) blocks.push({title:goal, content:'今日无相关记录'});
-            }
-        });
-        const extra = document.getElementById('editExtra')?.value.trim();
-        if(extra) blocks.push({title:'额外补充', content:extra});
-        if(blocks.length===0) return alert('请至少填写一项');
-        d.blocks = blocks;
-    } else {
-        const newRaw = document.getElementById('editFreeInput')?.value.trim();
-        if(!newRaw) return alert('内容不能为空');
-        d.rawText = newRaw; d.blocks = [{title:'原始内容', content:newRaw}];
-    }
-    saveDiaries(); renderDiaryList(); closeModal('editModal'); editingDiaryId=null; alert('已更新');
-});
-
-// ========== 视角全选 ==========
-function toggleAllViews() {
-    const checked = document.getElementById('selectAll').checked;
-    document.querySelectorAll('input[name="view"]').forEach(cb => { if(cb.value!=='custom') cb.checked = checked; });
-    document.querySelector('input[name="view"][value="custom"]').checked = false;
-    document.getElementById('customViewInput').style.display = 'none';
-}
-document.addEventListener('change', e => {
-    if(e.target.name==='view' && e.target.value==='custom') document.getElementById('customViewInput').style.display = e.target.checked?'block':'none';
-});
-
-// ========== 看板 ==========
+// ========== 分析看板 ==========
 function renderDashboard() {
     ['today','week','month','all'].forEach(range => {
         const latest = analysisHistory.filter(h=>h&&h.timeRange===range)[0];
@@ -509,7 +440,7 @@ async function quickAnalyze(range) {
     else target = [...diaries];
     target = target.filter(isValidDiary);
     if(!target.length) return alert('无有效日记');
-    const text = target.map(d => `【${d.date}】\n${safeBlocks(d).map(b=>`【${b.title}】${b.content}`).join('\n')}`).join('\n---\n');
+    const text = target.map(d => `【${d.date}】\n${d.blocks.map(b=>`【${b.title}】${b.content}`).join('\n')}`).join('\n---\n');
     document.getElementById(range+'Result').innerHTML = '<div class="loading">分析中...</div>';
     try {
         const prompt = config.analysisPrompt.replace('我的所有自定义长期目标', goals.join('、')).replace('{日记内容}', text);
@@ -526,14 +457,14 @@ async function startAnalysis() {
     const views = Array.from(document.querySelectorAll('input[name="view"]:checked')).map(cb=>cb.value);
     if(!views.length) return alert('请勾选视角');
     let target; const now = new Date();
-    if(range==='single') { if(!selectedDiaryId) return alert('请先在日记页选中一篇日记'); target = diaries.filter(d=>d.id===selectedDiaryId); }
+    if(range==='single') { if(!selectedDiaryId) return alert('请先在日记页选中一篇日记（点「选中当前日记分析」）'); target = diaries.filter(d=>d.id===selectedDiaryId); }
     else if(range==='today') target = diaries.filter(d=>d.date===now.toLocaleDateString());
     else if(range==='week') target = diaries.filter(d=>new Date(d.date) >= new Date(now.getTime()-7*86400000));
     else if(range==='month') target = diaries.filter(d=>new Date(d.date) >= new Date(now.getTime()-30*86400000));
     else target = [...diaries];
     target = target.filter(isValidDiary);
     if(!target.length) return alert('无有效日记');
-    const text = target.map(d => `【${d.date}】\n${safeBlocks(d).map(b=>`【${b.title}】${b.content}`).join('\n')}`).join('\n---\n');
+    const text = target.map(d => `【${d.date}】\n${d.blocks.map(b=>`【${b.title}】${b.content}`).join('\n')}`).join('\n---\n');
     document.getElementById('analysisResult').style.display='block';
     document.getElementById('analysisResult').innerHTML = '<div class="loading">分析中...</div>';
     try {
@@ -557,6 +488,17 @@ async function callAI(prompt) {
 }
 function copyResult() { const t = document.querySelector('#analysisResult div:first-child')?.innerText; if(t) navigator.clipboard.writeText(t).then(()=>alert('已复制')); }
 
+// ========== 视角全选 ==========
+function toggleAllViews() {
+    const checked = document.getElementById('selectAll').checked;
+    document.querySelectorAll('input[name="view"]').forEach(cb => { if(cb.value!=='custom') cb.checked = checked; });
+    document.querySelector('input[name="view"][value="custom"]').checked = false;
+    document.getElementById('customViewInput').style.display = 'none';
+}
+document.addEventListener('change', e => {
+    if(e.target.name==='view' && e.target.value==='custom') document.getElementById('customViewInput').style.display = e.target.checked?'block':'none';
+});
+
 // ========== 历史 ==========
 function viewRangeHistory(range) {
     const list = analysisHistory.filter(h=>h.timeRange===range);
@@ -570,7 +512,7 @@ function openModal(id) { document.getElementById(id).style.display='flex'; }
 function closeModal(id) { document.getElementById(id).style.display='none'; }
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.style.display='none'; }));
 
-// ========== 配置与数据 ==========
+// ========== 设置/数据管理 ==========
 document.getElementById('configBtn').onclick = () => { loadConfigToForm(); openModal('configModal'); };
 document.getElementById('goalConfigBtn').onclick = () => { renderGoalConfigList(); openModal('goalConfigModal'); };
 function loadConfigToForm() {
@@ -598,6 +540,7 @@ function saveConfig() {
 function resetPrompts() { if(confirm('恢复默认提示词？')) { document.getElementById('analysisPrompt').value = getFullDefaultAnalysisPrompt(); document.getElementById('partitionPrompt').value = getFullDefaultPartitionPrompt(); } }
 document.getElementById('modelName').addEventListener('change', function() { document.getElementById('customModel').style.display = this.value==='custom'?'block':'none'; });
 
+// 数据导入导出
 document.getElementById('exportBtn').addEventListener('click', ()=>{
     const blob = new Blob([JSON.stringify({diaries,analysisHistory,goals},null,2)],{type:'application/json'});
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `日记备份_${new Date().toISOString().slice(0,10)}.json`; a.click();
@@ -612,8 +555,8 @@ document.getElementById('importBtn').addEventListener('click', ()=>{
                 const data = JSON.parse(ev.target.result);
                 if(data.diaries) { const ids = new Set(diaries.map(d=>d.id)); data.diaries.forEach(d => { if(!ids.has(d.id)) diaries.unshift(d); }); }
                 if(data.analysisHistory) { const ids = new Set(analysisHistory.map(h=>h.id)); data.analysisHistory.forEach(h => { if(!ids.has(h.id)) analysisHistory.unshift(h); }); }
-                saveDiaries(); localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
-                renderDiaryList(); renderDashboard(); alert('导入成功'); location.reload();
+                saveDiariesToStorage(); localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
+                loadDiaryByDate(); renderDashboard(); alert('导入成功'); location.reload();
             } catch { alert('文件格式错误'); }
         };
         reader.readAsText(e.target.files[0]);
@@ -624,26 +567,26 @@ document.getElementById('restoreBtn').addEventListener('click', ()=>{
     if(!confirm('恢复到上次自动备份？')) return;
     const backup = localStorage.getItem('diaries_backup');
     if(!backup) return alert('无备份');
-    diaries = JSON.parse(backup); saveDiaries(); alert('恢复成功'); location.reload();
+    diaries = JSON.parse(backup); saveDiariesToStorage(); alert('恢复成功'); location.reload();
 });
-
-// ========== 搜索 ==========
-document.getElementById('searchInput').addEventListener('input', renderDiaryList);
-document.getElementById('diaryTypeFilter').addEventListener('change', renderDiaryList);
 
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', () => {
-    setDefaultDate();
+    // 设置默认日期为今天
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    document.getElementById('diaryDate').value = `${y}-${m}-${dd}`;
+
     initTheme();
     initTabs();
-    renderGoalInputs();
-    renderDiaryList();
+    loadDiaryByDate();
     renderDashboard();
-    decideEntryDisplay(); // 初始决定是否显示录入表单
 
     // 绑定保存按钮
-    document.getElementById('saveGoalBtn').addEventListener('click', saveGoalDiary);
-    document.getElementById('saveGoalBtn').addEventListener('touchstart', (e) => { e.preventDefault(); saveGoalDiary(); });
+    document.getElementById('saveDiaryBtn').addEventListener('click', saveCurrentDiary);
+    document.getElementById('saveDiaryBtn').addEventListener('touchstart', (e) => { e.preventDefault(); saveCurrentDiary(); });
 });
 </script>
 </body>
