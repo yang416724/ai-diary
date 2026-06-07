@@ -3,76 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI日记分析</title>
+    <title>AI日记分析（修复版）</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
         :root{
-            --bg:#FDF2F8;          /* 马卡龙樱花粉背景 */
-            --card:#FEF7FA;        /* 奶白卡片 */
-            --text:#5A4B5A;        /* 深灰粉正文 */
-            --text-secondary:#9A8B9A;/* 浅灰粉次要文字 */
-            --border:#E2D5E2;      /* 浅粉边框 */
-            --primary:#F9A8D4;     /* 主色：樱花粉 */
-            --primary-hover:#F472B6;
-            --danger:#F87171;      /* 豆沙红（删除） */
-            --success:#6EE7B7;     /* 马卡龙薄荷绿（重点：绿色主色） */
-            --success-hover:#4ADE80;
+            --bg:#FDF2F8; --card:#FEF7FA; --text:#5A4B5A;
+            --text-secondary:#9A8B9A; --border:#E2D5E2;
+            --primary:#F9A8D4; --primary-hover:#F472B6;
+            --danger:#F87171; --success:#6EE7B7; --success-hover:#4ADE80;
             --shadow:0 2px 8px 0 rgba(249, 168, 212, 0.15)
         }
         .dark{
-            --bg:#2D1F2D;
-            --card:#3D2F3D;
-            --text:#F0E6F0;
-            --text-secondary:#C0B0C0;
-            --border:#5D4F5D;
-            --primary:#FBCFE8;
-            --primary-hover:#F9A8D4;
-            --danger:#FCA5A5;
-            --success:#A7F3D0;     /* 深色模式亮薄荷绿 */
-            --success-hover:#86EFAC;
+            --bg:#2D1F2D; --card:#3D2F3D; --text:#F0E6F0;
+            --text-secondary:#C0B0C0; --border:#5D4F5D;
+            --primary:#FBCFE8; --primary-hover:#F9A8D4;
+            --danger:#FCA5A5; --success:#A7F3D0; --success-hover:#86EFAC;
             --shadow:0 2px 8px 0 rgba(0, 0, 0, 0.3)
         }
-
-        /* 圆角全局样式 */
         .card{border-radius:24px}
         .input,.select,.btn{border-radius:12px}
-
         body{background:var(--bg);color:var(--text);padding:20px;max-width:1000px;margin:0 auto;transition:all 0.3s ease}
         .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
         .top-bar h1{font-size:28px;color:var(--primary);display:flex;align-items:center;gap:8px}
         .top-actions{display:flex;gap:16px;align-items:center}
         .icon-btn{background:transparent;border:none;font-size:22px;cursor:pointer;color:var(--text);padding:8px;border-radius:8px;transition:background 0.2s}
         .icon-btn:hover{background:var(--border)}
-
         .card{background:var(--card);padding:24px;margin-bottom:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
         .card h2{font-size:22px;margin-bottom:20px;color:var(--text)}
         .card h3{font-size:18px;margin:16px 0 12px;color:var(--text)}
-
         .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
         @media (max-width:768px){.grid-2{grid-template-columns:1fr}}
-
         .input{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:16px;outline:none;transition:border-color 0.2s}
-        /* 输入框聚焦使用绿色 */
         .input:focus{border-color:var(--success)}
         .textarea{min-height:120px;resize:vertical;line-height:1.6}
         .select{width:100%;padding:12px 16px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:16px;cursor:pointer}
-
         .btn{padding:12px 24px;border:none;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s}
         .btn-primary{background:var(--primary);color:white}
         .btn-primary:hover{background:var(--primary-hover)}
         .btn-danger{background:var(--danger);color:white}
-        /* 绿色按钮样式（正式启用绿色配色） */
         .btn-success{background:var(--success);color:white}
         .btn-success:hover{background:var(--success-hover)}
         .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
         .btn-outline:hover{background:var(--border)}
         .btn-sm{padding:8px 16px;font-size:14px}
-
         .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:8px}
         .tab{padding:8px 16px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:8px;font-size:16px;transition:all 0.2s}
         .tab.active{background:var(--primary);color:white}
-
         .diary-item{border-bottom:1px solid var(--border);padding:16px 0}
         .diary-item:last-child{border-bottom:none}
         .diary-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
@@ -81,38 +58,37 @@
         .diary-preview{color:var(--text-secondary);line-height:1.5;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
         .diary-actions{display:flex;gap:8px;margin-top:12px}
         .diary-block{margin-bottom:12px;padding:12px;background:var(--bg);border-radius:8px}
-        .diary-block-title{font-weight:500;color:var(--success);margin-bottom:6px} /* 日记标题使用绿色 */
+        .diary-block-title{font-weight:500;color:var(--success);margin-bottom:6px}
         .diary-block-content{line-height:1.5}
-
         .analysis-result{background:var(--bg);border-radius:12px;padding:20px;margin-top:20px;line-height:1.8}
         .analysis-result h4{margin-bottom:12px;color:var(--primary)}
         .analysis-meta{font-size:14px;color:var(--text-secondary);margin-bottom:16px}
-
         .empty-state{text-align:center;padding:60px 20px;color:var(--text-secondary)}
         .loading{text-align:center;padding:40px;color:var(--text-secondary)}
         .loading::after{content:"";display:inline-block;width:20px;height:20px;border:3px solid var(--border);border-top-color:var(--success);border-radius:50%;animation:spin 1s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
-
         .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
         .modal-content{background:var(--card);border-radius:20px;padding:24px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto}
         .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
         .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text)}
-
-        .badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:12px;background:var(--success);color:white;margin-left:8px} /* 标签使用绿色 */
-
+        .badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:12px;background:var(--success);color:white;margin-left:8px}
         .dashboard-card{margin-bottom:30px}
         .dashboard-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
         .dashboard-actions{display:flex;gap:8px}
         .latest-result{max-height:300px;overflow-y:auto;padding:16px;background:var(--bg);border-radius:12px}
-
         .goal-input-group{margin-bottom:16px}
         .goal-input-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
         .goal-input-label{font-weight:500}
         .goal-no-record{display:flex;align-items:center;gap:6px;cursor:pointer}
         .goal-textarea{min-height:60px}
-
         .goal-item{display:flex;align-items:center;gap:12px;margin-bottom:12px}
         .goal-item input{flex:1}
+        /* 确保保存按钮始终可点击 */
+        #saveGoalBtn {
+            pointer-events: auto !important;
+            z-index: 999 !important;
+            opacity: 1 !important;
+        }
     </style>
 </head>
 <body>
@@ -145,8 +121,8 @@
                 <textarea class="input textarea goal-textarea" id="extraContent" placeholder="写一些目标之外的零散内容..."></textarea>
             </div>
             <div style="margin-top:20px">
-                <!-- 重点：按钮独立ID，JS绑定事件，移动端完全兼容 -->
-                <button class="btn btn-primary" id="saveGoalBtn">保存日记</button>
+                <!-- 关键修复：添加onclick事件，确保点击触发 -->
+                <button class="btn btn-primary" id="saveGoalBtn" onclick="saveGoalDiary()">保存日记</button>
             </div>
         </div>
 
@@ -155,7 +131,6 @@
             <textarea class="input textarea" id="freeDiaryInput" style="min-height:300px" placeholder="随便写点什么吧，不用有任何格式限制..."></textarea>
             <div style="margin-top:20px;display:flex;gap:12px">
                 <button class="btn btn-outline" onclick="saveFreeDiary(false)">仅保存原始文本</button>
-                <!-- 随心笔记使用绿色按钮 -->
                 <button class="btn btn-success" onclick="saveFreeDiary(true)">保存并AI智能分区</button>
             </div>
         </div>
@@ -375,6 +350,13 @@
     </div>
 
 <script>
+// 全局错误捕获，快速定位问题
+window.onerror = function(msg, url, line) {
+  alert(`发现JS错误: ${msg} (行号: ${line})`);
+  console.error(`错误: ${msg} 行号: ${line}`);
+  return true;
+};
+
 // 全局变量
 let diaries = [];
 let analysisHistory = [];
@@ -437,9 +419,12 @@ document.addEventListener('DOMContentLoaded', function(){
     renderDashboard();
     loadConfigToForm();
 
-    // 保存按钮事件（核心修复：纯click事件，全浏览器兼容）
+    // 双重保险：同时绑定addEventListener和onclick
     const saveGoalBtn = document.getElementById('saveGoalBtn');
-    if(saveGoalBtn) saveGoalBtn.addEventListener('click', saveGoalDiary);
+    if(saveGoalBtn) {
+        saveGoalBtn.addEventListener('click', saveGoalDiary);
+        saveGoalBtn.onclick = saveGoalDiary; // 额外添加DOM0级事件
+    }
 
     // 模型切换监听
     document.getElementById('modelName').addEventListener('change', function(){
@@ -523,55 +508,78 @@ function toggleInput(idx) {
     if(chk.checked) txt.value = '';
 }
 
-// ========== 核心：目标打卡保存（纯前端，无需AI，已彻底修复） ==========
+// ========== 核心：目标打卡保存（彻底修复版） ==========
 function saveGoalDiary() {
+    console.log("保存按钮被点击，开始执行保存逻辑");
     const blocks = [];
     const count = goals.length;
+    let hasContent = false;
+    
     // 遍历所有目标
     for(let i = 0; i < count; i++){
         const chk = document.getElementById(`chk_${i}`);
         const txt = document.getElementById(`txt_${i}`);
         const val = txt.value.trim();
+        
         if(!chk.checked && val){
             blocks.push({title: goals[i], content: val});
+            hasContent = true;
         }else if(chk.checked){
             blocks.push({title: goals[i], content: '今日无相关记录'});
+            hasContent = true;
         }
     }
+    
     // 额外补充
     const extra = document.getElementById('extraContent').value.trim();
-    if(extra) blocks.push({title: '额外补充', content: extra});
+    if(extra) {
+        blocks.push({title: '额外补充', content: extra});
+        hasContent = true;
+    }
 
-    if(blocks.length === 0){
-        alert('请填写内容 或 勾选「今日无相关记录」');
+    // 严格校验，确保有内容才保存
+    if(!hasContent){
+        alert('请至少填写一个目标内容或勾选「今日无相关记录」！');
+        console.log("保存失败：没有任何内容");
         return;
     }
 
-    // 生成日记
-    const diary = {
-        id: Date.now(),
-        date: new Date().toLocaleDateString(),
-        type: 'goal',
-        blocks: blocks,
-        rawText: '',
-        source: '目标打卡',
-        createdAt: new Date().toISOString()
-    };
-    diaries.unshift(diary);
-    saveDiaries();
-    renderDiaryList();
+    try {
+        // 生成日记
+        const diary = {
+            id: Date.now(),
+            date: new Date().toLocaleDateString(),
+            type: 'goal',
+            blocks: blocks,
+            rawText: '',
+            source: '目标打卡',
+            createdAt: new Date().toISOString()
+        };
+        diaries.unshift(diary);
+        saveDiaries();
+        renderDiaryList();
 
-    // 清空输入
-    for(let i = 0; i < count; i++){
-        const chk = document.getElementById(`chk_${i}`);
-        const txt = document.getElementById(`txt_${i}`);
-        chk.checked = false;
-        txt.disabled = false;
-        txt.value = '';
-        txt.style.opacity = '1';
+        // 清空输入
+        for(let i = 0; i < count; i++){
+            const chk = document.getElementById(`chk_${i}`);
+            const txt = document.getElementById(`txt_${i}`);
+            chk.checked = false;
+            txt.disabled = false;
+            txt.value = '';
+            txt.style.opacity = '1';
+        }
+        document.getElementById('extraContent').value = '';
+        
+        alert('✅ 日记保存成功！已自动同步到日记列表');
+        console.log("保存成功，日记已添加到列表");
+        
+        // 自动切换到日记列表（可选）
+        // document.querySelector('[data-main-tab="diaryList"]').click();
+        
+    } catch (e) {
+        alert('保存失败: ' + e.message);
+        console.error("保存过程出错:", e);
     }
-    document.getElementById('extraContent').value = '';
-    alert('✅ 日记保存成功！');
 }
 
 // 保存随心笔记
@@ -646,8 +654,18 @@ function saveGoals() {
 
 // 数据持久化 + 自动备份
 function saveDiaries() {
-    localStorage.setItem('diaries_backup', JSON.stringify(diaries));
-    localStorage.setItem('diaries', JSON.stringify(diaries));
+    try {
+        if (!window.localStorage) {
+            alert("浏览器不支持本地存储，数据将仅在当前会话有效");
+            return;
+        }
+        localStorage.setItem('diaries_backup', JSON.stringify(diaries));
+        localStorage.setItem('diaries', JSON.stringify(diaries));
+        console.log("数据成功保存到localStorage");
+    } catch (e) {
+        alert("保存到本地存储失败: " + e.message);
+        console.error("localStorage保存失败:", e);
+    }
 }
 
 // 渲染日记列表
