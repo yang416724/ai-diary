@@ -68,6 +68,8 @@
         .result-content.collapsed{max-height:200px;overflow:hidden}
         .result-content.collapsed::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent, var(--bg))}
         .toggle-btn{color:var(--primary);cursor:pointer;font-size:14px;margin-top:4px;background:none;border:none;font-family:var(--font);text-decoration:underline}
+        .notebook-item{padding:12px;border-bottom:1px solid var(--border)}
+        .notebook-item:last-child{border-bottom:none}
     </style>
 </head>
 <body>
@@ -87,32 +89,53 @@
 
 <!-- 日记页 -->
 <div id="diaryTab" class="main-tab-content">
-    <div class="card">
-        <div class="date-nav">
-            <button onclick="changeDate(-1)">◀</button>
-            <input type="date" id="diaryDate" onchange="loadDiaryByDate()">
-            <button onclick="changeDate(1)">▶</button>
-            <button class="btn btn-outline btn-sm" onclick="setToday()">今天</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteCurrentDiary()" style="margin-left:auto">🗑️ 删除当天</button>
-        </div>
-        <h3>🎯 今日目标</h3>
-        <div id="goalRows"></div>
-        <div class="other-section">
-            <h3>📌 其他</h3>
-            <textarea class="input textarea" id="otherBlock" placeholder="不在目标范围内的其他内容..."></textarea>
-        </div>
-        <div class="free-section">
-            <h3>✍️ 随心记（AI智能归类）</h3>
-            <textarea class="input textarea" id="freeInput" placeholder="随便写点什么，点下方按钮自动归类到对应目标…"></textarea>
-            <div class="ai-actions">
-                <button class="btn btn-success" id="aiPartitionBtn" onclick="aiPartition()">✨ AI智能归类</button>
-                <span style="color:var(--text-secondary);font-size:14px;padding-top:10px">归类后请手动调整并保存</span>
+    <!-- 子标签 -->
+    <div class="tabs" style="border-bottom:0;margin-bottom:0">
+        <button class="tab active" data-sub-tab="big">📖 大日记本</button>
+        <button class="tab" data-sub-tab="small">📚 小本子</button>
+    </div>
+
+    <!-- 大日记本 -->
+    <div id="bigNotebook" class="sub-tab-content">
+        <div class="card">
+            <div class="date-nav">
+                <button onclick="changeDate(-1)">◀</button>
+                <input type="date" id="diaryDate" onchange="loadDiaryByDate()">
+                <button onclick="changeDate(1)">▶</button>
+                <button class="btn btn-outline btn-sm" onclick="setToday()">今天</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCurrentDiary()" style="margin-left:auto">🗑️ 删除当天</button>
+            </div>
+            <h3>🎯 今日目标</h3>
+            <div id="goalRows"></div>
+            <div class="other-section">
+                <h3>📌 其他</h3>
+                <textarea class="input textarea" id="otherBlock" placeholder="不在目标范围内的其他内容..."></textarea>
+            </div>
+            <div class="free-section">
+                <h3>✍️ 随心记（AI智能归类）</h3>
+                <textarea class="input textarea" id="freeInput" placeholder="随便写点什么，点下方按钮自动归类到对应目标…"></textarea>
+                <div class="ai-actions">
+                    <button class="btn btn-success" id="aiPartitionBtn" onclick="aiPartition()">✨ AI智能归类</button>
+                    <span style="color:var(--text-secondary);font-size:14px;padding-top:10px">归类后请手动调整并保存</span>
+                </div>
+            </div>
+            <div style="margin-top:24px;display:flex;gap:12px">
+                <button class="btn btn-primary" id="saveDiaryBtn">💾 保存日记</button>
+                <button class="btn btn-outline" onclick="selectCurrentForAnalysis()">🔍 选中当天分析</button>
+                <button class="btn btn-outline" id="batchImportBtn" onclick="openModal('batchImportModal')">📥 批量导入旧日记</button>
             </div>
         </div>
-        <div style="margin-top:24px;display:flex;gap:12px">
-            <button class="btn btn-primary" id="saveDiaryBtn">💾 保存日记</button>
-            <button class="btn btn-outline" onclick="selectCurrentForAnalysis()">🔍 选中当天分析</button>
-            <button class="btn btn-outline" id="batchImportBtn" onclick="openModal('batchImportModal')">📥 批量导入旧日记</button>
+    </div>
+
+    <!-- 小本子 -->
+    <div id="smallNotebook" class="sub-tab-content" style="display:none">
+        <div class="card">
+            <h3>📚 目标小本子</h3>
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px">
+                <select class="select" id="notebookGoalSelector" onchange="renderNotebook()" style="width:200px"></select>
+                <button class="btn btn-success btn-sm" onclick="analyzeNotebook()">🔍 分析本子</button>
+            </div>
+            <div id="notebookEntries"></div>
         </div>
     </div>
 </div>
@@ -135,9 +158,12 @@
 
     <div class="card">
         <h2>🔍 自定义分析 <span class="badge">手动</span></h2>
-        <p style="color:var(--text-secondary);margin-bottom:12px">💡 可选中当前日记（日记页按钮），或直接选范围</p>
+        <p style="color:var(--text-secondary);margin-bottom:12px">💡 可选中当前日记（日记页按钮），或直接选范围。也可选择“目标小本子”分析单项。</p>
         <div class="grid-2">
-            <div><label>时间范围</label><select class="select" id="timeRange"><option value="single">当前选中日记</option><option value="today">今日</option><option value="week">近7天</option><option value="month">近30天</option><option value="all">全部</option></select></div>
+            <div>
+                <label>时间范围</label>
+                <select class="select" id="timeRange"><option value="single">当前选中日记</option><option value="today">今日</option><option value="week">近7天</option><option value="month">近30天</option><option value="all">全部</option><option value="notebook">当前小本子目标</option></select>
+            </div>
             <div>
                 <label>分析视角</label>
                 <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -189,7 +215,7 @@
             <div><label>温度</label><input type="number" class="input" id="temperature" value="0.7" step="0.1"></div>
         </div>
         <div><label>Tokens</label><input type="number" class="input" id="maxTokens" value="2000"></div>
-        <h3>提示词（全局共用，切换方案不会改变）</h3>
+        <h3>提示词（全局共用）</h3>
         <textarea class="input textarea" id="analysisPrompt" style="min-height:150px"></textarea>
         <textarea class="input textarea" id="partitionPrompt" style="min-height:100px;margin-top:8px"></textarea>
         <div style="margin:12px 0"><button class="btn btn-outline" onclick="resetPrompts()">恢复默认提示词</button><button class="btn btn-primary" id="saveConfigBtn">💾 保存当前方案</button></div>
@@ -274,89 +300,37 @@ function getDefaultPartitionPrompt() {
 }
 
 // ========== 全局变量 ==========
-let diaries = [], analysisHistory = [], goals = [], selectedDiaryId = null;
+let diaries = [], analysisHistory = [], goals = [], selectedDiaryId = null, selectedNotebookGoal = null;
 let apiConfigs = [], currentConfigId = null, config = {};
 
 function isValidDiary(d) { return d && typeof d === 'object' && Array.isArray(d.blocks); }
 function getValidDiaries() { return Array.isArray(diaries) ? diaries.filter(isValidDiary) : []; }
 
-// ========== 配置系统（深拷贝保护 + 保存稳定） ==========
+// ========== 配置系统 ==========
 function initConfigs() {
     const savedConfigs = localStorage.getItem('apiConfigs');
     const savedCurrentId = localStorage.getItem('currentConfigId');
     const oldConfig = localStorage.getItem('aiConfig');
-    if (savedConfigs) {
-        apiConfigs = JSON.parse(savedConfigs);
-        if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) apiConfigs = [];
-    }
+    if (savedConfigs) { apiConfigs = JSON.parse(savedConfigs); if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) apiConfigs = []; }
     if (apiConfigs.length === 0 && oldConfig) {
         const old = JSON.parse(oldConfig);
-        apiConfigs.push({
-            id: Date.now().toString(),
-            name: '默认配置',
-            apiKey: old.apiKey || '',
-            apiBase: old.apiBase || 'https://api.openai.com/v1',
-            modelName: old.modelName || 'gpt-3.5-turbo',
-            customModel: old.customModel || '',
-            temperature: old.temperature ?? 0.7,
-            maxTokens: old.maxTokens ?? 2000
-        });
-        if (old.analysisPrompt || old.partitionPrompt) {
-            localStorage.setItem('prompts', JSON.stringify({
-                analysisPrompt: old.analysisPrompt || getDefaultAnalysisPrompt(),
-                partitionPrompt: old.partitionPrompt || getDefaultPartitionPrompt()
-            }));
-        }
+        apiConfigs.push({ id: Date.now().toString(), name: '默认配置', apiKey: old.apiKey || '', apiBase: old.apiBase || 'https://api.openai.com/v1', modelName: old.modelName || 'gpt-3.5-turbo', customModel: old.customModel || '', temperature: old.temperature ?? 0.7, maxTokens: old.maxTokens ?? 2000 });
+        if (old.analysisPrompt || old.partitionPrompt) localStorage.setItem('prompts', JSON.stringify({ analysisPrompt: old.analysisPrompt || getDefaultAnalysisPrompt(), partitionPrompt: old.partitionPrompt || getDefaultPartitionPrompt() }));
     }
-    if (apiConfigs.length === 0) {
-        apiConfigs.push({
-            id: Date.now().toString(),
-            name: '默认配置',
-            apiKey: '',
-            apiBase: 'https://api.openai.com/v1',
-            modelName: 'gpt-3.5-turbo',
-            customModel: '',
-            temperature: 0.7,
-            maxTokens: 2000
-        });
-    }
+    if (apiConfigs.length === 0) apiConfigs.push({ id: Date.now().toString(), name: '默认配置', apiKey: '', apiBase: 'https://api.openai.com/v1', modelName: 'gpt-3.5-turbo', customModel: '', temperature: 0.7, maxTokens: 2000 });
     currentConfigId = savedCurrentId || apiConfigs[0].id;
     if (!apiConfigs.find(c => c.id === currentConfigId)) currentConfigId = apiConfigs[0].id;
-    if (!localStorage.getItem('prompts')) {
-        localStorage.setItem('prompts', JSON.stringify({
-            analysisPrompt: getDefaultAnalysisPrompt(),
-            partitionPrompt: getDefaultPartitionPrompt()
-        }));
-    }
+    if (!localStorage.getItem('prompts')) localStorage.setItem('prompts', JSON.stringify({ analysisPrompt: getDefaultAnalysisPrompt(), partitionPrompt: getDefaultPartitionPrompt() }));
     syncCurrentConfig();
 }
-
 function syncCurrentConfig() {
     const cfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0];
-    config.apiKey = cfg.apiKey;
-    config.apiBase = cfg.apiBase;
-    config.modelName = cfg.modelName;
-    config.temperature = cfg.temperature;
-    config.maxTokens = cfg.maxTokens;
+    config.apiKey = cfg.apiKey; config.apiBase = cfg.apiBase; config.modelName = cfg.modelName; config.temperature = cfg.temperature; config.maxTokens = cfg.maxTokens;
     const savedPrompts = localStorage.getItem('prompts');
-    if (savedPrompts) {
-        const prompts = JSON.parse(savedPrompts);
-        config.analysisPrompt = prompts.analysisPrompt || getDefaultAnalysisPrompt();
-        config.partitionPrompt = prompts.partitionPrompt || getDefaultPartitionPrompt();
-    } else {
-        config.analysisPrompt = getDefaultAnalysisPrompt();
-        config.partitionPrompt = getDefaultPartitionPrompt();
-    }
+    if (savedPrompts) { const prompts = JSON.parse(savedPrompts); config.analysisPrompt = prompts.analysisPrompt || getDefaultAnalysisPrompt(); config.partitionPrompt = prompts.partitionPrompt || getDefaultPartitionPrompt(); }
+    else { config.analysisPrompt = getDefaultAnalysisPrompt(); config.partitionPrompt = getDefaultPartitionPrompt(); }
 }
-
-function saveConfigs() {
-    localStorage.setItem('apiConfigs', JSON.stringify(apiConfigs));
-    localStorage.setItem('currentConfigId', currentConfigId);
-    localStorage.setItem('prompts', JSON.stringify({
-        analysisPrompt: config.analysisPrompt,
-        partitionPrompt: config.partitionPrompt
-    }));
-}
+function saveConfigs() { localStorage.setItem('apiConfigs', JSON.stringify(apiConfigs)); localStorage.setItem('currentConfigId', currentConfigId); localStorage.setItem('prompts', JSON.stringify({ analysisPrompt: config.analysisPrompt, partitionPrompt: config.partitionPrompt })); }
 
 // ========== 数据加载 ==========
 function safeLoadData() {
@@ -374,6 +348,8 @@ function initTheme() {
 }
 function initTabs() {
     document.querySelectorAll('[data-main-tab]').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('[data-main-tab]').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.main-tab-content').forEach(c=>c.style.display='none'); tab.classList.add('active'); document.getElementById(tab.dataset.mainTab+'Tab').style.display='block'; }); });
+    // 子标签（大日记本/小本子）
+    document.querySelectorAll('[data-sub-tab]').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('[data-sub-tab]').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.sub-tab-content').forEach(c=>c.style.display='none'); tab.classList.add('active'); document.getElementById(tab.dataset.subTab==='big'?'bigNotebook':'smallNotebook').style.display='block'; if(tab.dataset.subTab==='small') renderNotebook(); }); });
 }
 
 // ========== 展开/折叠 ==========
@@ -394,7 +370,7 @@ window.toggleAnalysisBlock = function(id) {
     else { block.classList.add('collapsed'); btn.textContent = '展开全文'; }
 };
 
-// ========== 日期与日记 ==========
+// ========== 日期与日记 (大日记本) ==========
 function getCurrentDateStr() { const d = document.getElementById('diaryDate').value; if(!d) return new Date().toLocaleDateString(); const parts = d.split('-'); return new Date(parts[0], parts[1]-1, parts[2]).toLocaleDateString(); }
 function changeDate(delta) { const dateInput = document.getElementById('diaryDate'); const parts = dateInput.value.split('-'); const date = new Date(parts[0], parts[1]-1, parts[2]); date.setDate(date.getDate() + delta); dateInput.value = date.toISOString().split('T')[0]; loadDiaryByDate(); }
 function setToday() { document.getElementById('diaryDate').value = new Date().toISOString().split('T')[0]; loadDiaryByDate(); }
@@ -438,7 +414,65 @@ function selectCurrentForAnalysis() { const diary = getDiaryByDate(getCurrentDat
 function renderGoalConfigList() { document.getElementById('goalConfigList').innerHTML = goals.map((g,i)=>`<div class="goal-item"><input class="input" value="${g}"><button class="btn btn-danger btn-sm" onclick="removeGoalItem(${i})">删除</button></div>`).join(''); }
 function addGoalItem() { goals.push('新目标'); renderGoalConfigList(); }
 function removeGoalItem(i) { if(goals.length<=1) return alert('至少一个'); goals.splice(i,1); renderGoalConfigList(); }
-function saveGoals() { goals = Array.from(document.querySelectorAll('#goalConfigList .goal-item input')).map(i=>i.value.trim()).filter(v=>v); if(!goals.length) return alert('至少一个'); localStorage.setItem('goals', JSON.stringify(goals)); loadDiaryByDate(); closeModal('goalConfigModal'); alert('目标已保存'); }
+function saveGoals() { goals = Array.from(document.querySelectorAll('#goalConfigList .goal-item input')).map(i=>i.value.trim()).filter(v=>v); if(!goals.length) return alert('至少一个'); localStorage.setItem('goals', JSON.stringify(goals)); loadDiaryByDate(); closeModal('goalConfigModal'); alert('目标已保存'); updateNotebookSelector(); }
+
+// ========== 小本子 ==========
+function updateNotebookSelector() {
+    const sel = document.getElementById('notebookGoalSelector');
+    if(!sel) return;
+    sel.innerHTML = goals.map(g => `<option value="${g}">${g}</option>`).join('');
+    if(selectedNotebookGoal && goals.includes(selectedNotebookGoal)) sel.value = selectedNotebookGoal;
+    else if(goals.length > 0) selectedNotebookGoal = goals[0];
+}
+
+function renderNotebook() {
+    const sel = document.getElementById('notebookGoalSelector');
+    if(sel) selectedNotebookGoal = sel.value;
+    const container = document.getElementById('notebookEntries');
+    if(!selectedNotebookGoal) { container.innerHTML = '<div class="empty-state">请先设置目标</div>'; return; }
+    const entries = getValidDiaries().filter(d => d.blocks.some(b => b.title === selectedNotebookGoal)).sort((a,b) => new Date(b.date) - new Date(a.date));
+    if(entries.length === 0) { container.innerHTML = `<div class="empty-state">暂无「${selectedNotebookGoal}」的记录</div>`; return; }
+    let html = '';
+    entries.forEach(d => {
+        const block = d.blocks.find(b => b.title === selectedNotebookGoal);
+        if(!block) return;
+        html += `<div class="notebook-item"><strong>📅 ${d.date}</strong> <button class="btn btn-sm btn-outline" onclick="jumpToDate('${d.date}')">编辑</button><div style="white-space:pre-wrap;margin-top:4px">${block.content}</div></div>`;
+    });
+    container.innerHTML = html;
+}
+
+window.jumpToDate = function(dateStr) {
+    // 切换回大日记本，并设置日期
+    document.querySelector('[data-sub-tab="big"]').click();
+    const parts = dateStr.split('/');
+    const date = new Date(parts[2], parts[0]-1, parts[1]);
+    const y = date.getFullYear();
+    const m = String(date.getMonth()+1).padStart(2,'0');
+    const d = String(date.getDate()).padStart(2,'0');
+    document.getElementById('diaryDate').value = `${y}-${m}-${d}`;
+    loadDiaryByDate();
+};
+
+async function analyzeNotebook() {
+    if(!selectedNotebookGoal) return alert('请先选择目标');
+    if(!config.apiKey) { openModal('configModal'); return alert('请配置AI密钥'); }
+    // 收集该目标下所有日记内容
+    const entries = getValidDiaries().filter(d => d.blocks.some(b => b.title === selectedNotebookGoal));
+    if(entries.length === 0) return alert('该目标暂无记录');
+    const text = entries.map(d => {
+        const block = d.blocks.find(b => b.title === selectedNotebookGoal);
+        return `【${d.date}】\n${block.content}`;
+    }).join('\n---\n');
+    // 输出到今日分析区域
+    document.getElementById('todayResult').innerHTML = '<div class="loading">分析中...</div>';
+    try {
+        const prompt = config.analysisPrompt.replace('我的所有自定义长期目标', goals.join('、')).replace('{日记内容}', text);
+        const res = await callAI(prompt);
+        analysisHistory.unshift({ id:Date.now().toString(), view:`小本子-${selectedNotebookGoal}`, timeRange:'today', diaryCount:entries.length, result:res, createdAt:new Date().toLocaleString() });
+        localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
+        renderDashboard(); alert(`「${selectedNotebookGoal}」分析完成，结果已保存到今日分析历史`);
+    } catch(e) { document.getElementById('todayResult').innerHTML = `<div style="color:red">失败：${e.message}</div>`; }
+}
 
 // ========== 分析看板与历史 ==========
 function renderDashboard() {
@@ -503,9 +537,16 @@ async function startAnalysis() {
     else if(range==='today') target = diaries.filter(d=>d.date===now.toLocaleDateString());
     else if(range==='week') target = diaries.filter(d=>new Date(d.date) >= new Date(now.getTime()-7*86400000));
     else if(range==='month') target = diaries.filter(d=>new Date(d.date) >= new Date(now.getTime()-30*86400000));
-    else target = [...diaries];
+    else if(range==='all') target = [...diaries];
+    else if(range==='notebook') {
+        if(!selectedNotebookGoal) return alert('请先在小本子选择目标');
+        target = getValidDiaries().filter(d => d.blocks.some(b => b.title === selectedNotebookGoal));
+        if(!target.length) return alert('该目标暂无记录');
+    }
     target = target.filter(isValidDiary); if(!target.length) return alert('无有效日记');
-    const text = target.map(d => `【${d.date}】\n${d.blocks.map(b=>`【${b.title}】${b.content}`).join('\n')}`).join('\n---\n');
+    const text = range==='notebook' 
+        ? target.map(d => { const block = d.blocks.find(b => b.title === selectedNotebookGoal); return `【${d.date}】\n${block.content}`; }).join('\n---\n')
+        : target.map(d => `【${d.date}】\n${d.blocks.map(b=>`【${b.title}】${b.content}`).join('\n')}`).join('\n---\n');
     document.getElementById('analysisResult').style.display='block';
     document.getElementById('analysisResult').innerHTML = '<div class="loading">分析中...</div>';
     try {
@@ -523,7 +564,7 @@ async function startAnalysis() {
             </div>`;
     } catch(e) { document.getElementById('analysisResult').innerHTML = `<div style="color:red">失败：${e.message}</div>`; }
 }
-function getRangeName(s) { return { single:'单篇日记', today:'今日', week:'近7天', month:'近30天', all:'全部' }[s] || s; }
+function getRangeName(s) { return { single:'单篇日记', today:'今日', week:'近7天', month:'近30天', all:'全部', notebook:'当前小本子' }[s] || s; }
 
 async function callAI(prompt) {
     const model = config.modelName==='custom' ? (document.getElementById('customModel')?.value || config.modelName) : config.modelName;
@@ -548,96 +589,39 @@ async function batchImportDiaries() {
     const rawText = document.getElementById('batchTextInput').value.trim();
     if (!rawText) return alert('请粘贴旧日记文本');
     if (!config.apiKey) return alert('请先配置AI密钥');
-    const btn = document.getElementById('batchImportBtn');
-    const status = document.getElementById('batchStatus');
-    btn.disabled = true; btn.textContent = '解析中...';
-    status.textContent = 'AI正在分析文本，请稍候...';
+    const btn = document.getElementById('batchImportBtn'); const status = document.getElementById('batchStatus');
+    btn.disabled = true; btn.textContent = '解析中...'; status.textContent = 'AI正在分析文本，请稍候...';
     try {
-        const prompt = `你是一个专业的日记整理助手。下面是一段跨越多天的日记文本，请完成以下任务：
-1. 识别出每条日记的日期（如果没有明确日期，尽量根据上下文推测，如推测不出则使用"未知"）。
-2. 对每条日记的内容，按照以下长期目标进行智能分区，并将剩余内容放入"其他"：
-${goals.join('、')}
-3. 输出格式必须为严格的JSON数组，每个元素如下：
-{
-  "date": "YYYY-MM-DD或原文字符串",
-  "blocks": [
-    {"title": "目标名称或临时主题", "content": "具体内容"}
-  ]
-}
-4. 不要添加任何额外解释，只输出JSON。
-5. 保留原文信息，不要修改内容。
-
-需要整理的文本：
-${rawText}`;
-        const result = await callAI(prompt);
-        const jsonStr = result.replace(/```json/g, '').replace(/```/g, '').trim();
-        const data = JSON.parse(jsonStr);
-        if (!Array.isArray(data)) throw new Error('返回数据不是数组');
-        let importedCount = 0;
-        const today = new Date().toLocaleDateString();
+        const prompt = `你是一个专业的日记整理助手。下面是一段跨越多天的日记文本，请完成以下任务：\n1. 识别出每条日记的日期（如果没有明确日期，尽量根据上下文推测，如推测不出则使用"未知"）。\n2. 对每条日记的内容，按照以下长期目标进行智能分区，并将剩余内容放入"其他"：\n${goals.join('、')}\n3. 输出格式必须为严格的JSON数组，每个元素如下：\n{\n  "date": "YYYY-MM-DD或原文字符串",\n  "blocks": [\n    {"title": "目标名称或临时主题", "content": "具体内容"}\n  ]\n}\n4. 不要添加任何额外解释，只输出JSON。\n5. 保留原文信息，不要修改内容。\n\n需要整理的文本：\n${rawText}`;
+        const result = await callAI(prompt); const jsonStr = result.replace(/```json/g, '').replace(/```/g, '').trim();
+        const data = JSON.parse(jsonStr); if (!Array.isArray(data)) throw new Error('返回数据不是数组');
+        let importedCount = 0; const today = new Date().toLocaleDateString();
         data.forEach(entry => {
             let dateStr = entry.date || today;
-            const parsedDate = new Date(dateStr);
-            if (!isNaN(parsedDate.getTime())) dateStr = parsedDate.toLocaleDateString();
-            const match = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-            if (match) dateStr = new Date(match[1], match[2]-1, match[3]).toLocaleDateString();
+            const parsedDate = new Date(dateStr); if (!isNaN(parsedDate.getTime())) dateStr = parsedDate.toLocaleDateString();
+            const match = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/); if (match) dateStr = new Date(match[1], match[2]-1, match[3]).toLocaleDateString();
             if (!entry.blocks || !Array.isArray(entry.blocks)) return;
-            const blocks = entry.blocks.filter(b => b.title && b.content);
-            if (blocks.length === 0) return;
+            const blocks = entry.blocks.filter(b => b.title && b.content); if (blocks.length === 0) return;
             const existing = getDiaryByDate(dateStr);
-            if (existing) {
-                blocks.forEach(b => {
-                    const existingBlock = existing.blocks.find(eb => eb.title === b.title);
-                    if (existingBlock) existingBlock.content = existingBlock.content + '\n' + b.content;
-                    else existing.blocks.push({ title: b.title, content: b.content });
-                });
-                existing.source = '批量导入';
-            } else {
-                diaries.unshift({
-                    id: Date.now() + Math.random(),
-                    date: dateStr,
-                    type: 'goal',
-                    blocks: blocks,
-                    rawText: '',
-                    source: '批量导入',
-                    createdAt: new Date().toISOString()
-                });
-            }
+            if (existing) { blocks.forEach(b => { const existingBlock = existing.blocks.find(eb => eb.title === b.title); if (existingBlock) existingBlock.content = existingBlock.content + '\n' + b.content; else existing.blocks.push({ title: b.title, content: b.content }); }); existing.source = '批量导入'; }
+            else { diaries.unshift({ id: Date.now() + Math.random(), date: dateStr, type: 'goal', blocks: blocks, rawText: '', source: '批量导入', createdAt: new Date().toISOString() }); }
             importedCount++;
         });
-        saveDiaries();
-        loadDiaryByDate();
-        status.textContent = `导入完成！成功导入 ${importedCount} 天日记`;
-        btn.disabled = false; btn.textContent = '✨ AI解析并导入';
-        document.getElementById('batchTextInput').value = '';
+        saveDiaries(); loadDiaryByDate(); status.textContent = `导入完成！成功导入 ${importedCount} 天日记`;
+        btn.disabled = false; btn.textContent = '✨ AI解析并导入'; document.getElementById('batchTextInput').value = '';
         setTimeout(() => { status.textContent = ''; }, 3000);
-    } catch (e) {
-        status.textContent = '导入失败: ' + e.message;
-        btn.disabled = false; btn.textContent = '✨ AI解析并导入';
-    }
+    } catch (e) { status.textContent = '导入失败: ' + e.message; btn.disabled = false; btn.textContent = '✨ AI解析并导入'; }
 }
 
-// ========== 设置面板（关键修复） ==========
+// ========== 设置面板 ==========
 document.getElementById('configBtn').onclick = () => { refreshConfigSelector(); loadConfigToForm(); openModal('configModal'); };
 document.getElementById('goalConfigBtn').onclick = () => { renderGoalConfigList(); openModal('goalConfigModal'); };
-function refreshConfigSelector() {
-    const sel = document.getElementById('configSelector');
-    sel.innerHTML = apiConfigs.map(c => `<option value="${c.id}" ${c.id===currentConfigId?'selected':''}>${c.name}</option>`).join('');
-}
-window.switchConfig = function(newId) {
-    if (!newId || newId === currentConfigId) return;
-    currentConfigId = newId;
-    syncCurrentConfig();
-    loadConfigToForm();
-    saveConfigs();
-    // 切换后无需刷新下拉框，避免重复触发
-};
+function refreshConfigSelector() { const sel = document.getElementById('configSelector'); sel.innerHTML = apiConfigs.map(c => `<option value="${c.id}" ${c.id===currentConfigId?'selected':''}>${c.name}</option>`).join(''); }
+window.switchConfig = function(newId) { if (!newId || newId === currentConfigId) return; currentConfigId = newId; syncCurrentConfig(); loadConfigToForm(); saveConfigs(); };
 function loadConfigToForm() {
     const cfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0];
-    document.getElementById('apiKey').value = cfg.apiKey || '';
-    document.getElementById('apiBase').value = cfg.apiBase || 'https://api.openai.com/v1';
-    document.getElementById('temperature').value = cfg.temperature ?? 0.7;
-    document.getElementById('maxTokens').value = cfg.maxTokens ?? 2000;
+    document.getElementById('apiKey').value = cfg.apiKey || ''; document.getElementById('apiBase').value = cfg.apiBase || 'https://api.openai.com/v1';
+    document.getElementById('temperature').value = cfg.temperature ?? 0.7; document.getElementById('maxTokens').value = cfg.maxTokens ?? 2000;
     const ms = document.getElementById('modelName'), cm = document.getElementById('customModel');
     const existingOptions = Array.from(ms.options).map(o=>o.value);
     if(existingOptions.includes(cfg.modelName)) { ms.value = cfg.modelName; cm.style.display='none'; }
@@ -645,76 +629,10 @@ function loadConfigToForm() {
     document.getElementById('analysisPrompt').value = config.analysisPrompt || getDefaultAnalysisPrompt();
     document.getElementById('partitionPrompt').value = config.partitionPrompt || getDefaultPartitionPrompt();
 }
-
-// 新增方案
-document.getElementById('addConfigBtn').addEventListener('click', () => {
-    const name = prompt('请输入新方案名称：');
-    if (!name) return;
-    const newId = Date.now().toString();
-    const currentCfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0];
-    const newCfg = JSON.parse(JSON.stringify(currentCfg));
-    newCfg.id = newId;
-    newCfg.name = name;
-    apiConfigs.push(newCfg);
-    currentConfigId = newId;
-    syncCurrentConfig();
-    refreshConfigSelector(); // 新增才需要重绘下拉框
-    loadConfigToForm();
-    saveConfigs();
-});
-
-// 删除方案
-document.getElementById('deleteConfigBtn').addEventListener('click', () => {
-    if (apiConfigs.length <= 1) return alert('至少保留一个配置方案');
-    if (!confirm('确定删除当前方案？')) return;
-    apiConfigs = apiConfigs.filter(c => c.id !== currentConfigId);
-    currentConfigId = apiConfigs[0].id;
-    syncCurrentConfig();
-    refreshConfigSelector();
-    loadConfigToForm();
-    saveConfigs();
-});
-
-// 保存当前方案（不再重绘下拉框）
-document.getElementById('saveConfigBtn').addEventListener('click', () => {
-    const cfg = apiConfigs.find(c => c.id === currentConfigId);
-    if (!cfg) return;
-    cfg.apiKey = document.getElementById('apiKey').value.trim();
-    cfg.apiBase = document.getElementById('apiBase').value.trim();
-    cfg.modelName = document.getElementById('modelName').value === 'custom' ? document.getElementById('customModel').value : document.getElementById('modelName').value;
-    cfg.customModel = document.getElementById('customModel').value;
-    cfg.temperature = document.getElementById('temperature').value;
-    cfg.maxTokens = document.getElementById('maxTokens').value;
-    // 更新全局提示词
-    config.analysisPrompt = document.getElementById('analysisPrompt').value;
-    config.partitionPrompt = document.getElementById('partitionPrompt').value;
-    // 同步全局参数（确保运行时使用最新配置）
-    config.apiKey = cfg.apiKey;
-    config.apiBase = cfg.apiBase;
-    config.modelName = cfg.modelName;
-    config.temperature = cfg.temperature;
-    config.maxTokens = cfg.maxTokens;
-    saveConfigs();
-    alert('当前方案已保存');
-    closeModal('configModal');
-});
-
-document.getElementById('fetchModelsBtn').addEventListener('click', async () => {
-    const base = document.getElementById('apiBase').value.trim(), key = document.getElementById('apiKey').value.trim();
-    if(!base || !key) return alert('请先填写API地址和密钥');
-    const btn = document.getElementById('fetchModelsBtn');
-    btn.disabled = true; btn.textContent = '获取中...';
-    try {
-        const res = await fetch(`${base}/models`, { headers: { 'Authorization': `Bearer ${key}` } });
-        if(!res.ok) throw new Error('请求失败');
-        const data = await res.json();
-        const models = data.data.map(m => m.id).filter(id => id.includes('gpt') || id.includes('claude') || id.includes('deepseek'));
-        document.getElementById('modelName').innerHTML = models.map(id => `<option value="${id}">${id}</option>`).join('') + '<option value="custom">自定义</option>';
-        document.getElementById('customModel').style.display = 'none';
-        alert('模型列表已更新');
-    } catch(e) { alert('获取失败: '+e.message); }
-    btn.disabled = false; btn.textContent = '🔄 拉取模型列表';
-});
+document.getElementById('addConfigBtn').addEventListener('click', () => { const name = prompt('请输入新方案名称：'); if (!name) return; const newId = Date.now().toString(); const currentCfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0]; const newCfg = JSON.parse(JSON.stringify(currentCfg)); newCfg.id = newId; newCfg.name = name; apiConfigs.push(newCfg); currentConfigId = newId; syncCurrentConfig(); refreshConfigSelector(); loadConfigToForm(); saveConfigs(); });
+document.getElementById('deleteConfigBtn').addEventListener('click', () => { if (apiConfigs.length <= 1) return alert('至少保留一个配置方案'); if (!confirm('确定删除当前方案？')) return; apiConfigs = apiConfigs.filter(c => c.id !== currentConfigId); currentConfigId = apiConfigs[0].id; syncCurrentConfig(); refreshConfigSelector(); loadConfigToForm(); saveConfigs(); });
+document.getElementById('saveConfigBtn').addEventListener('click', () => { const cfg = apiConfigs.find(c => c.id === currentConfigId); if (!cfg) return; cfg.apiKey = document.getElementById('apiKey').value.trim(); cfg.apiBase = document.getElementById('apiBase').value.trim(); cfg.modelName = document.getElementById('modelName').value === 'custom' ? document.getElementById('customModel').value : document.getElementById('modelName').value; cfg.customModel = document.getElementById('customModel').value; cfg.temperature = document.getElementById('temperature').value; cfg.maxTokens = document.getElementById('maxTokens').value; config.analysisPrompt = document.getElementById('analysisPrompt').value; config.partitionPrompt = document.getElementById('partitionPrompt').value; config.apiKey = cfg.apiKey; config.apiBase = cfg.apiBase; config.modelName = cfg.modelName; config.temperature = cfg.temperature; config.maxTokens = cfg.maxTokens; saveConfigs(); alert('当前方案已保存'); closeModal('configModal'); });
+document.getElementById('fetchModelsBtn').addEventListener('click', async () => { const base = document.getElementById('apiBase').value.trim(), key = document.getElementById('apiKey').value.trim(); if(!base || !key) return alert('请先填写API地址和密钥'); const btn = document.getElementById('fetchModelsBtn'); btn.disabled = true; btn.textContent = '获取中...'; try { const res = await fetch(`${base}/models`, { headers: { 'Authorization': `Bearer ${key}` } }); if(!res.ok) throw new Error('请求失败'); const data = await res.json(); const models = data.data.map(m => m.id).filter(id => id.includes('gpt') || id.includes('claude') || id.includes('deepseek')); document.getElementById('modelName').innerHTML = models.map(id => `<option value="${id}">${id}</option>`).join('') + '<option value="custom">自定义</option>'; document.getElementById('customModel').style.display = 'none'; alert('模型列表已更新'); } catch(e) { alert('获取失败: '+e.message); } btn.disabled = false; btn.textContent = '🔄 拉取模型列表'; });
 function resetPrompts() { if(confirm('恢复默认提示词？')) { document.getElementById('analysisPrompt').value = getDefaultAnalysisPrompt(); document.getElementById('partitionPrompt').value = getDefaultPartitionPrompt(); config.analysisPrompt = getDefaultAnalysisPrompt(); config.partitionPrompt = getDefaultPartitionPrompt(); saveConfigs(); alert('已恢复默认提示词'); } }
 document.getElementById('modelName').addEventListener('change', function() { document.getElementById('customModel').style.display = this.value==='custom'?'block':'none'; });
 
@@ -723,23 +641,7 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{ const all =
 document.getElementById('importBtn').addEventListener('click', ()=>{ if(!confirm('导入将合并新增数据')) return; const inp = document.createElement('input'); inp.type='file'; inp.accept='.json'; inp.onchange = e => { const reader = new FileReader(); reader.onload = ev => { handleImportData(ev.target.result); }; reader.readAsText(e.target.files[0]); }; inp.click(); });
 document.getElementById('pasteImportBtn').addEventListener('click', () => { openModal('pasteModal'); document.getElementById('pasteJsonInput').value = ''; });
 function importFromPaste() { const text = document.getElementById('pasteJsonInput').value.trim(); if(!text) return alert('请粘贴 JSON 内容'); handleImportData(text); closeModal('pasteModal'); }
-function handleImportData(jsonStr) {
-    try {
-        const data = JSON.parse(jsonStr);
-        let added = 0;
-        if(data.diaries) { const ids = new Set(diaries.map(d=>d.id)); data.diaries.forEach(d => { if(!ids.has(d.id)) { diaries.unshift(d); added++; } }); }
-        if(data.analysisHistory) { const ids = new Set(analysisHistory.map(h=>h.id)); data.analysisHistory.forEach(h => { if(!ids.has(h.id)) { analysisHistory.unshift(h); added++; } }); }
-        if(data.goals && !goals.length) goals = data.goals;
-        if(data.apiConfigs) {
-            const ids = new Set(apiConfigs.map(c=>c.id));
-            data.apiConfigs.forEach(c => { if(!ids.has(c.id)) apiConfigs.push(c); });
-            if(data.currentConfigId) currentConfigId = data.currentConfigId;
-        }
-        saveDiaries(); localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory)); localStorage.setItem('goals', JSON.stringify(goals)); saveConfigs();
-        syncCurrentConfig(); loadDiaryByDate(); renderDashboard(); renderGoalConfigList();
-        alert(`导入完成，新增 ${added} 条数据`); location.reload();
-    } catch(e) { alert('JSON 格式错误'); }
-}
+function handleImportData(jsonStr) { try { const data = JSON.parse(jsonStr); let added = 0; if(data.diaries) { const ids = new Set(diaries.map(d=>d.id)); data.diaries.forEach(d => { if(!ids.has(d.id)) { diaries.unshift(d); added++; } }); } if(data.analysisHistory) { const ids = new Set(analysisHistory.map(h=>h.id)); data.analysisHistory.forEach(h => { if(!ids.has(h.id)) { analysisHistory.unshift(h); added++; } }); } if(data.goals && !goals.length) goals = data.goals; if(data.apiConfigs) { const ids = new Set(apiConfigs.map(c=>c.id)); data.apiConfigs.forEach(c => { if(!ids.has(c.id)) apiConfigs.push(c); }); if(data.currentConfigId) currentConfigId = data.currentConfigId; } saveDiaries(); localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory)); localStorage.setItem('goals', JSON.stringify(goals)); saveConfigs(); syncCurrentConfig(); loadDiaryByDate(); renderDashboard(); renderGoalConfigList(); updateNotebookSelector(); alert(`导入完成，新增 ${added} 条数据`); location.reload(); } catch(e) { alert('JSON 格式错误'); } }
 document.getElementById('restoreBtn').addEventListener('click', ()=>{ if(!confirm('恢复到上次自动备份？')) return; const backup = localStorage.getItem('diaries_backup'); if(!backup) return alert('无备份'); diaries = JSON.parse(backup); saveDiaries(); alert('恢复成功'); location.reload(); });
 
 // ========== 初始化 ==========
@@ -747,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('diaryDate').value = today; document.getElementById('analyzeDatePicker').value = today;
     initTheme(); initTabs();
-    refreshConfigSelector(); loadDiaryByDate(); renderDashboard();
+    refreshConfigSelector(); loadDiaryByDate(); renderDashboard(); updateNotebookSelector();
     document.getElementById('saveDiaryBtn').addEventListener('click', saveCurrentDiary);
     document.getElementById('saveDiaryBtn').addEventListener('touchstart', (e) => { e.preventDefault(); saveCurrentDiary(); });
 });
