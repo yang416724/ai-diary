@@ -112,6 +112,7 @@
         <div style="margin-top:24px;display:flex;gap:12px">
             <button class="btn btn-primary" id="saveDiaryBtn">💾 保存日记</button>
             <button class="btn btn-outline" onclick="selectCurrentForAnalysis()">🔍 选中当天分析</button>
+            <button class="btn btn-outline" id="batchImportBtn" onclick="openModal('batchImportModal')">📥 批量导入旧日记</button>
         </div>
     </div>
 </div>
@@ -188,7 +189,7 @@
             <div><label>温度</label><input type="number" class="input" id="temperature" value="0.7" step="0.1"></div>
         </div>
         <div><label>Tokens</label><input type="number" class="input" id="maxTokens" value="2000"></div>
-        <h3>提示词（全局共用，切换方案不会改变）</h3>
+        <h3>提示词（全局共用）</h3>
         <textarea class="input textarea" id="analysisPrompt" style="min-height:150px"></textarea>
         <textarea class="input textarea" id="partitionPrompt" style="min-height:100px;margin-top:8px"></textarea>
         <div style="margin:12px 0"><button class="btn btn-outline" onclick="resetPrompts()">恢复默认提示词</button><button class="btn btn-primary" id="saveConfigBtn">💾 保存当前方案</button></div>
@@ -211,8 +212,21 @@
     </div>
 </div>
 
+<!-- 批量导入旧日记模态框 -->
+<div id="batchImportModal" class="modal" style="display:none">
+    <div class="modal-content">
+        <div class="modal-header"><h2>📥 批量导入旧日记</h2><button class="modal-close" onclick="closeModal('batchImportModal')">×</button></div>
+        <p style="color:var(--text-secondary);margin-bottom:12px">粘贴你以前写的多日期纯文本日记，AI 会自动识别日期并归类到对应目标</p>
+        <textarea class="input textarea" id="batchTextInput" style="min-height:300px" placeholder="在此粘贴旧日记文本..."></textarea>
+        <div style="margin-top:12px;display:flex;gap:12px">
+            <button class="btn btn-success" id="batchImportBtn" onclick="batchImportDiaries()">✨ AI解析并导入</button>
+            <span id="batchStatus" style="color:var(--text-secondary);padding-top:10px"></span>
+        </div>
+    </div>
+</div>
+
 <script>
-// ========== 默认提示词（含禁止重复规则） ==========
+// ========== 默认提示词 ==========
 function getDefaultAnalysisPrompt() {
     return `【AI角色】
 我是一名在福州读大学的女生，你是我的专属私人日记洞察师，深度了解我的所有自定义长期目标。你精通Flomo全6大洞察视角，客观中立，只讲真话，不做道德评判。我是坚定的女权主义者，反对平权，支持推翻父权制，成为强大女性（包括身体强壮，心理强大）。
@@ -316,7 +330,7 @@ function initTabs() {
     document.querySelectorAll('[data-main-tab]').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('[data-main-tab]').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.main-tab-content').forEach(c=>c.style.display='none'); tab.classList.add('active'); document.getElementById(tab.dataset.mainTab+'Tab').style.display='block'; }); });
 }
 
-// ========== 展开/折叠功能 ==========
+// ========== 展开/折叠 ==========
 function renderAnalysisBlock(content, showToggle = true) {
     if (!content) return '';
     const parsed = marked.parse(content);
@@ -482,6 +496,118 @@ document.addEventListener('change', e => { if(e.target.name==='view' && e.target
 function openModal(id) { document.getElementById(id).style.display='flex'; }
 function closeModal(id) { document.getElementById(id).style.display='none'; }
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.style.display='none'; }));
+
+// ========== 批量导入旧日记功能 ==========
+async function batchImportDiaries() {
+    const rawText = document.getElementById('batchTextInput').value.trim();
+    if (!rawText) return alert('请粘贴旧日记文本');
+    if (!config.apiKey) return alert('请先配置AI密钥');
+
+    const btn = document.getElementById('batchImportBtn');
+    const status = document.getElementById('batchStatus');
+    btn.disabled = true; btn.textContent = '解析中...';
+    status.textContent = 'AI正在分析文本，请稍候...';
+
+    try {
+        const prompt = `你是一个专业的日记整理助手。下面是一段跨越多天的日记文本，请完成以下任务：
+1. 识别出每条日记的日期（如果没有明确日期，尽量根据上下文推测，如推测不出则使用"未知"）。
+2. 对每条日记的内容，按照以下长期目标进行智能分区，并将剩余内容放入"其他"：
+${goals.join('、')}
+3. 输出格式必须为严格的JSON数组，每个元素如下：
+{
+  "date": "YYYY-MM-DD或原文字符串",
+  "blocks": [
+    {"title": "目标名称或临时主题", "content": "具体内容"}
+  ]
+}
+4. 不要添加任何额外解释，只输出JSON。
+5. 保留原文信息，不要修改内容。
+
+需要整理的文本：
+${rawText}`;
+
+        const result = await callAI(prompt);
+        let data;
+        try {
+            // 清理可能的 markdown 代码块
+            const jsonStr = result.replace(/```json/g, '').replace(/```/g, '').trim();
+            data = JSON.parse(jsonStr);
+        } catch (e) {
+            throw new Error('AI返回格式错误，无法解析为JSON');
+        }
+
+        if (!Array.isArray(data)) throw new Error('返回数据不是数组');
+
+        let importedCount = 0;
+        const today = new Date().toLocaleDateString();
+
+        data.forEach(entry => {
+            let dateStr = entry.date;
+            // 尝试将日期标准化
+            if (!dateStr || dateStr === '未知' || dateStr === '未知日期') {
+                dateStr = today;
+            } else {
+                // 尝试解析常见的日期格式
+                const parsed = new Date(dateStr);
+                if (!isNaN(parsed.getTime())) {
+                    dateStr = parsed.toLocaleDateString();
+                }
+                // 如果是类似 "2024年1月1日" 的格式，尝试转换
+                const match = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+                if (match) {
+                    dateStr = new Date(match[1], match[2]-1, match[3]).toLocaleDateString();
+                }
+            }
+
+            if (!entry.blocks || !Array.isArray(entry.blocks)) return;
+            const blocks = entry.blocks.filter(b => b.title && b.content);
+
+            if (blocks.length === 0) return;
+
+            const existing = getDiaryByDate(dateStr);
+            if (existing) {
+                // 合并：追加到已有区块
+                blocks.forEach(b => {
+                    const existingBlock = existing.blocks.find(eb => eb.title === b.title);
+                    if (existingBlock) {
+                        existingBlock.content = existingBlock.content + '\n' + b.content;
+                    } else {
+                        existing.blocks.push({ title: b.title, content: b.content });
+                    }
+                });
+                existing.source = '批量导入';
+            } else {
+                diaries.unshift({
+                    id: Date.now() + Math.random(),
+                    date: dateStr,
+                    type: 'goal',
+                    blocks: blocks,
+                    rawText: '',
+                    source: '批量导入',
+                    createdAt: new Date().toISOString()
+                });
+            }
+            importedCount++;
+        });
+
+        saveDiaries();
+        loadDiaryByDate();
+        status.textContent = `导入完成！成功导入 ${importedCount} 天日记`;
+        btn.disabled = false; btn.textContent = '✨ AI解析并导入';
+        document.getElementById('batchTextInput').value = '';
+        setTimeout(() => { status.textContent = ''; }, 3000);
+
+        // 如果当前日期有导入的日记，刷新显示
+        const currentDate = getCurrentDateStr();
+        const todayDiary = getDiaryByDate(currentDate);
+        if (todayDiary && todayDiary.source === '批量导入') {
+            loadDiaryByDate();
+        }
+    } catch (e) {
+        status.textContent = '导入失败: ' + e.message;
+        btn.disabled = false; btn.textContent = '✨ AI解析并导入';
+    }
+}
 
 // ========== 设置面板 ==========
 document.getElementById('configBtn').onclick = () => { refreshConfigSelector(); loadConfigToForm(); openModal('configModal'); };
