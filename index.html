@@ -189,7 +189,7 @@
             <div><label>温度</label><input type="number" class="input" id="temperature" value="0.7" step="0.1"></div>
         </div>
         <div><label>Tokens</label><input type="number" class="input" id="maxTokens" value="2000"></div>
-        <h3>提示词（全局共用）</h3>
+        <h3>提示词（全局共用，切换方案不会改变）</h3>
         <textarea class="input textarea" id="analysisPrompt" style="min-height:150px"></textarea>
         <textarea class="input textarea" id="partitionPrompt" style="min-height:100px;margin-top:8px"></textarea>
         <div style="margin:12px 0"><button class="btn btn-outline" onclick="resetPrompts()">恢复默认提示词</button><button class="btn btn-primary" id="saveConfigBtn">💾 保存当前方案</button></div>
@@ -280,36 +280,83 @@ let apiConfigs = [], currentConfigId = null, config = {};
 function isValidDiary(d) { return d && typeof d === 'object' && Array.isArray(d.blocks); }
 function getValidDiaries() { return Array.isArray(diaries) ? diaries.filter(isValidDiary) : []; }
 
-// ========== 配置系统 ==========
+// ========== 配置系统（修复版：深拷贝避免方案串扰） ==========
 function initConfigs() {
     const savedConfigs = localStorage.getItem('apiConfigs');
     const savedCurrentId = localStorage.getItem('currentConfigId');
     const oldConfig = localStorage.getItem('aiConfig');
-    if (savedConfigs) { apiConfigs = JSON.parse(savedConfigs); if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) apiConfigs = []; }
+    if (savedConfigs) {
+        apiConfigs = JSON.parse(savedConfigs);
+        if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) apiConfigs = [];
+    }
     if (apiConfigs.length === 0 && oldConfig) {
         const old = JSON.parse(oldConfig);
-        apiConfigs.push({ id: Date.now().toString(), name: '默认配置', apiKey: old.apiKey || '', apiBase: old.apiBase || 'https://api.openai.com/v1', modelName: old.modelName || 'gpt-3.5-turbo', customModel: old.customModel || '', temperature: old.temperature ?? 0.7, maxTokens: old.maxTokens ?? 2000 });
-        if (old.analysisPrompt || old.partitionPrompt) localStorage.setItem('prompts', JSON.stringify({ analysisPrompt: old.analysisPrompt || getDefaultAnalysisPrompt(), partitionPrompt: old.partitionPrompt || getDefaultPartitionPrompt() }));
+        apiConfigs.push({
+            id: Date.now().toString(),
+            name: '默认配置',
+            apiKey: old.apiKey || '',
+            apiBase: old.apiBase || 'https://api.openai.com/v1',
+            modelName: old.modelName || 'gpt-3.5-turbo',
+            customModel: old.customModel || '',
+            temperature: old.temperature ?? 0.7,
+            maxTokens: old.maxTokens ?? 2000
+        });
+        if (old.analysisPrompt || old.partitionPrompt) {
+            localStorage.setItem('prompts', JSON.stringify({
+                analysisPrompt: old.analysisPrompt || getDefaultAnalysisPrompt(),
+                partitionPrompt: old.partitionPrompt || getDefaultPartitionPrompt()
+            }));
+        }
     }
-    if (apiConfigs.length === 0) apiConfigs.push({ id: Date.now().toString(), name: '默认配置', apiKey: '', apiBase: 'https://api.openai.com/v1', modelName: 'gpt-3.5-turbo', customModel: '', temperature: 0.7, maxTokens: 2000 });
+    if (apiConfigs.length === 0) {
+        apiConfigs.push({
+            id: Date.now().toString(),
+            name: '默认配置',
+            apiKey: '',
+            apiBase: 'https://api.openai.com/v1',
+            modelName: 'gpt-3.5-turbo',
+            customModel: '',
+            temperature: 0.7,
+            maxTokens: 2000
+        });
+    }
     currentConfigId = savedCurrentId || apiConfigs[0].id;
     if (!apiConfigs.find(c => c.id === currentConfigId)) currentConfigId = apiConfigs[0].id;
-    if (!localStorage.getItem('prompts')) localStorage.setItem('prompts', JSON.stringify({ analysisPrompt: getDefaultAnalysisPrompt(), partitionPrompt: getDefaultPartitionPrompt() }));
+    if (!localStorage.getItem('prompts')) {
+        localStorage.setItem('prompts', JSON.stringify({
+            analysisPrompt: getDefaultAnalysisPrompt(),
+            partitionPrompt: getDefaultPartitionPrompt()
+        }));
+    }
     syncCurrentConfig();
 }
 
 function syncCurrentConfig() {
     const cfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0];
-    config.apiKey = cfg.apiKey; config.apiBase = cfg.apiBase; config.modelName = cfg.modelName; config.temperature = cfg.temperature; config.maxTokens = cfg.maxTokens;
+    config.apiKey = cfg.apiKey;
+    config.apiBase = cfg.apiBase;
+    config.modelName = cfg.modelName;
+    config.temperature = cfg.temperature;
+    config.maxTokens = cfg.maxTokens;
     const savedPrompts = localStorage.getItem('prompts');
-    if (savedPrompts) { const prompts = JSON.parse(savedPrompts); config.analysisPrompt = prompts.analysisPrompt || getDefaultAnalysisPrompt(); config.partitionPrompt = prompts.partitionPrompt || getDefaultPartitionPrompt(); }
-    else { config.analysisPrompt = getDefaultAnalysisPrompt(); config.partitionPrompt = getDefaultPartitionPrompt(); }
+    if (savedPrompts) {
+        const prompts = JSON.parse(savedPrompts);
+        config.analysisPrompt = prompts.analysisPrompt || getDefaultAnalysisPrompt();
+        config.partitionPrompt = prompts.partitionPrompt || getDefaultPartitionPrompt();
+    } else {
+        config.analysisPrompt = getDefaultAnalysisPrompt();
+        config.partitionPrompt = getDefaultPartitionPrompt();
+    }
 }
 
 function saveConfigs() {
+    // 写入前先深拷贝，防止外部引用污染
     localStorage.setItem('apiConfigs', JSON.stringify(apiConfigs));
     localStorage.setItem('currentConfigId', currentConfigId);
-    localStorage.setItem('prompts', JSON.stringify({ analysisPrompt: config.analysisPrompt, partitionPrompt: config.partitionPrompt }));
+    localStorage.setItem('prompts', JSON.stringify({
+        analysisPrompt: config.analysisPrompt,
+        partitionPrompt: config.partitionPrompt
+    }));
 }
 
 // ========== 数据加载 ==========
@@ -497,17 +544,15 @@ function openModal(id) { document.getElementById(id).style.display='flex'; }
 function closeModal(id) { document.getElementById(id).style.display='none'; }
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.style.display='none'; }));
 
-// ========== 批量导入旧日记功能 ==========
+// ========== 批量导入旧日记 ==========
 async function batchImportDiaries() {
     const rawText = document.getElementById('batchTextInput').value.trim();
     if (!rawText) return alert('请粘贴旧日记文本');
     if (!config.apiKey) return alert('请先配置AI密钥');
-
     const btn = document.getElementById('batchImportBtn');
     const status = document.getElementById('batchStatus');
     btn.disabled = true; btn.textContent = '解析中...';
     status.textContent = 'AI正在分析文本，请稍候...';
-
     try {
         const prompt = `你是一个专业的日记整理助手。下面是一段跨越多天的日记文本，请完成以下任务：
 1. 识别出每条日记的日期（如果没有明确日期，尽量根据上下文推测，如推测不出则使用"未知"）。
@@ -525,55 +570,27 @@ ${goals.join('、')}
 
 需要整理的文本：
 ${rawText}`;
-
         const result = await callAI(prompt);
-        let data;
-        try {
-            // 清理可能的 markdown 代码块
-            const jsonStr = result.replace(/```json/g, '').replace(/```/g, '').trim();
-            data = JSON.parse(jsonStr);
-        } catch (e) {
-            throw new Error('AI返回格式错误，无法解析为JSON');
-        }
-
+        const jsonStr = result.replace(/```json/g, '').replace(/```/g, '').trim();
+        const data = JSON.parse(jsonStr);
         if (!Array.isArray(data)) throw new Error('返回数据不是数组');
-
         let importedCount = 0;
         const today = new Date().toLocaleDateString();
-
         data.forEach(entry => {
-            let dateStr = entry.date;
-            // 尝试将日期标准化
-            if (!dateStr || dateStr === '未知' || dateStr === '未知日期') {
-                dateStr = today;
-            } else {
-                // 尝试解析常见的日期格式
-                const parsed = new Date(dateStr);
-                if (!isNaN(parsed.getTime())) {
-                    dateStr = parsed.toLocaleDateString();
-                }
-                // 如果是类似 "2024年1月1日" 的格式，尝试转换
-                const match = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-                if (match) {
-                    dateStr = new Date(match[1], match[2]-1, match[3]).toLocaleDateString();
-                }
-            }
-
+            let dateStr = entry.date || today;
+            const parsedDate = new Date(dateStr);
+            if (!isNaN(parsedDate.getTime())) dateStr = parsedDate.toLocaleDateString();
+            const match = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+            if (match) dateStr = new Date(match[1], match[2]-1, match[3]).toLocaleDateString();
             if (!entry.blocks || !Array.isArray(entry.blocks)) return;
             const blocks = entry.blocks.filter(b => b.title && b.content);
-
             if (blocks.length === 0) return;
-
             const existing = getDiaryByDate(dateStr);
             if (existing) {
-                // 合并：追加到已有区块
                 blocks.forEach(b => {
                     const existingBlock = existing.blocks.find(eb => eb.title === b.title);
-                    if (existingBlock) {
-                        existingBlock.content = existingBlock.content + '\n' + b.content;
-                    } else {
-                        existing.blocks.push({ title: b.title, content: b.content });
-                    }
+                    if (existingBlock) existingBlock.content = existingBlock.content + '\n' + b.content;
+                    else existing.blocks.push({ title: b.title, content: b.content });
                 });
                 existing.source = '批量导入';
             } else {
@@ -589,35 +606,29 @@ ${rawText}`;
             }
             importedCount++;
         });
-
         saveDiaries();
         loadDiaryByDate();
         status.textContent = `导入完成！成功导入 ${importedCount} 天日记`;
         btn.disabled = false; btn.textContent = '✨ AI解析并导入';
         document.getElementById('batchTextInput').value = '';
         setTimeout(() => { status.textContent = ''; }, 3000);
-
-        // 如果当前日期有导入的日记，刷新显示
-        const currentDate = getCurrentDateStr();
-        const todayDiary = getDiaryByDate(currentDate);
-        if (todayDiary && todayDiary.source === '批量导入') {
-            loadDiaryByDate();
-        }
     } catch (e) {
         status.textContent = '导入失败: ' + e.message;
         btn.disabled = false; btn.textContent = '✨ AI解析并导入';
     }
 }
 
-// ========== 设置面板 ==========
+// ========== 设置面板（深拷贝修复配置串扰） ==========
 document.getElementById('configBtn').onclick = () => { refreshConfigSelector(); loadConfigToForm(); openModal('configModal'); };
 document.getElementById('goalConfigBtn').onclick = () => { renderGoalConfigList(); openModal('goalConfigModal'); };
 function refreshConfigSelector() { const sel = document.getElementById('configSelector'); sel.innerHTML = apiConfigs.map(c => `<option value="${c.id}" ${c.id===currentConfigId?'selected':''}>${c.name}</option>`).join(''); }
 window.switchConfig = function(newId) { if (!newId || newId === currentConfigId) return; currentConfigId = newId; syncCurrentConfig(); loadConfigToForm(); saveConfigs(); refreshConfigSelector(); };
 function loadConfigToForm() {
     const cfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0];
-    document.getElementById('apiKey').value = cfg.apiKey || ''; document.getElementById('apiBase').value = cfg.apiBase || 'https://api.openai.com/v1';
-    document.getElementById('temperature').value = cfg.temperature ?? 0.7; document.getElementById('maxTokens').value = cfg.maxTokens ?? 2000;
+    document.getElementById('apiKey').value = cfg.apiKey || '';
+    document.getElementById('apiBase').value = cfg.apiBase || 'https://api.openai.com/v1';
+    document.getElementById('temperature').value = cfg.temperature ?? 0.7;
+    document.getElementById('maxTokens').value = cfg.maxTokens ?? 2000;
     const ms = document.getElementById('modelName'), cm = document.getElementById('customModel');
     const existingOptions = Array.from(ms.options).map(o=>o.value);
     if(existingOptions.includes(cfg.modelName)) { ms.value = cfg.modelName; cm.style.display='none'; }
@@ -626,10 +637,70 @@ function loadConfigToForm() {
     document.getElementById('partitionPrompt').value = config.partitionPrompt || getDefaultPartitionPrompt();
 }
 
-document.getElementById('addConfigBtn').addEventListener('click', () => { const name = prompt('请输入新方案名称：'); if (!name) return; const newId = Date.now().toString(); const currentCfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0]; apiConfigs.push({ ...currentCfg, id: newId, name }); currentConfigId = newId; syncCurrentConfig(); refreshConfigSelector(); loadConfigToForm(); saveConfigs(); });
-document.getElementById('deleteConfigBtn').addEventListener('click', () => { if (apiConfigs.length <= 1) return alert('至少保留一个配置方案'); if (!confirm('确定删除当前方案？')) return; apiConfigs = apiConfigs.filter(c => c.id !== currentConfigId); currentConfigId = apiConfigs[0].id; syncCurrentConfig(); refreshConfigSelector(); loadConfigToForm(); saveConfigs(); });
-document.getElementById('saveConfigBtn').addEventListener('click', () => { const cfg = apiConfigs.find(c => c.id === currentConfigId); if (!cfg) return; cfg.apiKey = document.getElementById('apiKey').value.trim(); cfg.apiBase = document.getElementById('apiBase').value.trim(); cfg.modelName = document.getElementById('modelName').value === 'custom' ? document.getElementById('customModel').value : document.getElementById('modelName').value; cfg.customModel = document.getElementById('customModel').value; cfg.temperature = document.getElementById('temperature').value; cfg.maxTokens = document.getElementById('maxTokens').value; config.analysisPrompt = document.getElementById('analysisPrompt').value; config.partitionPrompt = document.getElementById('partitionPrompt').value; syncCurrentConfig(); saveConfigs(); alert('当前方案已保存'); closeModal('configModal'); });
-document.getElementById('fetchModelsBtn').addEventListener('click', async () => { const base = document.getElementById('apiBase').value.trim(), key = document.getElementById('apiKey').value.trim(); if(!base || !key) return alert('请先填写API地址和密钥'); const btn = document.getElementById('fetchModelsBtn'); btn.disabled = true; btn.textContent = '获取中...'; try { const res = await fetch(`${base}/models`, { headers: { 'Authorization': `Bearer ${key}` } }); if(!res.ok) throw new Error('请求失败'); const data = await res.json(); const models = data.data.map(m => m.id).filter(id => id.includes('gpt') || id.includes('claude') || id.includes('deepseek')); document.getElementById('modelName').innerHTML = models.map(id => `<option value="${id}">${id}</option>`).join('') + '<option value="custom">自定义</option>'; document.getElementById('customModel').style.display = 'none'; alert('模型列表已更新'); } catch(e) { alert('获取失败: '+e.message); } btn.disabled = false; btn.textContent = '🔄 拉取模型列表'; });
+// 新增方案（深拷贝）
+document.getElementById('addConfigBtn').addEventListener('click', () => {
+    const name = prompt('请输入新方案名称：');
+    if (!name) return;
+    const newId = Date.now().toString();
+    const currentCfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0];
+    // 深拷贝一份当前配置作为新方案的基础
+    const newCfg = JSON.parse(JSON.stringify(currentCfg));
+    newCfg.id = newId;
+    newCfg.name = name;
+    apiConfigs.push(newCfg);
+    currentConfigId = newId;
+    syncCurrentConfig();
+    refreshConfigSelector();
+    loadConfigToForm();
+    saveConfigs();
+});
+
+// 删除方案
+document.getElementById('deleteConfigBtn').addEventListener('click', () => {
+    if (apiConfigs.length <= 1) return alert('至少保留一个配置方案');
+    if (!confirm('确定删除当前方案？')) return;
+    apiConfigs = apiConfigs.filter(c => c.id !== currentConfigId);
+    currentConfigId = apiConfigs[0].id;
+    syncCurrentConfig();
+    refreshConfigSelector();
+    loadConfigToForm();
+    saveConfigs();
+});
+
+// 保存当前方案（直接修改 apiConfigs 中的元素）
+document.getElementById('saveConfigBtn').addEventListener('click', () => {
+    const cfg = apiConfigs.find(c => c.id === currentConfigId);
+    if (!cfg) return;
+    cfg.apiKey = document.getElementById('apiKey').value.trim();
+    cfg.apiBase = document.getElementById('apiBase').value.trim();
+    cfg.modelName = document.getElementById('modelName').value === 'custom' ? document.getElementById('customModel').value : document.getElementById('modelName').value;
+    cfg.customModel = document.getElementById('customModel').value;
+    cfg.temperature = document.getElementById('temperature').value;
+    cfg.maxTokens = document.getElementById('maxTokens').value;
+    config.analysisPrompt = document.getElementById('analysisPrompt').value;
+    config.partitionPrompt = document.getElementById('partitionPrompt').value;
+    syncCurrentConfig();
+    saveConfigs();
+    alert('当前方案已保存');
+    closeModal('configModal');
+});
+
+document.getElementById('fetchModelsBtn').addEventListener('click', async () => {
+    const base = document.getElementById('apiBase').value.trim(), key = document.getElementById('apiKey').value.trim();
+    if(!base || !key) return alert('请先填写API地址和密钥');
+    const btn = document.getElementById('fetchModelsBtn');
+    btn.disabled = true; btn.textContent = '获取中...';
+    try {
+        const res = await fetch(`${base}/models`, { headers: { 'Authorization': `Bearer ${key}` } });
+        if(!res.ok) throw new Error('请求失败');
+        const data = await res.json();
+        const models = data.data.map(m => m.id).filter(id => id.includes('gpt') || id.includes('claude') || id.includes('deepseek'));
+        document.getElementById('modelName').innerHTML = models.map(id => `<option value="${id}">${id}</option>`).join('') + '<option value="custom">自定义</option>';
+        document.getElementById('customModel').style.display = 'none';
+        alert('模型列表已更新');
+    } catch(e) { alert('获取失败: '+e.message); }
+    btn.disabled = false; btn.textContent = '🔄 拉取模型列表';
+});
 function resetPrompts() { if(confirm('恢复默认提示词？')) { document.getElementById('analysisPrompt').value = getDefaultAnalysisPrompt(); document.getElementById('partitionPrompt').value = getDefaultPartitionPrompt(); config.analysisPrompt = getDefaultAnalysisPrompt(); config.partitionPrompt = getDefaultPartitionPrompt(); saveConfigs(); alert('已恢复默认提示词'); } }
 document.getElementById('modelName').addEventListener('change', function() { document.getElementById('customModel').style.display = this.value==='custom'?'block':'none'; });
 
@@ -638,7 +709,23 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{ const all =
 document.getElementById('importBtn').addEventListener('click', ()=>{ if(!confirm('导入将合并新增数据')) return; const inp = document.createElement('input'); inp.type='file'; inp.accept='.json'; inp.onchange = e => { const reader = new FileReader(); reader.onload = ev => { handleImportData(ev.target.result); }; reader.readAsText(e.target.files[0]); }; inp.click(); });
 document.getElementById('pasteImportBtn').addEventListener('click', () => { openModal('pasteModal'); document.getElementById('pasteJsonInput').value = ''; });
 function importFromPaste() { const text = document.getElementById('pasteJsonInput').value.trim(); if(!text) return alert('请粘贴 JSON 内容'); handleImportData(text); closeModal('pasteModal'); }
-function handleImportData(jsonStr) { try { const data = JSON.parse(jsonStr); let added = 0; if(data.diaries) { const ids = new Set(diaries.map(d=>d.id)); data.diaries.forEach(d => { if(!ids.has(d.id)) { diaries.unshift(d); added++; } }); } if(data.analysisHistory) { const ids = new Set(analysisHistory.map(h=>h.id)); data.analysisHistory.forEach(h => { if(!ids.has(h.id)) { analysisHistory.unshift(h); added++; } }); } if(data.goals && !goals.length) goals = data.goals; if(data.apiConfigs) { const ids = new Set(apiConfigs.map(c=>c.id)); data.apiConfigs.forEach(c => { if(!ids.has(c.id)) apiConfigs.push(c); }); if(data.currentConfigId) currentConfigId = data.currentConfigId; } saveDiaries(); localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory)); localStorage.setItem('goals', JSON.stringify(goals)); saveConfigs(); syncCurrentConfig(); loadDiaryByDate(); renderDashboard(); renderGoalConfigList(); alert(`导入完成，新增 ${added} 条数据`); location.reload(); } catch(e) { alert('JSON 格式错误'); } }
+function handleImportData(jsonStr) {
+    try {
+        const data = JSON.parse(jsonStr);
+        let added = 0;
+        if(data.diaries) { const ids = new Set(diaries.map(d=>d.id)); data.diaries.forEach(d => { if(!ids.has(d.id)) { diaries.unshift(d); added++; } }); }
+        if(data.analysisHistory) { const ids = new Set(analysisHistory.map(h=>h.id)); data.analysisHistory.forEach(h => { if(!ids.has(h.id)) { analysisHistory.unshift(h); added++; } }); }
+        if(data.goals && !goals.length) goals = data.goals;
+        if(data.apiConfigs) {
+            const ids = new Set(apiConfigs.map(c=>c.id));
+            data.apiConfigs.forEach(c => { if(!ids.has(c.id)) apiConfigs.push(c); });
+            if(data.currentConfigId) currentConfigId = data.currentConfigId;
+        }
+        saveDiaries(); localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory)); localStorage.setItem('goals', JSON.stringify(goals)); saveConfigs();
+        syncCurrentConfig(); loadDiaryByDate(); renderDashboard(); renderGoalConfigList();
+        alert(`导入完成，新增 ${added} 条数据`); location.reload();
+    } catch(e) { alert('JSON 格式错误'); }
+}
 document.getElementById('restoreBtn').addEventListener('click', ()=>{ if(!confirm('恢复到上次自动备份？')) return; const backup = localStorage.getItem('diaries_backup'); if(!backup) return alert('无备份'); diaries = JSON.parse(backup); saveDiaries(); alert('恢复成功'); location.reload(); });
 
 // ========== 初始化 ==========
