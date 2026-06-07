@@ -60,7 +60,9 @@
         .loading{text-align:center;padding:20px}
         .loading::after{content:"";display:inline-block;width:20px;height:20px;border:3px solid var(--border);border-top-color:var(--success);border-radius:50%;animation:spin 1s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
-        .fetch-models-btn{margin-top:8px}
+        .config-selector{display:flex;gap:8px;align-items:center;margin-bottom:16px}
+        .config-selector select{flex:1}
+        .config-selector button{white-space:nowrap}
     </style>
 </head>
 <body>
@@ -111,7 +113,6 @@
 
 <!-- 分析页 -->
 <div id="analyzeTab" class="main-tab-content" style="display:none">
-    <!-- 快速按日期分析 -->
     <div class="card">
         <h3>📅 分析指定日期</h3>
         <div style="display:flex;gap:12px;align-items:center">
@@ -121,13 +122,11 @@
         </div>
     </div>
 
-    <!-- 看板卡片，每个带折叠历史 -->
     <div class="card"><h3>☀️ 今日分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('today')">重新分析</button><button class="btn btn-outline btn-sm" onclick="toggleHistory('today')">显示/隐藏历史</button></div><div id="todayResult"></div><div id="todayHistory" class="history-panel" style="display:none"></div></div>
     <div class="card"><h3>📅 近7天分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('week')">重新分析</button><button class="btn btn-outline btn-sm" onclick="toggleHistory('week')">显示/隐藏历史</button></div><div id="weekResult"></div><div id="weekHistory" class="history-panel" style="display:none"></div></div>
     <div class="card"><h3>📆 近30天分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('month')">重新分析</button><button class="btn btn-outline btn-sm" onclick="toggleHistory('month')">显示/隐藏历史</button></div><div id="monthResult"></div><div id="monthHistory" class="history-panel" style="display:none"></div></div>
     <div class="card"><h3>📈 年度分析</h3><div><button class="btn btn-success btn-sm" onclick="quickAnalyze('all')">重新分析</button><button class="btn btn-outline btn-sm" onclick="toggleHistory('all')">显示/隐藏历史</button></div><div id="allResult"></div><div id="allHistory" class="history-panel" style="display:none"></div></div>
 
-    <!-- 自定义分析 -->
     <div class="card">
         <h2>🔍 自定义分析 <span class="badge">手动</span></h2>
         <p style="color:var(--text-secondary);margin-bottom:12px">💡 可选中当前日记（日记页按钮），或直接选范围</p>
@@ -162,10 +161,16 @@
     </div>
 </div>
 
-<!-- 设置模态框 -->
+<!-- 设置模态框（增加配置切换） -->
 <div id="configModal" class="modal" style="display:none">
     <div class="modal-content">
         <div class="modal-header"><h2>⚙️ 设置</h2><button class="modal-close" onclick="closeModal('configModal')">×</button></div>
+        <h3>🔁 API配置方案</h3>
+        <div class="config-selector">
+            <select class="select" id="configSelector"></select>
+            <button class="btn btn-outline btn-sm" id="addConfigBtn">+ 新增方案</button>
+            <button class="btn btn-outline btn-sm" id="deleteConfigBtn">🗑️ 删除</button>
+        </div>
         <h3>AI接口</h3>
         <div class="grid-2"><div><label>API Key</label><input type="password" class="input" id="apiKey"></div><div><label>节点地址</label><input type="text" class="input" id="apiBase" value="https://api.openai.com/v1"></div></div>
         <div class="grid-2">
@@ -181,7 +186,7 @@
         <h3>提示词</h3>
         <textarea class="input textarea" id="analysisPrompt" style="min-height:150px"></textarea>
         <textarea class="input textarea" id="partitionPrompt" style="min-height:100px;margin-top:8px"></textarea>
-        <div style="margin:12px 0"><button class="btn btn-outline" onclick="resetPrompts()">恢复默认</button><button class="btn btn-primary" onclick="saveConfig()">💾 保存AI配置</button></div>
+        <div style="margin:12px 0"><button class="btn btn-outline" onclick="resetPrompts()">恢复默认</button><button class="btn btn-primary" id="saveConfigBtn">💾 保存当前方案</button></div>
         <h3>💾 数据管理</h3>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
             <button class="btn btn-success" id="exportBtn">📤 导出文件</button>
@@ -202,8 +207,11 @@
 </div>
 
 <script>
-// ========== 全局变量与工具 ==========
-let diaries = [], analysisHistory = [], goals = [], config = {}, selectedDiaryId = null;
+// ========== 全局变量 ==========
+let diaries = [], analysisHistory = [], goals = [], selectedDiaryId = null;
+let apiConfigs = [];              // 多套配置
+let currentConfigId = null;      // 当前使用配置的ID
+let config = {};                 // 当前生效配置（同步自 apiConfigs）
 
 function isValidDiary(d) { return d && typeof d === 'object' && Array.isArray(d.blocks); }
 function getValidDiaries() { return Array.isArray(diaries) ? diaries.filter(isValidDiary) : []; }
@@ -211,18 +219,94 @@ function getValidDiaries() { return Array.isArray(diaries) ? diaries.filter(isVa
 function getFullDefaultAnalysisPrompt() { return "【AI角色】\n我是福州在读女生...\n{日记内容}"; }
 function getFullDefaultPartitionPrompt() { return "将文本按目标分区...\n{目标列表}\n{文本内容}"; }
 
+// ========== 配置初始化 ==========
+function initConfigs() {
+    // 尝试从旧版单 config 迁移
+    const oldConfig = localStorage.getItem('aiConfig');
+    const savedConfigs = localStorage.getItem('apiConfigs');
+    const savedCurrentId = localStorage.getItem('currentConfigId');
+
+    if (savedConfigs) {
+        apiConfigs = JSON.parse(savedConfigs);
+        if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) apiConfigs = [];
+    }
+    if (apiConfigs.length === 0 && oldConfig) {
+        // 旧版数据迁移
+        const old = JSON.parse(oldConfig);
+        const newConfig = {
+            id: Date.now().toString(),
+            name: '默认配置',
+            apiKey: old.apiKey || '',
+            apiBase: old.apiBase || 'https://api.openai.com/v1',
+            modelName: old.modelName || 'gpt-3.5-turbo',
+            customModel: old.customModel || '',
+            temperature: old.temperature ?? 0.7,
+            maxTokens: old.maxTokens ?? 2000
+        };
+        apiConfigs.push(newConfig);
+    }
+    if (apiConfigs.length === 0) {
+        // 创建默认配置
+        apiConfigs.push({
+            id: Date.now().toString(),
+            name: '默认配置',
+            apiKey: '',
+            apiBase: 'https://api.openai.com/v1',
+            modelName: 'gpt-3.5-turbo',
+            customModel: '',
+            temperature: 0.7,
+            maxTokens: 2000
+        });
+    }
+
+    currentConfigId = savedCurrentId || apiConfigs[0].id;
+    // 确保 currentConfigId 有效
+    if (!apiConfigs.find(c => c.id === currentConfigId)) {
+        currentConfigId = apiConfigs[0].id;
+    }
+    syncCurrentConfig();
+}
+
+function syncCurrentConfig() {
+    const cfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0];
+    config = {
+        apiKey: cfg.apiKey,
+        apiBase: cfg.apiBase,
+        modelName: cfg.modelName,
+        temperature: cfg.temperature,
+        maxTokens: cfg.maxTokens,
+        analysisPrompt: config.analysisPrompt || getFullDefaultAnalysisPrompt(),  // 保留全局提示词
+        partitionPrompt: config.partitionPrompt || getFullDefaultPartitionPrompt()
+    };
+    // 单独存储提示词（全局）
+    const storedPrompts = localStorage.getItem('prompts');
+    if (storedPrompts) {
+        const prompts = JSON.parse(storedPrompts);
+        config.analysisPrompt = prompts.analysisPrompt || config.analysisPrompt;
+        config.partitionPrompt = prompts.partitionPrompt || config.partitionPrompt;
+    }
+}
+
+function saveConfigs() {
+    localStorage.setItem('apiConfigs', JSON.stringify(apiConfigs));
+    localStorage.setItem('currentConfigId', currentConfigId);
+    // 保存提示词
+    localStorage.setItem('prompts', JSON.stringify({
+        analysisPrompt: config.analysisPrompt,
+        partitionPrompt: config.partitionPrompt
+    }));
+}
+
+// 加载所有数据
 function safeLoadData() {
     try { diaries = JSON.parse(localStorage.getItem('diaries')||'[]'); if(!Array.isArray(diaries)) diaries=[]; diaries=diaries.filter(isValidDiary); } catch(e){ diaries=[]; }
     try { analysisHistory = JSON.parse(localStorage.getItem('analysisHistory')||'[]'); } catch(e){ analysisHistory=[]; }
     try { goals = JSON.parse(localStorage.getItem('goals')||'["瘦子增肌","去外地找工作","早睡早起","克服拖延症","攒钱租房","自媒体"]'); } catch(e){ goals=["瘦子增肌","去外地找工作","早睡早起","克服拖延症","攒钱租房","自媒体"]; }
-    try {
-        config = JSON.parse(localStorage.getItem('aiConfig'));
-        if(!config) config = { apiKey:'', apiBase:'https://api.openai.com/v1', modelName:'gpt-3.5-turbo', temperature:0.7, maxTokens:2000, analysisPrompt:getFullDefaultAnalysisPrompt(), partitionPrompt:getFullDefaultPartitionPrompt() };
-    } catch(e){ config = { apiKey:'', apiBase:'https://api.openai.com/v1', modelName:'gpt-3.5-turbo', temperature:0.7, maxTokens:2000, analysisPrompt:getFullDefaultAnalysisPrompt(), partitionPrompt:getFullDefaultPartitionPrompt() }; }
+    initConfigs();
 }
 safeLoadData();
 
-// 主题与标签
+// ========== 主题与标签 ==========
 function initTheme() {
     if(localStorage.getItem('theme')==='dark'){ document.body.classList.add('dark'); document.getElementById('themeBtn').textContent='☀️'; }
     document.getElementById('themeBtn').onclick = () => {
@@ -242,7 +326,7 @@ function initTabs() {
     });
 }
 
-// 日期导航
+// ========== 日期导航与日记渲染 ==========
 function getCurrentDateStr() {
     const d = document.getElementById('diaryDate').value;
     if(!d) return new Date().toLocaleDateString();
@@ -321,11 +405,11 @@ function deleteCurrentDiary() {
 }
 function saveDiaries() { localStorage.setItem('diaries_backup', JSON.stringify(diaries)); localStorage.setItem('diaries', JSON.stringify(diaries)); }
 
-// AI分区
+// ========== AI分区 ==========
 async function aiPartition() {
     const raw = document.getElementById('freeInput').value.trim();
     if(!raw) return alert('请输入内容');
-    if(!config.apiKey) return alert('请先配置AI密钥');
+    if(!config.apiKey) return alert('请先在设置中配置API密钥');
     const btn = document.getElementById('aiPartitionBtn');
     btn.disabled = true; btn.textContent = '分区中...';
     try {
@@ -358,7 +442,7 @@ function selectCurrentForAnalysis() {
     alert('已选中当天日记，可前往分析页进行自定义分析');
 }
 
-// 目标配置
+// ========== 目标配置 ==========
 function renderGoalConfigList() { document.getElementById('goalConfigList').innerHTML = goals.map((g,i)=>`<div class="goal-item"><input class="input" value="${g}"><button class="btn btn-danger btn-sm" onclick="removeGoalItem(${i})">删除</button></div>`).join(''); }
 function addGoalItem() { goals.push('新目标'); renderGoalConfigList(); }
 function removeGoalItem(i) { if(goals.length<=1) return alert('至少一个'); goals.splice(i,1); renderGoalConfigList(); }
@@ -369,7 +453,7 @@ function saveGoals() {
     loadDiaryByDate(); closeModal('goalConfigModal'); alert('目标已保存');
 }
 
-// 分析看板（含折叠历史）
+// ========== 分析看板与历史 ==========
 function renderDashboard() {
     ['today','week','month','all'].forEach(range => {
         const latest = analysisHistory.filter(h=>h&&h.timeRange===range)[0];
@@ -415,7 +499,6 @@ async function quickAnalyze(range) {
     } catch(e) { document.getElementById(range+'Result').innerHTML = `<div style="color:red">失败：${e.message}</div>`; }
 }
 
-// 分析指定日期
 async function analyzeSpecificDate() {
     const dateVal = document.getElementById('analyzeDatePicker').value;
     if(!dateVal) return alert('请选择日期');
@@ -434,7 +517,6 @@ async function analyzeSpecificDate() {
     } catch(e) { document.getElementById('todayResult').innerHTML = `<div style="color:red">失败：${e.message}</div>`; }
 }
 
-// 自定义分析
 async function startAnalysis() {
     if(!config.apiKey) { openModal('configModal'); return alert('请配置AI密钥'); }
     const range = document.getElementById('timeRange').value;
@@ -462,7 +544,7 @@ async function startAnalysis() {
 }
 
 async function callAI(prompt) {
-    const model = config.modelName==='custom' ? document.getElementById('customModel').value : config.modelName;
+    const model = config.modelName==='custom' ? (document.getElementById('customModel')?.value || config.modelName) : config.modelName;
     const res = await fetch(`${config.apiBase}/chat/completions`, {
         method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${config.apiKey}`},
         body: JSON.stringify({ model, messages:[{role:'user',content:prompt}], temperature:Number(config.temperature), max_tokens:Number(config.maxTokens) })
@@ -480,27 +562,85 @@ function toggleAllViews() {
 }
 document.addEventListener('change', e => { if(e.target.name==='view' && e.target.value==='custom') document.getElementById('customViewInput').style.display = e.target.checked?'block':'none'; });
 
-// 弹窗
+// ========== 弹窗 ==========
 function openModal(id) { document.getElementById(id).style.display='flex'; }
 function closeModal(id) { document.getElementById(id).style.display='none'; }
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.style.display='none'; }));
 
-// 设置与数据管理
-document.getElementById('configBtn').onclick = () => { loadConfigToForm(); openModal('configModal'); };
+// ========== 设置面板 ==========
+document.getElementById('configBtn').onclick = () => { refreshConfigSelector(); loadConfigToForm(); openModal('configModal'); };
 document.getElementById('goalConfigBtn').onclick = () => { renderGoalConfigList(); openModal('goalConfigModal'); };
 
+function refreshConfigSelector() {
+    const sel = document.getElementById('configSelector');
+    sel.innerHTML = apiConfigs.map(c => `<option value="${c.id}" ${c.id===currentConfigId?'selected':''}>${c.name}</option>`).join('');
+}
+
 function loadConfigToForm() {
-    document.getElementById('apiKey').value = config.apiKey||'';
-    document.getElementById('apiBase').value = config.apiBase||'';
-    document.getElementById('temperature').value = config.temperature||0.7;
-    document.getElementById('maxTokens').value = config.maxTokens||2000;
-    document.getElementById('analysisPrompt').value = config.analysisPrompt||'';
-    document.getElementById('partitionPrompt').value = config.partitionPrompt||'';
+    const cfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0];
+    document.getElementById('apiKey').value = cfg.apiKey || '';
+    document.getElementById('apiBase').value = cfg.apiBase || 'https://api.openai.com/v1';
+    document.getElementById('temperature').value = cfg.temperature ?? 0.7;
+    document.getElementById('maxTokens').value = cfg.maxTokens ?? 2000;
     const ms = document.getElementById('modelName'), cm = document.getElementById('customModel');
     const existingOptions = Array.from(ms.options).map(o=>o.value);
-    if(existingOptions.includes(config.modelName)) { ms.value = config.modelName; cm.style.display='none'; }
-    else { ms.value = 'custom'; cm.value = config.modelName||''; cm.style.display='block'; }
+    if(existingOptions.includes(cfg.modelName)) { ms.value = cfg.modelName; cm.style.display='none'; }
+    else { ms.value = 'custom'; cm.value = cfg.modelName || ''; cm.style.display='block'; }
+    document.getElementById('analysisPrompt').value = config.analysisPrompt || getFullDefaultAnalysisPrompt();
+    document.getElementById('partitionPrompt').value = config.partitionPrompt || getFullDefaultPartitionPrompt();
 }
+
+// 切换配置
+document.getElementById('configSelector').addEventListener('change', function() {
+    currentConfigId = this.value;
+    syncCurrentConfig();
+    loadConfigToForm();
+    saveConfigs();
+});
+
+// 新增配置方案
+document.getElementById('addConfigBtn').addEventListener('click', () => {
+    const name = prompt('请输入新方案名称：');
+    if (!name) return;
+    const newId = Date.now().toString();
+    const currentCfg = apiConfigs.find(c => c.id === currentConfigId) || apiConfigs[0];
+    apiConfigs.push({ ...currentCfg, id: newId, name });
+    currentConfigId = newId;
+    syncCurrentConfig();
+    refreshConfigSelector();
+    loadConfigToForm();
+    saveConfigs();
+});
+
+// 删除配置方案
+document.getElementById('deleteConfigBtn').addEventListener('click', () => {
+    if (apiConfigs.length <= 1) return alert('至少保留一个配置方案');
+    if (!confirm('确定删除当前方案？')) return;
+    apiConfigs = apiConfigs.filter(c => c.id !== currentConfigId);
+    currentConfigId = apiConfigs[0].id;
+    syncCurrentConfig();
+    refreshConfigSelector();
+    loadConfigToForm();
+    saveConfigs();
+});
+
+// 保存当前方案
+document.getElementById('saveConfigBtn').addEventListener('click', () => {
+    const cfg = apiConfigs.find(c => c.id === currentConfigId);
+    if (!cfg) return;
+    cfg.apiKey = document.getElementById('apiKey').value.trim();
+    cfg.apiBase = document.getElementById('apiBase').value.trim();
+    cfg.modelName = document.getElementById('modelName').value === 'custom' ? document.getElementById('customModel').value : document.getElementById('modelName').value;
+    cfg.customModel = document.getElementById('customModel').value;
+    cfg.temperature = document.getElementById('temperature').value;
+    cfg.maxTokens = document.getElementById('maxTokens').value;
+    config.analysisPrompt = document.getElementById('analysisPrompt').value;
+    config.partitionPrompt = document.getElementById('partitionPrompt').value;
+    syncCurrentConfig(); // 刷新 config 引用
+    saveConfigs();
+    alert('当前方案已保存');
+    closeModal('configModal');
+});
 
 // 拉取模型列表
 document.getElementById('fetchModelsBtn').addEventListener('click', async () => {
@@ -522,29 +662,18 @@ document.getElementById('fetchModelsBtn').addEventListener('click', async () => 
     btn.disabled = false; btn.textContent = '🔄 拉取模型列表';
 });
 
-function saveConfig() {
-    config.apiKey = document.getElementById('apiKey').value.trim();
-    config.apiBase = document.getElementById('apiBase').value.trim();
-    config.modelName = document.getElementById('modelName').value==='custom' ? document.getElementById('customModel').value : document.getElementById('modelName').value;
-    config.temperature = document.getElementById('temperature').value;
-    config.maxTokens = document.getElementById('maxTokens').value;
-    config.analysisPrompt = document.getElementById('analysisPrompt').value;
-    config.partitionPrompt = document.getElementById('partitionPrompt').value;
-    localStorage.setItem('aiConfig', JSON.stringify(config));
-    alert('配置已保存'); closeModal('configModal');
-}
 function resetPrompts() { if(confirm('恢复默认？')) { document.getElementById('analysisPrompt').value = getFullDefaultAnalysisPrompt(); document.getElementById('partitionPrompt').value = getFullDefaultPartitionPrompt(); } }
 document.getElementById('modelName').addEventListener('change', function() { document.getElementById('customModel').style.display = this.value==='custom'?'block':'none'; });
 
-// 导出
+// ========== 数据导入导出 ==========
 document.getElementById('exportBtn').addEventListener('click', ()=>{
-    const blob = new Blob([JSON.stringify({diaries,analysisHistory,goals},null,2)],{type:'application/json'});
+    const all = { diaries, analysisHistory, goals, apiConfigs, currentConfigId, exportTime: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(all, null, 2)],{type:'application/json'});
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `日记备份_${new Date().toISOString().slice(0,10)}.json`; a.click();
 });
 
-// 文件导入
 document.getElementById('importBtn').addEventListener('click', ()=>{
-    if(!confirm('导入将合并新增数据')) return;
+    if(!confirm('导入将合并新增数据，配置方案也会合并')) return;
     const inp = document.createElement('input'); inp.type='file'; inp.accept='.json';
     inp.onchange = e => {
         const reader = new FileReader();
@@ -554,7 +683,6 @@ document.getElementById('importBtn').addEventListener('click', ()=>{
     inp.click();
 });
 
-// 粘贴导入
 document.getElementById('pasteImportBtn').addEventListener('click', () => {
     openModal('pasteModal');
     document.getElementById('pasteJsonInput').value = '';
@@ -574,7 +702,19 @@ function handleImportData(jsonStr) {
         if(data.diaries) { const ids = new Set(diaries.map(d=>d.id)); data.diaries.forEach(d => { if(!ids.has(d.id)) { diaries.unshift(d); added++; } }); }
         if(data.analysisHistory) { const ids = new Set(analysisHistory.map(h=>h.id)); data.analysisHistory.forEach(h => { if(!ids.has(h.id)) { analysisHistory.unshift(h); added++; } }); }
         if(data.goals && !goals.length) goals = data.goals;
-        saveDiaries(); localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory)); localStorage.setItem('goals', JSON.stringify(goals));
+        // 合并配置方案
+        if(data.apiConfigs && Array.isArray(data.apiConfigs)) {
+            const existingIds = new Set(apiConfigs.map(c=>c.id));
+            data.apiConfigs.forEach(c => { if(!existingIds.has(c.id)) apiConfigs.push(c); });
+            if(data.currentConfigId && apiConfigs.find(c=>c.id===data.currentConfigId)) {
+                currentConfigId = data.currentConfigId;
+            }
+        }
+        saveDiaries();
+        localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
+        localStorage.setItem('goals', JSON.stringify(goals));
+        saveConfigs();
+        syncCurrentConfig();
         loadDiaryByDate(); renderDashboard(); renderGoalConfigList();
         alert(`导入完成，新增 ${added} 条数据`);
         location.reload();
@@ -588,13 +728,14 @@ document.getElementById('restoreBtn').addEventListener('click', ()=>{
     diaries = JSON.parse(backup); saveDiaries(); alert('恢复成功'); location.reload();
 });
 
-// 初始化
+// ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('diaryDate').value = today;
     document.getElementById('analyzeDatePicker').value = today;
     initTheme();
     initTabs();
+    refreshConfigSelector();
     loadDiaryByDate();
     renderDashboard();
     document.getElementById('saveDiaryBtn').addEventListener('click', saveCurrentDiary);
